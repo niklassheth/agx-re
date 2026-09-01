@@ -1,0 +1,118 @@
+{
+  "interpretation": {
+    "b1hi_8_to_16": "inert in this carrier: full output remains exact",
+    "srcB_4_to_8": "changes only the separately stored prior-IMAD value from p0 to p1; the following ISELECT region remains exact"
+  },
+  "results": {
+    "b1hi_8_to_16": {
+      "repetitions": [
+        {
+          "changed_byte_count": 0,
+          "exact_native_oracle": true,
+          "exact_srcB8_oracle": false,
+          "first_changed_byte": null,
+          "iselect_region_exact": true,
+          "last_changed_byte": null,
+          "output_sha256": "7fe273172200cf68d46e0a2e1ffa471d3616d66181ec944b956ed6807e99c17b",
+          "repeat": 1,
+          "status": "OK"
+        },
+        {
+          "changed_byte_count": 0,
+          "exact_native_oracle": true,
+          "exact_srcB8_oracle": false,
+          "first_changed_byte": null,
+          "iselect_region_exact": true,
+          "last_changed_byte": null,
+          "output_sha256": "7fe273172200cf68d46e0a2e1ffa471d3616d66181ec944b956ed6807e99c17b",
+          "repeat": 2,
+          "status": "OK"
+        }
+      ],
+      "repetitions_identical": true
+    },
+    "both": {
+      "repetitions": [
+        {
+          "changed_byte_count": 1024,
+          "exact_native_oracle": false,
+          "exact_srcB8_oracle": true,
+          "first_changed_byte": 1024,
+          "iselect_region_exact": true,
+          "last_changed_byte": 2047,
+          "output_sha256": "90f9cca96c3a995dca9de37b176ed64e6aeab96b8be730e0a3e74aba7391af09",
+          "repeat": 1,
+          "status": "OUTPUT_MISMATCH"
+        },
+        {
+          "changed_byte_count": 1024,
+          "exact_native_oracle": false,
+          "exact_srcB8_oracle": true,
+          "first_changed_byte": 1024,
+          "iselect_region_exact": true,
+          "last_changed_byte": 2047,
+          "output_sha256": "90f9cca96c3a995dca9de37b176ed64e6aeab96b8be730e0a3e74aba7391af09",
+          "repeat": 2,
+          "status": "OUTPUT_MISMATCH"
+        }
+      ],
+      "repetitions_identical": true
+    },
+    "control": {
+      "repetitions": [
+        {
+          "changed_byte_count": 0,
+          "exact_native_oracle": true,
+          "exact_srcB8_oracle": false,
+          "first_changed_byte": null,
+          "iselect_region_exact": true,
+          "last_changed_byte": null,
+          "output_sha256": "7fe273172200cf68d46e0a2e1ffa471d3616d66181ec944b956ed6807e99c17b",
+          "repeat": 1,
+          "status": "OK"
+        },
+        {
+          "changed_byte_count": 0,
+          "exact_native_oracle": true,
+          "exact_srcB8_oracle": false,
+          "first_changed_byte": null,
+          "iselect_region_exact": true,
+          "last_changed_byte": null,
+          "output_sha256": "7fe273172200cf68d46e0a2e1ffa471d3616d66181ec944b956ed6807e99c17b",
+          "repeat": 2,
+          "status": "OK"
+        }
+      ],
+      "repetitions_identical": true
+    },
+    "srcB_4_to_8": {
+      "repetitions": [
+        {
+          "changed_byte_count": 1024,
+          "exact_native_oracle": false,
+          "exact_srcB8_oracle": true,
+          "first_changed_byte": 1024,
+          "iselect_region_exact": true,
+          "last_changed_byte": 2047,
+          "output_sha256": "90f9cca96c3a995dca9de37b176ed64e6aeab96b8be730e0a3e74aba7391af09",
+          "repeat": 1,
+          "status": "OUTPUT_MISMATCH"
+        },
+        {
+          "changed_byte_count": 1024,
+          "exact_native_oracle": false,
+          "exact_srcB8_oracle": true,
+          "first_changed_byte": 1024,
+          "iselect_region_exact": true,
+          "last_changed_byte": 2047,
+          "output_sha256": "90f9cca96c3a995dca9de37b176ed64e6aeab96b8be730e0a3e74aba7391af09",
+          "repeat": 2,
+          "status": "OUTPUT_MISMATCH"
+        }
+      ],
+      "repetitions_identical": true
+    }
+  },
+  "schema_version": 1,
+  "source_case": "r30_iselect_atomic_u32_direct_route12_split_store_live0_a"
+}

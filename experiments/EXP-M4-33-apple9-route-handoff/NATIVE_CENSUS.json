@@ -1,0 +1,3583 @@
+{
+  "cases": {
+    "r33_atomic_f32_issue01_prior0_a": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_atomic_f32_issue01_prior0",
+        "compute_function": "r33_atomic_f32_issue01_prior0_a",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_atomic_f32_issue01_prior0.bin",
+        "expected_sha256": "8a0727f319a17007f62eaf6ce2eed7941cb12ab3641bb2ffb91a9a34198eba9c",
+        "formulation": "a",
+        "id": "r33_atomic_f32_issue01_prior0_a",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 0,
+        "producer": "atomic_f32",
+        "source": "generated/sources/r33_atomic_f32_issue01_prior0_a.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "182e76c28a0a9461f6ada8b527a0e25d0ed8e67f3e6e13b15d4a91b61ae2bc7c",
+      "main_size": 144,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 6,
+          "width": 3,
+          "without_route": "29f105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 192,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f1058180c0",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 90,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 2,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090020",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 106,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 1,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_atomic_f32_issue01_prior0_b": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_atomic_f32_issue01_prior0",
+        "compute_function": "r33_atomic_f32_issue01_prior0_b",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_atomic_f32_issue01_prior0.bin",
+        "expected_sha256": "8a0727f319a17007f62eaf6ce2eed7941cb12ab3641bb2ffb91a9a34198eba9c",
+        "formulation": "b",
+        "id": "r33_atomic_f32_issue01_prior0_b",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 0,
+        "producer": "atomic_f32",
+        "source": "generated/sources/r33_atomic_f32_issue01_prior0_b.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "182e76c28a0a9461f6ada8b527a0e25d0ed8e67f3e6e13b15d4a91b61ae2bc7c",
+      "main_size": 144,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 6,
+          "width": 3,
+          "without_route": "29f105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 192,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f1058180c0",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 90,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 2,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090020",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 106,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 1,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_atomic_f32_issue01_prior0_chain3_a": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 14,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540e0280088c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 108,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 10,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 0,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540a0200098c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 118,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028009881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 128,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_atomic_f32_issue01_prior0_chain3",
+        "compute_function": "r33_atomic_f32_issue01_prior0_chain3_a",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_atomic_f32_issue01_prior0_chain3.bin",
+        "expected_sha256": "970b7ce827831a47ef50f593e6c68f083382d44f00856e60eda09111333ef210",
+        "formulation": "a",
+        "id": "r33_atomic_f32_issue01_prior0_chain3_a",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 3,
+        "prior_role": 0,
+        "producer": "atomic_f32",
+        "source": "generated/sources/r33_atomic_f32_issue01_prior0_chain3_a.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "601f77a711f363974a3427dcd8a120de359b72a908006143254d88450b36fcbc",
+      "main_size": 204,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 6,
+          "width": 3,
+          "without_route": "69f105818000"
+        },
+        {
+          "start": 45,
+          "value": 0,
+          "width": 3,
+          "without_route": "49e105818000"
+        },
+        {
+          "start": 45,
+          "value": 0,
+          "width": 3,
+          "without_route": "29d105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 6,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 192,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "69f1058180c0",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 90,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 4,
+            "imm_exp": 14,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 0,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "49e105818000",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 13,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 0,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29d105818000",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 102,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 2,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 8,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c110020",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 138,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 1,
+        "width": 3,
+        "without_route": "09011c110000"
+      }
+    },
+    "r33_atomic_f32_issue01_prior0_chain3_b": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 14,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540e0280088c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 108,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 10,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 0,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540a0200098c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 118,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028009881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 128,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_atomic_f32_issue01_prior0_chain3",
+        "compute_function": "r33_atomic_f32_issue01_prior0_chain3_b",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_atomic_f32_issue01_prior0_chain3.bin",
+        "expected_sha256": "970b7ce827831a47ef50f593e6c68f083382d44f00856e60eda09111333ef210",
+        "formulation": "b",
+        "id": "r33_atomic_f32_issue01_prior0_chain3_b",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 3,
+        "prior_role": 0,
+        "producer": "atomic_f32",
+        "source": "generated/sources/r33_atomic_f32_issue01_prior0_chain3_b.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "601f77a711f363974a3427dcd8a120de359b72a908006143254d88450b36fcbc",
+      "main_size": 204,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 6,
+          "width": 3,
+          "without_route": "69f105818000"
+        },
+        {
+          "start": 45,
+          "value": 0,
+          "width": 3,
+          "without_route": "49e105818000"
+        },
+        {
+          "start": 45,
+          "value": 0,
+          "width": 3,
+          "without_route": "29d105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 6,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 192,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "69f1058180c0",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 90,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 4,
+            "imm_exp": 14,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 0,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "49e105818000",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 13,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 0,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29d105818000",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 102,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 2,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 8,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c110020",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 138,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 1,
+        "width": 3,
+        "without_route": "09011c110000"
+      }
+    },
+    "r33_atomic_f32_issue01_prior1_a": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 102,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_atomic_f32_issue01_prior1",
+        "compute_function": "r33_atomic_f32_issue01_prior1_a",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_atomic_f32_issue01_prior1.bin",
+        "expected_sha256": "2bf3b3c51fba487b0d75d798aec84d6cc166d82765e71b664c2cd4101f6a69f4",
+        "formulation": "a",
+        "id": "r33_atomic_f32_issue01_prior1_a",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 1,
+        "producer": "atomic_f32",
+        "source": "generated/sources/r33_atomic_f32_issue01_prior1_a.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "d4884cc8de72eb76ed69421de6d1809f868fa73454ed2e7d50d6eaab433be187",
+      "main_size": 150,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 6,
+          "width": 3,
+          "without_route": "29f105898000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 192,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 4,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f1058980c0",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 2,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090020",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 112,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 1,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_atomic_f32_issue01_prior1_b": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 102,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_atomic_f32_issue01_prior1",
+        "compute_function": "r33_atomic_f32_issue01_prior1_b",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_atomic_f32_issue01_prior1.bin",
+        "expected_sha256": "2bf3b3c51fba487b0d75d798aec84d6cc166d82765e71b664c2cd4101f6a69f4",
+        "formulation": "b",
+        "id": "r33_atomic_f32_issue01_prior1_b",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 1,
+        "producer": "atomic_f32",
+        "source": "generated/sources/r33_atomic_f32_issue01_prior1_b.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "d4884cc8de72eb76ed69421de6d1809f868fa73454ed2e7d50d6eaab433be187",
+      "main_size": 150,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 6,
+          "width": 3,
+          "without_route": "29f105898000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 192,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 4,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f1058980c0",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 2,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090020",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 112,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 1,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_atomic_f32_issue10_prior0_a": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 102,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_atomic_f32_issue10_prior0",
+        "compute_function": "r33_atomic_f32_issue10_prior0_a",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_atomic_f32_issue10_prior0.bin",
+        "expected_sha256": "8a0727f319a17007f62eaf6ce2eed7941cb12ab3641bb2ffb91a9a34198eba9c",
+        "formulation": "a",
+        "id": "r33_atomic_f32_issue10_prior0_a",
+        "issue_order": [
+          1,
+          0
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 0,
+        "producer": "atomic_f32",
+        "source": "generated/sources/r33_atomic_f32_issue10_prior0_a.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "3670b37e7a323d08687f896fbd32be1c04a24d9b85714d007e4dfb9ca46fea02",
+      "main_size": 150,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 6,
+          "width": 3,
+          "without_route": "29f105898000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 192,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 4,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f1058980c0",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 2,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090020",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 112,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 1,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_atomic_f32_issue10_prior0_b": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 102,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_atomic_f32_issue10_prior0",
+        "compute_function": "r33_atomic_f32_issue10_prior0_b",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_atomic_f32_issue10_prior0.bin",
+        "expected_sha256": "8a0727f319a17007f62eaf6ce2eed7941cb12ab3641bb2ffb91a9a34198eba9c",
+        "formulation": "b",
+        "id": "r33_atomic_f32_issue10_prior0_b",
+        "issue_order": [
+          1,
+          0
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 0,
+        "producer": "atomic_f32",
+        "source": "generated/sources/r33_atomic_f32_issue10_prior0_b.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "3670b37e7a323d08687f896fbd32be1c04a24d9b85714d007e4dfb9ca46fea02",
+      "main_size": 150,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 6,
+          "width": 3,
+          "without_route": "29f105898000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 192,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 4,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f1058980c0",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 2,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090020",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 112,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 1,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_atomic_f32_issue10_prior1_a": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_atomic_f32_issue10_prior1",
+        "compute_function": "r33_atomic_f32_issue10_prior1_a",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_atomic_f32_issue10_prior1.bin",
+        "expected_sha256": "2bf3b3c51fba487b0d75d798aec84d6cc166d82765e71b664c2cd4101f6a69f4",
+        "formulation": "a",
+        "id": "r33_atomic_f32_issue10_prior1_a",
+        "issue_order": [
+          1,
+          0
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 1,
+        "producer": "atomic_f32",
+        "source": "generated/sources/r33_atomic_f32_issue10_prior1_a.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "d691cd3772f93af52be6cbb7d606fd1c6c934c2204f98449e0d74c8b3df91821",
+      "main_size": 144,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 6,
+          "width": 3,
+          "without_route": "29f105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 192,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f1058180c0",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 90,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 2,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090020",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 106,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 1,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_atomic_f32_issue10_prior1_b": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_atomic_f32_issue10_prior1",
+        "compute_function": "r33_atomic_f32_issue10_prior1_b",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_atomic_f32_issue10_prior1.bin",
+        "expected_sha256": "2bf3b3c51fba487b0d75d798aec84d6cc166d82765e71b664c2cd4101f6a69f4",
+        "formulation": "b",
+        "id": "r33_atomic_f32_issue10_prior1_b",
+        "issue_order": [
+          1,
+          0
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 1,
+        "producer": "atomic_f32",
+        "source": "generated/sources/r33_atomic_f32_issue10_prior1_b.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "d691cd3772f93af52be6cbb7d606fd1c6c934c2204f98449e0d74c8b3df91821",
+      "main_size": 144,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 6,
+          "width": 3,
+          "without_route": "29f105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 192,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f1058180c0",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 90,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 2,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090020",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 106,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 1,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_texture_f32_issue01_prior0_a": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_texture_f32_issue01_prior0",
+        "compute_function": "r33_texture_f32_issue01_prior0_a",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_texture_f32_issue01_prior0.bin",
+        "expected_sha256": "612a19ee0916c3c59aedb073399b3d13d84c2f563cefd7260a41b1dadf5619fb",
+        "formulation": "a",
+        "id": "r33_texture_f32_issue01_prior0_a",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 0,
+        "producer": "texture_f32",
+        "source": "generated/sources/r33_texture_f32_issue01_prior0_a.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "4db00e98b268bd15f494ef645ee66018e3d4fd9deed192ce9b58a7bebbe9d9f6",
+      "main_size": 140,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 1,
+          "width": 3,
+          "without_route": "29f105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 32,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f105818020",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 86,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 4,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090040",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 102,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 2,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_texture_f32_issue01_prior0_b": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_texture_f32_issue01_prior0",
+        "compute_function": "r33_texture_f32_issue01_prior0_b",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_texture_f32_issue01_prior0.bin",
+        "expected_sha256": "612a19ee0916c3c59aedb073399b3d13d84c2f563cefd7260a41b1dadf5619fb",
+        "formulation": "b",
+        "id": "r33_texture_f32_issue01_prior0_b",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 0,
+        "producer": "texture_f32",
+        "source": "generated/sources/r33_texture_f32_issue01_prior0_b.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "4db00e98b268bd15f494ef645ee66018e3d4fd9deed192ce9b58a7bebbe9d9f6",
+      "main_size": 140,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 1,
+          "width": 3,
+          "without_route": "29f105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 32,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f105818020",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 86,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 4,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090040",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 102,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 2,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_texture_f32_issue01_prior0_chain3_a": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 14,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540e0280088c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 104,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 10,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 0,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540a0200098c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 114,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028009881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 124,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_texture_f32_issue01_prior0_chain3",
+        "compute_function": "r33_texture_f32_issue01_prior0_chain3_a",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_texture_f32_issue01_prior0_chain3.bin",
+        "expected_sha256": "a8e4b543efe18fe470380e0183194e02df84b3018ab86ffa24c13d6195c21de3",
+        "formulation": "a",
+        "id": "r33_texture_f32_issue01_prior0_chain3_a",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 3,
+        "prior_role": 0,
+        "producer": "texture_f32",
+        "source": "generated/sources/r33_texture_f32_issue01_prior0_chain3_a.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "f80be4ba594073fa1c937deef5641c52ad7e57e72758c39a746ec7e9c2d9ac76",
+      "main_size": 200,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 1,
+          "width": 3,
+          "without_route": "69f105818000"
+        },
+        {
+          "start": 45,
+          "value": 0,
+          "width": 3,
+          "without_route": "49e105818000"
+        },
+        {
+          "start": 45,
+          "value": 0,
+          "width": 3,
+          "without_route": "29d105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 6,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 32,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "69f105818020",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 86,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 4,
+            "imm_exp": 14,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 0,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "49e105818000",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 13,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 0,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29d105818000",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 98,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 4,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 8,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c110040",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 134,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 2,
+        "width": 3,
+        "without_route": "09011c110000"
+      }
+    },
+    "r33_texture_f32_issue01_prior0_chain3_b": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 14,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540e0280088c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 104,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 10,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 0,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540a0200098c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 114,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028009881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 124,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_texture_f32_issue01_prior0_chain3",
+        "compute_function": "r33_texture_f32_issue01_prior0_chain3_b",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_texture_f32_issue01_prior0_chain3.bin",
+        "expected_sha256": "a8e4b543efe18fe470380e0183194e02df84b3018ab86ffa24c13d6195c21de3",
+        "formulation": "b",
+        "id": "r33_texture_f32_issue01_prior0_chain3_b",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 3,
+        "prior_role": 0,
+        "producer": "texture_f32",
+        "source": "generated/sources/r33_texture_f32_issue01_prior0_chain3_b.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "f80be4ba594073fa1c937deef5641c52ad7e57e72758c39a746ec7e9c2d9ac76",
+      "main_size": 200,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 1,
+          "width": 3,
+          "without_route": "69f105818000"
+        },
+        {
+          "start": 45,
+          "value": 0,
+          "width": 3,
+          "without_route": "49e105818000"
+        },
+        {
+          "start": 45,
+          "value": 0,
+          "width": 3,
+          "without_route": "29d105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 6,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 32,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "69f105818020",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 86,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 4,
+            "imm_exp": 14,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 0,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "49e105818000",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 13,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 0,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29d105818000",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 98,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 4,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 8,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c110040",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 134,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 2,
+        "width": 3,
+        "without_route": "09011c110000"
+      }
+    },
+    "r33_texture_f32_issue01_prior1_a": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_texture_f32_issue01_prior1",
+        "compute_function": "r33_texture_f32_issue01_prior1_a",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_texture_f32_issue01_prior1.bin",
+        "expected_sha256": "188866a98ac9b11a9cb315ddde9e9d3f9d80c712ba0147db8d855644fa434d34",
+        "formulation": "a",
+        "id": "r33_texture_f32_issue01_prior1_a",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 1,
+        "producer": "texture_f32",
+        "source": "generated/sources/r33_texture_f32_issue01_prior1_a.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "2aa1f9ef2787fa61d800e160780445d099f67947ecc2c3fa5ca749a7bdd130fd",
+      "main_size": 140,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 1,
+          "width": 3,
+          "without_route": "29f105898000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 32,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 4,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f105898020",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 86,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 4,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090040",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 102,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 2,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_texture_f32_issue01_prior1_b": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_texture_f32_issue01_prior1",
+        "compute_function": "r33_texture_f32_issue01_prior1_b",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_texture_f32_issue01_prior1.bin",
+        "expected_sha256": "188866a98ac9b11a9cb315ddde9e9d3f9d80c712ba0147db8d855644fa434d34",
+        "formulation": "b",
+        "id": "r33_texture_f32_issue01_prior1_b",
+        "issue_order": [
+          0,
+          1
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 1,
+        "producer": "texture_f32",
+        "source": "generated/sources/r33_texture_f32_issue01_prior1_b.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "2aa1f9ef2787fa61d800e160780445d099f67947ecc2c3fa5ca749a7bdd130fd",
+      "main_size": 140,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 1,
+          "width": 3,
+          "without_route": "29f105898000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 32,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 4,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f105898020",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 86,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 4,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090040",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 102,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 2,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_texture_f32_issue10_prior0_a": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_texture_f32_issue10_prior0",
+        "compute_function": "r33_texture_f32_issue10_prior0_a",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_texture_f32_issue10_prior0.bin",
+        "expected_sha256": "612a19ee0916c3c59aedb073399b3d13d84c2f563cefd7260a41b1dadf5619fb",
+        "formulation": "a",
+        "id": "r33_texture_f32_issue10_prior0_a",
+        "issue_order": [
+          1,
+          0
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 0,
+        "producer": "texture_f32",
+        "source": "generated/sources/r33_texture_f32_issue10_prior0_a.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "56dfa611d9eb418fe472ec0fb821c2307b2b13cc73e4ce3fd3a5ef0f252a19e6",
+      "main_size": 140,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 1,
+          "width": 3,
+          "without_route": "29f105898000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 32,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 4,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f105898020",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 86,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 4,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090040",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 102,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 2,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_texture_f32_issue10_prior0_b": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_texture_f32_issue10_prior0",
+        "compute_function": "r33_texture_f32_issue10_prior0_b",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_texture_f32_issue10_prior0.bin",
+        "expected_sha256": "612a19ee0916c3c59aedb073399b3d13d84c2f563cefd7260a41b1dadf5619fb",
+        "formulation": "b",
+        "id": "r33_texture_f32_issue10_prior0_b",
+        "issue_order": [
+          1,
+          0
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 0,
+        "producer": "texture_f32",
+        "source": "generated/sources/r33_texture_f32_issue10_prior0_b.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "56dfa611d9eb418fe472ec0fb821c2307b2b13cc73e4ce3fd3a5ef0f252a19e6",
+      "main_size": 140,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 1,
+          "width": 3,
+          "without_route": "29f105898000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 32,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 4,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f105898020",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 86,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 4,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090040",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 102,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 2,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_texture_f32_issue10_prior1_a": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_texture_f32_issue10_prior1",
+        "compute_function": "r33_texture_f32_issue10_prior1_a",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_texture_f32_issue10_prior1.bin",
+        "expected_sha256": "188866a98ac9b11a9cb315ddde9e9d3f9d80c712ba0147db8d855644fa434d34",
+        "formulation": "a",
+        "id": "r33_texture_f32_issue10_prior1_a",
+        "issue_order": [
+          1,
+          0
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 1,
+        "producer": "texture_f32",
+        "source": "generated/sources/r33_texture_f32_issue10_prior1_a.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "d62b78c02c8bff3605cf9175c5262675ac02bf637b1a5cc3996b3596798154ef",
+      "main_size": 140,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 1,
+          "width": 3,
+          "without_route": "29f105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 32,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f105818020",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 86,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 4,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090040",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 102,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 2,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    },
+    "r33_texture_f32_issue10_prior1_b": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "case": {
+        "cell_id": "r33_texture_f32_issue10_prior1",
+        "compute_function": "r33_texture_f32_issue10_prior1_b",
+        "dispatch_threads": 64,
+        "expected": "generated/oracles/r33_texture_f32_issue10_prior1.bin",
+        "expected_sha256": "188866a98ac9b11a9cb315ddde9e9d3f9d80c712ba0147db8d855644fa434d34",
+        "formulation": "b",
+        "id": "r33_texture_f32_issue10_prior1_b",
+        "issue_order": [
+          1,
+          0
+        ],
+        "math_mode": "precise",
+        "prior_count": 1,
+        "prior_role": 1,
+        "producer": "texture_f32",
+        "source": "generated/sources/r33_texture_f32_issue10_prior1_b.metal",
+        "stage": "compute",
+        "threads_per_threadgroup": 64
+      },
+      "main_sha256": "d62b78c02c8bff3605cf9175c5262675ac02bf637b1a5cc3996b3596798154ef",
+      "main_size": 140,
+      "prior_routes": [
+        {
+          "start": 45,
+          "value": 1,
+          "width": 3,
+          "without_route": "29f105818000"
+        }
+      ],
+      "priors": [
+        {
+          "fields": {
+            "ctrl_lo": 0,
+            "dst": 2,
+            "imm_exp": 15,
+            "imm_flag": 1,
+            "imm_mant": 0,
+            "imm_sign": 0,
+            "mods": 32,
+            "opflags": 0,
+            "opsel": 5,
+            "srcA_reg": 0,
+            "srcA_reg_top": 1,
+            "srcA_size": 1
+          },
+          "hex": "29f105818020",
+          "length": 6,
+          "mnemonic": "falu2i",
+          "note": null,
+          "offset": 86,
+          "op_mnemonic": null
+        }
+      ],
+      "target": {
+        "fields": {
+          "ctrl": 0,
+          "dst": 0,
+          "mod_hi": 4,
+          "mod_lo": 0,
+          "opflags": 3,
+          "opsel": 4,
+          "srcA_reg": 0,
+          "srcA_reg_top": 0,
+          "srcA_size": 1,
+          "srcB_imm": 0,
+          "srcB_neg": 0,
+          "srcB_reg": 4,
+          "srcB_reg_top": 0,
+          "srcB_size": 1
+        },
+        "hex": "09011c090040",
+        "length": 6,
+        "mnemonic": "falu2",
+        "note": null,
+        "offset": 102,
+        "op_mnemonic": null
+      },
+      "target_route": {
+        "start": 45,
+        "value": 2,
+        "width": 3,
+        "without_route": "09011c090000"
+      }
+    }
+  },
+  "environment": {
+    "build_version": "25G83",
+    "product_version": "26.6.2",
+    "target": "T8132 Apple M4"
+  },
+  "schema_version": 1,
+  "semantic_handoffs": {
+    "r33_atomic_f32_issue01_prior0": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        }
+      ],
+      "issue_order": [
+        0,
+        1
+      ],
+      "prior_count": 1,
+      "prior_fields": [
+        {
+          "ctrl_lo": 0,
+          "dst": 2,
+          "imm_exp": 15,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 192,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 0,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        }
+      ],
+      "prior_hex": [
+        "29f1058180c0"
+      ],
+      "prior_role": 0,
+      "prior_routes": [
+        6
+      ],
+      "producer": "atomic_f32",
+      "target_fields": {
+        "ctrl": 0,
+        "dst": 0,
+        "mod_hi": 2,
+        "mod_lo": 0,
+        "opflags": 3,
+        "opsel": 4,
+        "srcA_reg": 0,
+        "srcA_reg_top": 0,
+        "srcA_size": 1,
+        "srcB_imm": 0,
+        "srcB_neg": 0,
+        "srcB_reg": 4,
+        "srcB_reg_top": 0,
+        "srcB_size": 1
+      },
+      "target_hex": "09011c090020",
+      "target_route": 1
+    },
+    "r33_atomic_f32_issue01_prior0_chain3": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 14,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540e0280088c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 108,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 10,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 0,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540a0200098c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 118,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028009881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 128,
+          "op_mnemonic": null
+        }
+      ],
+      "issue_order": [
+        0,
+        1
+      ],
+      "prior_count": 3,
+      "prior_fields": [
+        {
+          "ctrl_lo": 0,
+          "dst": 6,
+          "imm_exp": 15,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 192,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 0,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        },
+        {
+          "ctrl_lo": 0,
+          "dst": 4,
+          "imm_exp": 14,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 0,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 0,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        },
+        {
+          "ctrl_lo": 0,
+          "dst": 2,
+          "imm_exp": 13,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 0,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 0,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        }
+      ],
+      "prior_hex": [
+        "69f1058180c0",
+        "49e105818000",
+        "29d105818000"
+      ],
+      "prior_role": 0,
+      "prior_routes": [
+        6,
+        0,
+        0
+      ],
+      "producer": "atomic_f32",
+      "target_fields": {
+        "ctrl": 0,
+        "dst": 0,
+        "mod_hi": 2,
+        "mod_lo": 0,
+        "opflags": 3,
+        "opsel": 4,
+        "srcA_reg": 0,
+        "srcA_reg_top": 0,
+        "srcA_size": 1,
+        "srcB_imm": 0,
+        "srcB_neg": 0,
+        "srcB_reg": 8,
+        "srcB_reg_top": 0,
+        "srcB_size": 1
+      },
+      "target_hex": "09011c110020",
+      "target_route": 1
+    },
+    "r33_atomic_f32_issue01_prior1": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 102,
+          "op_mnemonic": null
+        }
+      ],
+      "issue_order": [
+        0,
+        1
+      ],
+      "prior_count": 1,
+      "prior_fields": [
+        {
+          "ctrl_lo": 0,
+          "dst": 2,
+          "imm_exp": 15,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 192,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 4,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        }
+      ],
+      "prior_hex": [
+        "29f1058980c0"
+      ],
+      "prior_role": 1,
+      "prior_routes": [
+        6
+      ],
+      "producer": "atomic_f32",
+      "target_fields": {
+        "ctrl": 0,
+        "dst": 0,
+        "mod_hi": 2,
+        "mod_lo": 0,
+        "opflags": 3,
+        "opsel": 4,
+        "srcA_reg": 0,
+        "srcA_reg_top": 0,
+        "srcA_size": 1,
+        "srcB_imm": 0,
+        "srcB_neg": 0,
+        "srcB_reg": 4,
+        "srcB_reg_top": 0,
+        "srcB_size": 1
+      },
+      "target_hex": "09011c090020",
+      "target_route": 1
+    },
+    "r33_atomic_f32_issue10_prior0": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 102,
+          "op_mnemonic": null
+        }
+      ],
+      "issue_order": [
+        1,
+        0
+      ],
+      "prior_count": 1,
+      "prior_fields": [
+        {
+          "ctrl_lo": 0,
+          "dst": 2,
+          "imm_exp": 15,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 192,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 4,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        }
+      ],
+      "prior_hex": [
+        "29f1058980c0"
+      ],
+      "prior_role": 0,
+      "prior_routes": [
+        6
+      ],
+      "producer": "atomic_f32",
+      "target_fields": {
+        "ctrl": 0,
+        "dst": 0,
+        "mod_hi": 2,
+        "mod_lo": 0,
+        "opflags": 3,
+        "opsel": 4,
+        "srcA_reg": 0,
+        "srcA_reg_top": 0,
+        "srcA_size": 1,
+        "srcB_imm": 0,
+        "srcB_neg": 0,
+        "srcB_reg": 4,
+        "srcB_reg_top": 0,
+        "srcB_size": 1
+      },
+      "target_hex": "09011c090020",
+      "target_route": 1
+    },
+    "r33_atomic_f32_issue10_prior1": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 96,
+          "op_mnemonic": null
+        }
+      ],
+      "issue_order": [
+        1,
+        0
+      ],
+      "prior_count": 1,
+      "prior_fields": [
+        {
+          "ctrl_lo": 0,
+          "dst": 2,
+          "imm_exp": 15,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 192,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 0,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        }
+      ],
+      "prior_hex": [
+        "29f1058180c0"
+      ],
+      "prior_role": 1,
+      "prior_routes": [
+        6
+      ],
+      "producer": "atomic_f32",
+      "target_fields": {
+        "ctrl": 0,
+        "dst": 0,
+        "mod_hi": 2,
+        "mod_lo": 0,
+        "opflags": 3,
+        "opsel": 4,
+        "srcA_reg": 0,
+        "srcA_reg_top": 0,
+        "srcA_size": 1,
+        "srcB_imm": 0,
+        "srcB_neg": 0,
+        "srcB_reg": 4,
+        "srcB_reg_top": 0,
+        "srcB_size": 1
+      },
+      "target_hex": "09011c090020",
+      "target_route": 1
+    },
+    "r33_texture_f32_issue01_prior0": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "issue_order": [
+        0,
+        1
+      ],
+      "prior_count": 1,
+      "prior_fields": [
+        {
+          "ctrl_lo": 0,
+          "dst": 2,
+          "imm_exp": 15,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 32,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 0,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        }
+      ],
+      "prior_hex": [
+        "29f105818020"
+      ],
+      "prior_role": 0,
+      "prior_routes": [
+        1
+      ],
+      "producer": "texture_f32",
+      "target_fields": {
+        "ctrl": 0,
+        "dst": 0,
+        "mod_hi": 4,
+        "mod_lo": 0,
+        "opflags": 3,
+        "opsel": 4,
+        "srcA_reg": 0,
+        "srcA_reg_top": 0,
+        "srcA_size": 1,
+        "srcB_imm": 0,
+        "srcB_neg": 0,
+        "srcB_reg": 4,
+        "srcB_reg_top": 0,
+        "srcB_size": 1
+      },
+      "target_hex": "09011c090040",
+      "target_route": 2
+    },
+    "r33_texture_f32_issue01_prior0_chain3": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 14,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540e0280088c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 104,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 10,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 140,
+            "srcB_ext": 4,
+            "srcB_imm": 0,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f01540a0200098c1104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 114,
+          "op_mnemonic": null
+        },
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 1,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028009881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 124,
+          "op_mnemonic": null
+        }
+      ],
+      "issue_order": [
+        0,
+        1
+      ],
+      "prior_count": 3,
+      "prior_fields": [
+        {
+          "ctrl_lo": 0,
+          "dst": 6,
+          "imm_exp": 15,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 32,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 0,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        },
+        {
+          "ctrl_lo": 0,
+          "dst": 4,
+          "imm_exp": 14,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 0,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 0,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        },
+        {
+          "ctrl_lo": 0,
+          "dst": 2,
+          "imm_exp": 13,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 0,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 0,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        }
+      ],
+      "prior_hex": [
+        "69f105818020",
+        "49e105818000",
+        "29d105818000"
+      ],
+      "prior_role": 0,
+      "prior_routes": [
+        1,
+        0,
+        0
+      ],
+      "producer": "texture_f32",
+      "target_fields": {
+        "ctrl": 0,
+        "dst": 0,
+        "mod_hi": 4,
+        "mod_lo": 0,
+        "opflags": 3,
+        "opsel": 4,
+        "srcA_reg": 0,
+        "srcA_reg_top": 0,
+        "srcA_size": 1,
+        "srcB_imm": 0,
+        "srcB_neg": 0,
+        "srcB_reg": 8,
+        "srcB_reg_top": 0,
+        "srcB_size": 1
+      },
+      "target_hex": "09011c110040",
+      "target_route": 2
+    },
+    "r33_texture_f32_issue01_prior1": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "issue_order": [
+        0,
+        1
+      ],
+      "prior_count": 1,
+      "prior_fields": [
+        {
+          "ctrl_lo": 0,
+          "dst": 2,
+          "imm_exp": 15,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 32,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 4,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        }
+      ],
+      "prior_hex": [
+        "29f105898020"
+      ],
+      "prior_role": 1,
+      "prior_routes": [
+        1
+      ],
+      "producer": "texture_f32",
+      "target_fields": {
+        "ctrl": 0,
+        "dst": 0,
+        "mod_hi": 4,
+        "mod_lo": 0,
+        "opflags": 3,
+        "opsel": 4,
+        "srcA_reg": 0,
+        "srcA_reg_top": 0,
+        "srcA_size": 1,
+        "srcB_imm": 0,
+        "srcB_neg": 0,
+        "srcB_reg": 4,
+        "srcB_reg_top": 0,
+        "srcB_size": 1
+      },
+      "target_hex": "09011c090040",
+      "target_route": 2
+    },
+    "r33_texture_f32_issue10_prior0": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "issue_order": [
+        1,
+        0
+      ],
+      "prior_count": 1,
+      "prior_fields": [
+        {
+          "ctrl_lo": 0,
+          "dst": 2,
+          "imm_exp": 15,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 32,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 4,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        }
+      ],
+      "prior_hex": [
+        "29f105898020"
+      ],
+      "prior_role": 0,
+      "prior_routes": [
+        1
+      ],
+      "producer": "texture_f32",
+      "target_fields": {
+        "ctrl": 0,
+        "dst": 0,
+        "mod_hi": 4,
+        "mod_lo": 0,
+        "opflags": 3,
+        "opsel": 4,
+        "srcA_reg": 0,
+        "srcA_reg_top": 0,
+        "srcA_size": 1,
+        "srcB_imm": 0,
+        "srcB_neg": 0,
+        "srcB_reg": 4,
+        "srcB_reg_top": 0,
+        "srcB_size": 1
+      },
+      "target_hex": "09011c090040",
+      "target_route": 2
+    },
+    "r33_texture_f32_issue10_prior1": {
+      "between": [
+        {
+          "fields": {
+            "addsub": 1,
+            "b2_bit0": 0,
+            "b2_fmt": 21,
+            "dst": 6,
+            "lenbit": 1,
+            "opc_tail": 17,
+            "opc_tail2": 4,
+            "opmode": 2,
+            "srcA": 136,
+            "srcB_ext": 4,
+            "srcB_imm": 128,
+            "srcB_imm_hi": 0,
+            "srcB_reg_hi": 0,
+            "store_en": 0
+          },
+          "hex": "9f015406028008881104",
+          "length": 10,
+          "mnemonic": "iadd2",
+          "note": null,
+          "offset": 92,
+          "op_mnemonic": null
+        }
+      ],
+      "issue_order": [
+        1,
+        0
+      ],
+      "prior_count": 1,
+      "prior_fields": [
+        {
+          "ctrl_lo": 0,
+          "dst": 2,
+          "imm_exp": 15,
+          "imm_flag": 1,
+          "imm_mant": 0,
+          "imm_sign": 0,
+          "mods": 32,
+          "opflags": 0,
+          "opsel": 5,
+          "srcA_reg": 0,
+          "srcA_reg_top": 1,
+          "srcA_size": 1
+        }
+      ],
+      "prior_hex": [
+        "29f105818020"
+      ],
+      "prior_role": 1,
+      "prior_routes": [
+        1
+      ],
+      "producer": "texture_f32",
+      "target_fields": {
+        "ctrl": 0,
+        "dst": 0,
+        "mod_hi": 4,
+        "mod_lo": 0,
+        "opflags": 3,
+        "opsel": 4,
+        "srcA_reg": 0,
+        "srcA_reg_top": 0,
+        "srcA_size": 1,
+        "srcB_imm": 0,
+        "srcB_neg": 0,
+        "srcB_reg": 4,
+        "srcB_reg_top": 0,
+        "srcB_size": 1
+      },
+      "target_hex": "09011c090040",
+      "target_route": 2
+    }
+  },
+  "summary": {
+    "exact_executions": 40,
+    "native_cases": 20,
+    "stable_formulation_pairs": 10
+  }
+}

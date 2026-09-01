@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "source": {
+    "assembly": "../EXP-M4-32-public-metal-corpus/ASSEMBLY.jsonl.zst",
+    "assembly_sha256": "d0b447451534960b59294101697747da20c4fc7ba94906451190354d506cc9e2",
+    "corpus_census": "../EXP-M4-32-public-metal-corpus/CORPUS_CENSUS.json",
+    "corpus_census_sha256": "a39516c66c5adeb6e1c23ece974f8bbc3e6827aeef74ea8c0f5369c6f5d73266"
+  },
+  "classification": {
+    "atomic_mnemonics": ["atomic_mem", "atomic_rmw", "atomic_tg"],
+    "basic_route_mnemonics": ["falu2", "falu2i"],
+    "qualified_opsel": [4, 5],
+    "unit": "instruction instance in a unique stage main"
+  },
+  "all_locally_tokenized": {
+    "atomic_program": {
+      "programs": 49,
+      "routes": {"0": 62, "6": 2}
+    },
+    "non_atomic_program": {
+      "programs": 30511,
+      "routes": {"0": 27084, "1": 298, "2": 106, "3": 79, "4": 43, "5": 37, "6": 1464}
+    }
+  },
+  "descriptor_complete": {
+    "atomic_program": {
+      "programs": 11,
+      "routes": {"0": 6, "6": 1}
+    },
+    "non_atomic_program": {
+      "programs": 3609,
+      "routes": {"0": 2206, "1": 88, "2": 27, "3": 18, "4": 11, "5": 11, "6": 342}
+    }
+  },
+  "atomic_program_route6_witnesses": [
+    {
+      "program_sha256": "095be2ac0ad886a1d95547ba551ae73a45bdadd119ebff34b16b5a39cd94eaae",
+      "name": "embedding_bag_per_sample_weights_backward_float_int",
+      "route6_offset": 502,
+      "preceding_device_load_offsets": [462, 476],
+      "atomic_offset": 508,
+      "route6_precedes_atomic": true
+    },
+    {
+      "program_sha256": "b0c78b888eb06d37e27d8cc08f022e13880c567f303624188d0ec6660a20736b",
+      "name": "embedding_bag_backward_float_int",
+      "route6_offset": 574,
+      "preceding_device_load_offsets": [560],
+      "atomic_offset": 610,
+      "route6_precedes_atomic": true
+    }
+  ]
+}
