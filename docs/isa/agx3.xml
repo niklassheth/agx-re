@@ -1,23 +1,23 @@
 <!--
-  Apple A18 Pro / G17P AGX shader ISA - Mesa ISA-XML rendering.
+  Apple9 G16G/G17P AGX shader ISA - Mesa ISA-XML rendering.
   GENERATED from tools/agx-isa/db.json by tools/agx-isa/gen_agx3_xml.py.
   Do not hand-edit; regenerate after any DB change.
 
-  Source DB: Apple A18 Pro / G17P AGX (clean-room, OWN-SHADER derived)
+  Source DB: Apple9 AGX / G16G and G17P (clean-room, OWN-SHADER derived)
   SPDX-License-Identifier: MIT
 
   CLEAN-ROOM: every encoding below was learned only from the compiled form
   of MSL we wrote (own-shader byte-diff + on-hardware splice validation).
   No Apple binary was disassembled. This file re-shapes our own data (db.json)
   into the same GenXML schema Mesa uses for G13/G14 (src/asahi/isa/AGX2.xml)
-  so the Mesa team can generate a G17P disassembler from it. See CLAUDE.md.
+  so the Mesa team can generate a G16G/G17P disassembler from it. See CLAUDE.md.
 
   BIT NUMBERING (identical to AGX2.xml): an N-byte instruction is one
   little-endian integer; bit 0 = bit 0 of byte 0; byte +k bit b = bit 8*k+b.
   bit="lo:hi" is inclusive. An <exact>/attr value string is the little-endian
   value of the listed bits (leftmost char = highest listed bit).
 
-  LENGTH: unlike G13, the first parcel does NOT encode length on G17P; length
+  LENGTH: unlike G13, the first parcel does NOT encode length on Apple9; length
   is a function of byte 0 (group) + a per-group length bit/signature. Each <ins>
   here is one concrete form with a fixed byte length; the full length rule lives
   in tools/agx-isa/isadb.py::instr_length and docs/isa/encoding-tables.md.
@@ -41,11 +41,9 @@
     <value value="1">immediate</value>
   </enum>
 
-  <enum kind="falu2_srcB_class" name="falu2 srcB_class">
-    <value value="0" label="GPR (srcB_reg)">GPR</value>
-    <value value="1" label="non-GPR file / inline immediate (srcB_reg)">non_GPR_file_inline_immediate</value>
-    <value value="2" label="reads 0.0">reads_0_0</value>
-    <value value="3" label="reads 0.0">reads_0_0</value>
+  <enum kind="falu2_srcB_file" name="falu2 srcB_file">
+    <value value="0">GPR</value>
+    <value value="1" label="non-GPR / inline source">non_GPR_inline_source</value>
   </enum>
 
   <enum kind="funary_mod" name="funary mod">
@@ -536,6 +534,11 @@
     <value value="18" label="nonleaf_restore_link (0x10 = restore-link flag; v &amp; 3 == 2)">nonleaf_restore_link</value>
   </enum>
 
+  <enum kind="half_alu_srcA_half" name="half_alu srcA_half">
+    <value value="0">low</value>
+    <value value="1">high</value>
+  </enum>
+
   <enum kind="ibitcount_fn_hi" name="ibitcount fn_hi">
     <value value="0" label="popcount(b1=0x05)">popcount</value>
     <value value="1" label="reverse_bits(b1=0x04)|find_msb(b1=0x05)">reverse_bits_find_msb</value>
@@ -726,24 +729,27 @@
   <!-- ========================= instructions / groups ====================== -->
 
   <!-- falu2: d = op(srcA, [-]srcB) -->
-  <!-- provenance: HW-VALIDATED (EXP-0006): dst/srcA/srcB positions, (reg<<1)|size encoding, 16-bit-low-half read, srcB negate (a+b->a-b), and srcB-immediate mode all ... -->
+  <!-- provenance: HW-VALIDATED (EXP-0006): base operand positions, sizes, negate, and immediate mode. EXP-0086/0089/0099/0119 establish source release and destination ... -->
   <group name="falu2" length="6" label="d = op(srcA, [-]srcB)">
     <exact bit="0:3">1001</exact>
     <exact bit="16:18">opsel</exact>
     <dest name="dst" bit="4:7"/>
     <modifier name="srcA_size" bit="8" kind="opsize"/>
     <src name="srcA_reg" bit="9:14"/>
-    <modifier name="opflags" bit="19:23"/>
+    <modifier name="opflags" bit="19:21"/>
+    <dest name="dst_mid" bit="22:23"/>
     <modifier name="srcB_size" bit="24" kind="opsize"/>
     <src name="srcB_reg" bit="25:30"/>
     <modifier name="ctrl" bit="32:38"/>
     <modifier name="srcB_imm" bit="39" kind="immsel"/>
-    <modifier name="srcA_class" bit="40"/>
-    <modifier name="srcB_class" bit="41:42" kind="falu2_srcB_class"/>
+    <src name="srcA_hi" bit="40"/>
+    <modifier name="srcB_file" bit="41" kind="falu2_srcB_file"/>
+    <src name="srcB_hi" bit="42"/>
     <modifier name="srcB_neg" bit="43"/>
-    <modifier name="mod_hi" bit="44:47"/>
-    <modifier name="srcA_reg_top" bit="15"/>
-    <modifier name="srcB_reg_top" bit="31"/>
+    <dest name="dst_hi" bit="44"/>
+    <modifier name="scoreboard_slot" bit="45:47"/>
+    <modifier name="srcA_aux" bit="15"/>
+    <modifier name="srcB_aux" bit="31"/>
 
     <ins name="fadd" opsel="100"/>
     <ins name="fmul" opsel="101"/>
@@ -823,22 +829,28 @@
     <ins name="fma_coord_7" op="10101110"/>
   </group>
 
-  <!-- falu2_ext: d = saturate?( op(srcA,[+/-]srcB) ) -->
+  <!-- falu2_ext: d = saturate?(op(srcA, [+/-]srcB)) -->
   <!-- provenance: EXP-M4-13 R10 own-MSL byte-diff (k_sat): saturate(a+b)/saturate(a*b) -> 09 05 1c/1d 01 01 00 00 82 differ from plain fadd/fmul only by byte+4=0x01 ... -->
-  <group name="falu2_ext" length="8" label="d = saturate?( op(srcA,[+/-]srcB) )">
+  <group name="falu2_ext" length="8" label="d = saturate?(op(srcA, [+/-]srcB))">
     <exact bit="0:3">1001</exact>
     <exact bit="16:18">opsel</exact>
     <dest name="dst" bit="4:7"/>
     <modifier name="srcA_size" bit="8" kind="opsize"/>
-    <src name="srcA_reg" bit="9:15"/>
-    <modifier name="opflags" bit="19:23"/>
+    <src name="srcA_reg" bit="9:14"/>
+    <modifier name="srcA_aux" bit="15"/>
+    <modifier name="opflags" bit="19:21"/>
+    <dest name="dst_mid" bit="22:23"/>
     <modifier name="srcB_size" bit="24" kind="opsize"/>
-    <src name="srcB_reg" bit="25:31"/>
+    <src name="srcB_reg" bit="25:30"/>
+    <modifier name="srcB_aux" bit="31"/>
     <modifier name="ctrl" bit="32:38"/>
     <modifier name="srcB_imm" bit="39"/>
-    <modifier name="mod_lo" bit="40:42"/>
+    <src name="srcA_hi" bit="40"/>
+    <modifier name="srcB_file" bit="41" kind="falu2_srcB_file"/>
+    <src name="srcB_hi" bit="42"/>
     <modifier name="srcB_neg" bit="43"/>
-    <modifier name="mod_hi" bit="44:47"/>
+    <dest name="dst_hi" bit="44"/>
+    <modifier name="scoreboard_slot" bit="45:47"/>
     <modifier name="ext_tail" bit="48:63"/>
 
     <ins name="fadd" opsel="100"/>
@@ -928,18 +940,28 @@
     <modifier name="b11" bit="88:95"/>
   </ins>
 
-  <!-- iminmax: d = min/max(a,b) by TYPE (32-bit int signed/unsigned, or float) -->
-  <!-- provenance: byte-diff EXP-M4-13 R2 (own-MSL): dst=byte0-hi PROVEN by an 8-reg sweep (8 live imin ops, byte0 hi nibbles e,d,b,9,7,5,3,1). op-select=byte+4 PROVEN ... -->
-  <group name="iminmax" length="6" label="d = min/max(a,b) by TYPE (32-bit int signed/unsigned, or float)">
+  <!-- iminmax: d = min/max(srcA, srcB) with sel 0=fmax, 1=fmin, 4=umax, 5=umin, 6=imax, 7=imin -->
+  <!-- provenance: EXP-M4-13 R2 own-MSL byte-diff first located dst=byte0-hi and the byte+4 min/max selector. EXP-0007 validates the base min/max operation, and ... -->
+  <group name="iminmax" length="6" label="d = min/max(srcA, srcB) with sel 0=fmax, 1=fmin, 4=umax, 5=umin, 6=imax, 7=imin">
     <exact bit="0:3">0010</exact>
     <exact bit="16:18">110</exact>
     <exact bit="32:34">sel</exact>
     <dest name="dst" bit="4:7"/>
-    <src name="srcA" bit="8:15"/>
-    <modifier name="fmt" bit="19:23"/>
-    <src name="srcB" bit="24:31"/>
+    <modifier name="srcA_size" bit="8" kind="opsize"/>
+    <src name="srcA_reg" bit="9:14"/>
+    <modifier name="srcA_aux" bit="15"/>
+    <modifier name="fmt" bit="19:21"/>
+    <dest name="dst_mid" bit="22:23"/>
+    <modifier name="srcB_size" bit="24" kind="opsize"/>
+    <src name="srcB_reg" bit="25:30"/>
+    <modifier name="srcB_aux" bit="31"/>
     <modifier name="selhi" bit="35:39"/>
-    <modifier name="dst_full" bit="40:47"/>
+    <src name="srcA_hi" bit="40"/>
+    <modifier name="srcB_file" bit="41"/>
+    <src name="srcB_hi" bit="42"/>
+    <modifier name="src_modifier" bit="43"/>
+    <dest name="dst_hi" bit="44"/>
+    <modifier name="scoreboard_slot" bit="45:47"/>
 
     <ins name="fmax" sel="000"/>
     <ins name="fmin" sel="001"/>
@@ -2024,17 +2046,27 @@
     <zero bit="40:47"/>
   </ins>
 
-  <!-- half_alu: d(half) = op(h[byte+1], h[byte+3]) -->
+  <!-- half_alu: d -->
   <!-- provenance: HW-VALIDATED (EXP-0033): half_add / half2_add / half2_mul read back exact for both packed lanes; op-select (0x1c/0x1d) mirrors the HW-validated 0x09 ... -->
-  <group name="half_alu" length="6" label="d(half) = op(h[byte+1], h[byte+3])">
+  <group name="half_alu" length="6" label="d">
     <exact bit="0:3">0000</exact>
     <exact bit="16:18">opsel</exact>
     <dest name="dst" bit="4:7"/>
-    <src name="srcA" bit="8:15"/>
-    <modifier name="opflags" bit="19:23"/>
-    <src name="srcB" bit="24:31"/>
+    <modifier name="srcA_half" bit="8" kind="half_alu_srcA_half"/>
+    <src name="srcA_reg" bit="9:14"/>
+    <modifier name="srcA_aux" bit="15"/>
+    <modifier name="opflags" bit="19:21"/>
+    <dest name="dst_mid" bit="22:23"/>
+    <modifier name="srcB_half" bit="24" kind="half_alu_srcA_half"/>
+    <src name="srcB_reg" bit="25:30"/>
+    <modifier name="srcB_aux" bit="31"/>
     <modifier name="ctrl" bit="32:39"/>
-    <modifier name="src_modifier" bit="40:47"/>
+    <src name="srcA_hi" bit="40"/>
+    <modifier name="srcB_file" bit="41"/>
+    <src name="srcB_hi" bit="42"/>
+    <modifier name="srcA_neg" bit="43"/>
+    <dest name="dst_hi" bit="44"/>
+    <modifier name="scoreboard_slot" bit="45:47"/>
 
     <ins name="hadd" opsel="100"/>
     <ins name="hmul" opsel="101"/>
@@ -3111,22 +3143,28 @@
     <ins name="fmul_interp" opsel="111"/>
   </group>
 
-  <!-- falu2_srcmod10: 10-byte EXTENDED 2-source float ALU (abs-source form): the falu2 op in bits [0:48] (opsel 4=fadd / ... -->
-  <!-- provenance: byte-diff (EXP-M4-13 R7): SAME match bits as the HW-VALIDATED falu2_ext (EXP-M4-10), one modifier word longer. [0:48] = HW-VALIDATED falu2 layout ... -->
-  <group name="falu2_srcmod10" length="10" label="10-byte EXTENDED 2-source float ALU (abs-source form): the falu2 op in bits [0:48] (opsel 4=fadd / ...">
+  <!-- falu2_srcmod10: Ten-byte two-source float ALU with the same first-48-bit split r0 -->
+  <!-- provenance: byte-diff (EXP-M4-13 R7): SAME match bits as the HW-VALIDATED falu2_ext (EXP-M4-10), one modifier word longer. EXP-M4-38 hardware-validates the ... -->
+  <group name="falu2_srcmod10" length="10" label="Ten-byte two-source float ALU with the same first-48-bit split r0">
     <exact bit="0:3">1001</exact>
     <exact bit="16:18">opsel</exact>
     <dest name="dst" bit="4:7"/>
     <modifier name="srcA_size" bit="8" kind="opsize"/>
-    <src name="srcA_reg" bit="9:15"/>
-    <modifier name="opflags" bit="19:23"/>
+    <src name="srcA_reg" bit="9:14"/>
+    <modifier name="srcA_aux" bit="15"/>
+    <modifier name="opflags" bit="19:21"/>
+    <dest name="dst_mid" bit="22:23"/>
     <modifier name="srcB_size" bit="24" kind="opsize"/>
-    <src name="srcB_reg" bit="25:31"/>
+    <src name="srcB_reg" bit="25:30"/>
+    <modifier name="srcB_aux" bit="31"/>
     <modifier name="ctrl" bit="32:38"/>
     <modifier name="srcB_imm" bit="39"/>
-    <modifier name="mod_lo" bit="40:42"/>
+    <src name="srcA_hi" bit="40"/>
+    <modifier name="srcB_file" bit="41" kind="falu2_srcB_file"/>
+    <src name="srcB_hi" bit="42"/>
     <modifier name="srcB_neg" bit="43"/>
-    <modifier name="mod_hi" bit="44:47"/>
+    <dest name="dst_hi" bit="44"/>
+    <modifier name="scoreboard_slot" bit="45:47"/>
     <modifier name="ext_srcmod" bit="48:79"/>
 
     <ins name="fadd" opsel="100"/>

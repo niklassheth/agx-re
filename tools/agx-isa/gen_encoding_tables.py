@@ -3,7 +3,7 @@
 # human-readable authoritative encoding tables at docs/isa/encoding-tables.md.
 #
 # This makes the encoding table live in docs/ (not just tools/): a driver author
-# reads this to emit A18 Pro / G17P AGX instructions. It is generated-but-committed
+# reads this to emit Apple9 G16G/G17P AGX instructions. It is generated-but-committed
 # -- regenerate with `python3 gen_encoding_tables.py` after any db.json change.
 #
 # CLEAN-ROOM: pure rendering of our own OWN-SHADER-derived DB. No Apple binary.
@@ -159,23 +159,23 @@ def main():
         L.append(s)
 
     total = len(db["instructions"])
-    w("# A18 Pro (G17P) AGX — Instruction Encoding Tables")
+    w("# Apple9 (G16G/G17P) AGX — Instruction Encoding Tables")
     w()
     w(f"> **Generated** from `tools/agx-isa/db.json` by `tools/agx-isa/gen_encoding_tables.py` "
       f"({datetime.date.today().isoformat()}). Regenerate after any DB change; do not hand-edit. "
       f"This is the **authoritative, self-contained encoding table** a driver author reads to emit "
-      f"A18 Pro AGX instructions — {total} instruction descriptors.")
+      f"Apple9 AGX instructions — {total} instruction descriptors.")
     w()
     w("**Clean-room:** every encoding here was learned from the compiled form of MSL **we wrote** "
       "(OWN-SHADER) — by byte-diffing our own shaders and by splicing bytes and running them on the "
-      "real A18 Pro GPU (hardware validation). No Apple binary was disassembled. See `../../CLAUDE.md`.")
+      "real Apple9 GPUs (hardware validation). No Apple binary was disassembled. See `../../CLAUDE.md`.")
     w()
     w("## How to read this")
     w()
     w("- Bit numbering: an *N*-byte instruction is one **little-endian** integer. Bit 0 = bit 0 of "
       "byte 0; bit 16 = bit 0 of byte +2; so *byte offset +k, bit b* = bit (8·k + b).")
     w("- **Length** is a function of byte 0 (the group) plus a per-group length bit/signature — the "
-      "first parcel does *not* encode length on G17P. The full length rule is the byte-0 table in "
+      "first parcel does *not* encode length on Apple9. The full length rule is the byte-0 table in "
       "the [Length rule](#length-rule-byte-0) appendix and `tools/agx-isa/isadb.py::instr_length`.")
     w("- **Match** = the constant bits that identify the instruction. **Fields** = every non-constant "
       "bit, with its bit-range, type, and enum values where known.")

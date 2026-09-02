@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# isadb.py -- clean-room machine-readable instruction database for the Apple
-# A18 Pro (G17P) AGX shader ISA, plus a table-driven assembler and disassembler.
+# isadb.py -- clean-room machine-readable instruction database for the Apple9
+# G16G/G17P AGX shader ISA, plus a table-driven assembler and disassembler.
 #
 # CLEAN-ROOM: every encoding fact in this table was learned from the compiled
 # form of MSL **we wrote** (OWN-SHADER), by byte-diffing our own shaders and/or
@@ -8,7 +8,7 @@
 # Apple binary was ever disassembled or introspected. The *shape* of this table
 # (an InstructionDesc with match bits + typed bit-fields + sizes) reuses the
 # design of the public MIT dougallj/applegpu database; the CONTENTS are ours,
-# populated from scratch for G17P (which is a different ISA from G13/G14).
+# populated from scratch for Apple9 (which is a different ISA from G13/G14).
 #
 # One table drives both directions:
 #   disassemble(bytes) -> list of {mnemonic, fields, length, provenance}
@@ -1896,6 +1896,15 @@ def instr_length(buf, off=0):
         if b1 == 0xc2 and (buf[off+6] if off+6 < len(buf) else -1) == 0x80 \
                       and (buf[off+7] if off+7 < len(buf) else -1) == 0x08:
             return 8                   # transcendental range-reduction select (t_sin@24)
+        # EXP-M4-38: compact min/max uses byte+2 bits 6..7 for dst[4..5],
+        # rather than as part of the opcode selector.  Decode the proven 6-byte
+        # selectors after stripping those orthogonal destination bits.  Keeping
+        # this narrow avoids projecting the split-register layout onto the other,
+        # still-uncharacterized low-nibble-2 forms.
+        compact_b2 = b2 & 0x3f if b2 >= 0 else b2
+        if b2 > 0x3f and compact_b2 in (0x1e, 0x2e, 0x3e, 0x26, 0x36,
+                                       0x35, 0x1c, 0x06, 0x0e, 0x16):
+            return 6
         if 0 <= b2 <= 0x3f:
             ln = b2 & 0x0f
             if b2 == 0x21:
@@ -2596,6 +2605,7 @@ ISA = _DB_DOC.get("isa")
 PARCEL_BYTES = _DB_DOC.get("parcel_bytes")
 LENGTH_RULE = _DB_DOC.get("length_rule")
 SCOREBOARD_MODEL = _DB_DOC.get("scoreboard_model")
+REGISTER_COMPOSITES = _DB_DOC.get("register_composites", [])
 LENGTH_RULE_GAPS = _DB_DOC.get("length_rule_gaps")
 
 # Index by mnemonic for the assembler.
@@ -2622,12 +2632,31 @@ def _matches(desc, v):
     return True
 
 
+def _decode_register_composites(mnemonic, fields):
+    """Reconstruct logical registers from DB-described scattered fields."""
+    out = {}
+    for group in REGISTER_COMPOSITES:
+        if mnemonic not in group.get("instructions", ()):
+            continue
+        for operand, spec in group.get("operands", {}).items():
+            condition = spec.get("when")
+            if condition is not None:
+                field, expected = condition
+                if fields.get(field) != expected:
+                    continue
+            value = 0
+            for field, shift in spec["parts"]:
+                value |= fields[field] << shift
+            out[operand] = value
+    return out
+
+
 def decode_one(buf, off=0):
     """Decode a single instruction at buf[off].
 
     Returns (record, length) where record is a dict:
-      {mnemonic, op_mnemonic(if any), fields:{name:value}, length, hex,
-       provenance, semantics}
+      {mnemonic, op_mnemonic(if any), fields:{name:value},
+       operands:{logical_name:register}, length, hex, provenance, semantics}
     Raises ValueError if length is unknown or no descriptor matches.
     """
     length = instr_length(buf, off)
@@ -2658,6 +2687,7 @@ def decode_one(buf, off=0):
         "mnemonic": desc["mnemonic"],
         "op_mnemonic": op_mnem,
         "fields": fields,
+        "operands": _decode_register_composites(desc["mnemonic"], fields),
         "length": length,
         "hex": raw.hex(),
         "provenance": desc["provenance"],
@@ -2774,212 +2804,12 @@ def assemble_op(op_mnemonic, **fields):
 # ------------------------------------------------------------------------------
 
 def to_json():
-    """Serialize the DB (and the length rule, described) to a JSON string."""
-    out = {
-        "isa": "Apple A18 Pro / G17P AGX (clean-room, OWN-SHADER derived)",
-        "parcel_bytes": 2,
-        "length_rule": {
-            "note": "first parcel does NOT encode length on G17P (fsub 09 01 1c "
-                    "= 6B vs fma 09 01 1e = 8B share first parcel); length is a "
-                    "function of byte0 (group) + a per-group length bit. Float 0x09 "
-                    "uses byte+2 bit1; integer arithmetic (0x9f/0x1f/0xa7) uses "
-                    "byte+1 bit0 (1=10B 2-src, 0=12B 3-src mul-add / bitfield). "
-                    "EXP-0007 HW-validated.",
-            "byte0_table": {
-                "0x0e": 4, "lownibble_0xC": 4,
-                "0x67/0xe7": "14  [load/store: device, threadgroup (byte+1 bit1=0x02) "
-                             "and constant all share this opcode pair -- EXP-0012]",
-                "0x07 (+ byte+2==0x54)": "6  [THREADGROUP/EXECUTION BARRIER "
-                             "(threadgroup_barrier): 07 04 54 <mem_scope> <flags> 00. byte+3 = "
-                             "fenced memory scope 0x61 threadgroup / 0x85 device. The ONLY explicit "
-                             "ordering op in compute -- device load/store/atomic/texture are NOT "
-                             "scoreboard-waited (HW register interlock). EXP-0025 HW/splice-proven]",
-                "lownibble_0x9": "6, or 8 if (byte[+2] & 0x02), or 4 if byte+2 in {0x18,0x38}  [float ALU; "
-                             "byte+2 in {0x18,0x38} = compact 4-byte float accumulate (falu_acc), EXP-0025 / "
-                             "RT-1a-FIX -- NOT a wait; 0x18 vs 0x38 is a source cache/last-use hint. "
-                             "srcB-imm form (bit39=1): byte+1 exp>=8 (bit15=1) = minifloat immediate (falu2i), "
-                             "exp<8 (bit15=0) = UNIFORM-register source (falu2_uni), RT-1a-FIX. "
-                             "byte+2==0x25 (still 6B) = transcendental ESTIMATE SEED (byte0 0x29): "
-                             "byte+3 0x09 rcp / 0x0b rsqrt / 0x0d sqrt estimate, ~8 mantissa bits, "
-                             "the Newton-Raphson seed for precise 1/x/rsqrt/sqrt, EXP-0026]",
-                "0x2f/0xaf": "10  [float SPECIAL-FUNCTION UNIT (SFU): one op computes rcp/rsqrt/exp2 "
-                             "(byte0 0xaf) | round/sqrt/log2 (byte0 0x2f), function = byte+1 "
-                             "(0x00 rcp|round / 0x01 rsqrt|sqrt / 0x02 exp2|log2). exp/log/pow/div "
-                             "compose these. fast-math emits single ops; precise 1/x/sqrt/div refine "
-                             "with Newton-Raphson. EXP-0013 (exp2/log2/round) + EXP-0026 (rcp/rsqrt/sqrt)]",
-                "lownibble_0xB": "4 if (byte+2==0x01 and byte+3==0x08) [uniform_mov: "
-                                 "uniform-reg -> GPR, EXP-0020]; else 10 [float unary / "
-                                 "integer and/or/xor]",
-                "0x02": "6  [integer min/max | compare-for-select]",
-                "0x12": "6 float min/max, or 14 if (byte+2 & 0x0f)==0x0d [int compare]",
-                "0x9f/0x1f": "10 if (byte+1 & 1) else 12  [integer add/sub | mul-add]",
-                "0xa7": "10 if (byte+1 & 1) else 12  [integer shift-r | bitfield]",
-                "0x27": "8  [integer unary / popcount]",
-                "0x0a": "6  [integer compare -> execution predicate (branch/return)]",
-                "0x05/0x16": "4  [conditional select (branchless if/ternary)]",
-                "0x0f": "EXECUTION-MASK family, byte+1 sub-op (RT-ISA-FIX): 0x00 jump 10 / 0x01 "
-                        "jump_cond(else,loop-guard) 10 / 0x05 if_push 4 (or 14 if byte+4==0x8f = direct CALL) / "
-                        "0x06 pop_reconverge 6 / 0x80 call_indirect(computed branch) 6 / 0x04 mask_op 4",
-                "0x07 (byte+2 in {0x00,0x02})": "4  [compute memory/scoreboard fence around calls & "
-                        "divergent CF (07 22 02 00 pre-call; 07 02/00 00 CF). RT-ISA-FIX HW]",
-                "lownibble_0x5 + byte+1==0x80 + byte+2==0x0c":
-                        "14  [TEXTURE sample / read: 4B coord/result companion + 10B "
-                        "sampler op (0xb0/0x90). EXP-0016 HW-validated]",
-                "0xd7": "16  [TEXTURE write (memory-family store). EXP-0016 HW-validated]",
-                "0x37": "8 if byte+2==0x56 [quad reduce/scan, EXP-0018]; else 10 "
-                        "[derivative / quad-difference dfdx/dfdy/fwidth, EXP-0016]",
-                "0xbf/0x3f/0xb7 (+ byte+2==0x56)":
-                        "8  [SUBGROUP/QUAD reduce & prefix-scan: bit3=scope(1 simd/0 quad), "
-                        "bit7+byte+1=op, byte+7=datatype/shape. SIMD width 32. EXP-0018 HW]",
-                "0x47/0xc7": "10  [SUBGROUP/QUAD shuffle & broadcast: bit7=dir, byte+1=simd/"
-                        "quad/rotate, byte+6=(lane<<1), byte+2 0x54/0x56 (cache bit, RT-ISA-FIX). EXP-0018 HW]",
-                "0x17": "10  [simd_ballot (byte+1 low-nib 7: 0x07 active-mask/any/all, 0x17 ballot(pred), "
-                        "RT-ISA-FIX) | unpack_convert (byte+1 low-nib 4). EXP-0018/0033 HW]",
-                "0x67 (byte+1==0x11)": "14  [device ATOMIC RMW (elected-lane), op at byte+12. "
-                        "EXP-0018 HW]",
-                "0x67 (byte+1==0x01)": "14  [standalone ATOMIC exchange/cmpxchg/indexed, op at "
-                        "byte+12. EXP-0018 HW]. Atomics are native single ops, NOT CAS loops.",
-                "0xcf": "12  [SIMD-group MATRIX multiply-accumulate: one full 8x8x8 cooperative-"
-                        "matrix tile MAC d=a*b(+c). DEDICATED matrix HW. byte+2 0x56 single / 0x54 "
-                        "tiled; byte+7=C src reg; byte+11 bit0=accumulate-enable. simdgroup_load/"
-                        "store are ordinary 0x67/0xe7 memory ops, NOT matrix ops. EXP-0022 HW]",
-                "lownibble_0x4 + byte+1==0xea":
-                        "8  [RAY TRACING: dedicated ray-INTERSECT op. byte0 hi nibble=result reg; "
-                        "byte+2 mode (0x90 const-origin / 0x10 dyn-origin / 0xd0 +fn-table); byte+6 "
-                        "bit7=intersection-function-table present. Emitted 2x/kernel (traverse + "
-                        "result-read). ABSENT from a software Moller-Trumbore loop. EXP-0023 HW]",
-                "0xdf": "14  [RAY TRACING: dedicated acceleration-structure / ray-data load (memory-"
-                        "family sibling of 0x67/0xe7, byte+2==0x54). BVH-node/ray/stack fetch during "
-                        "the (software) traversal loop. EXP-0023]",
-                # ---- EXP-0036 consolidation additions (EXP-0031/0033/0035) ----
-                "byte0 low-3-bits 0b100": "4 get_sr (SR#=byte1, dst=byte0-hi; byte+3 lo-nibble==6 "
-                        "suffix, covers 0xNc & 0xN4 forms) | 2 mov_imm (byte0==0x0c, no suffix). EXP-0031",
-                "0x10": "6, or 8 if (byte+2 & 0x02)  [NATIVE-HALF (fp16) float ALU, sibling of 0x09. EXP-0033]",
-                "0x27 (byte+1==0x05, byte+2==0x56)": "8  [popcount / bit-scan single op (ibitcount). EXP-0033]",
-                "0x27 (byte+1==0x01)": "12  [ROTATE-by-immediate funnel shift (irotate). EXP-0033]",
-                "0xa7 (byte+1 in {0x04,0x05})": "8  [reverse_bits / find-MSB bit-scan (ibitcount). EXP-0033]",
-                "0x97 (byte+2==0x56)": "10  [pack_convert (pack_float_to_unorm/snorm2x16); byte+2==0x54 is the "
-                        "fragment frag_color_pack. EXP-0033]",
-                "0x17 (byte+2==0x56)": "10  [unpack_convert (unpack_unorm2x16); simd_ballot (byte+1==0x07) is "
-                        "the ballot/vote source. EXP-0033/0018]",
-                "0x22": "6 if (byte+2 lo-nibble==0x0e) [iminmax_chain: min3/max3/clamp] else 10 [shift/"
-                        "sign-extend helper]. EXP-0033",
-                "0xNb (byte+2 low-nibble e/f, 0x2b/3b/5b/8b)": "10 shift-amount PREP stage; (byte+2 hi-nibble 2) "
-                        "= 4 compact call-argument MOVE; (byte+2 in {0e,1e,1f}) = 10 funary/ilogic; "
-                        "(byte+2==0x01,byte+3==0x08) = 4 uniform_mov. EXP-0033/0036",
-                "0x43": "4  [CALL-SITE / FRAME-SETUP marker (`43 00 00 01`), precedes every out-of-line CALL "
-                        "in compute & mesh. NOT mesh-unique. EXP-0035 (re-scoped EXP-0030)]",
-                "0x0f (byte+1==0x05)": "14 direct CALL if byte+4==0x8f (target = call_addr+4+off40) else 8 "
-                        "exec-mask push; (byte+1==0x80) = 6 INDIRECT CALL leader; (byte+1==0x06) = 6 reconverge. EXP-0035",
-                "0x8f": "4  [function RETURN (`8f <lm> 54 00`); no encoded target (HW link register / CF stack); "
-                        "byte+1 0x02 leaf / 0x12 non-leaf. EXP-0035]",
-                # ---- EXP-0037 (vertex varying store + texture coordinate math) ----
-                "0x57": "8  [VERTEX varying / [[position]] store to the UVS/parameter buffer the FS iter op "
-                        "interpolates. Memory-family (low-nibble 7). byte+3=source GPR, byte+4=output slot "
-                        "(index<<5; position=slots 0-3). EXP-0037 HW-splice-proven]",
-                "lownibble_0x5 + (byte+1 & 0xf0)==0x80 + byte+2==0x0c":
-                        "14  [tex_sample companion-gate WIDENED (EXP-0037) from byte+1==0x80 to high-nibble 8 so "
-                        "the CHAINED-companion forms (0x82/0x84/0x88 before the 2nd..Nth sample op) also absorb "
-                        "their 10-byte 0xb0/0x90 sampler op]",
-                "0x09 op-select 0x26/0x2e": "8 if (byte+4 & 0x02) else 6  [fused mul / mul-add COORDINATE / "
-                        "matrix-multiply op -- byte+2 bit1 is SET yet the 2-source form is 6B, so length reads "
-                        "byte+4 bit1 not byte+2 bit1 (EXP-0037). 0x09 op-select 0x18/0x38 = 4 compact accumulate]",
-                "0xNb (byte+2 in {0x27,0x2f})": "10  [texture COORDINATE / LOD / gather-offset setup ALU "
-                        "(tex_coord_setup); must precede the (byte+2 hi-nibble 2)=4 compact-move branch. EXP-0037]",
-                "0x2e/0x3e (byte+2==0x23)": "10  [coordinate / interpolation fused mul-add ALU LEADER (coord_madf); "
-                        "gated tightly on the `23 a0 42` coord signature. EXP-0037]",
-                "0x30/0x90/0xb0 (byte+2 in texture-variant set)": "10  [standalone texture SAMPLER OP fallback, "
-                        "resync-only; primary closer is the companion-gate widening. EXP-0037]",
-                # ---- EXP-0038 (u64 carry / non-leaf frame / half pack / cache bit) ----
-                "0x32": "6  [u64 CARRY-GENERATE (carry_gen): unsigned-overflow compare (byte+2==0x35, byte+4==0x22) "
-                        "detecting the low-word add carry in a 64-bit ADD chain; predicate feeds a 0x05 psel. EXP-0038]",
-                "0x22 (byte+2==0x35)": "6  [carry-generate sibling of 0x32 (intermediate carry of a 3-operand u64 add); "
-                        "the byte+2 lo-nibble 0x0e min3/max3/clamp form is also 6, else 10. EXP-0038]",
-                "0x6f": "6  [NON-LEAF FUNCTION FRAME PROLOGUE (frame_prologue): establishes the per-thread scratch "
-                        "frame a non-leaf callee uses to save its link register around inner calls. EXP-0038]",
-                "0x60": "4  [FOUR-BYTE 0x60 FORM (historical name spill_frame_marker): `60 00 00 00` was "
-                        "observed after entry get_sr in one prior A18 high-pressure kernel. Runtime-inert for "
-                        "that computation (byte0/+1/+2 splices no-op), byte+3 live (0xff faults). EXP-0041 "
-                        "found it absent from nine M4 own mains including 208--576 B scratch, so it is not a "
-                        "universal spill marker. Length 4 validated; exact role unresolved]",
-                "device_load/store +5 index_reg (RT-1a-FIX)": "+5 is the INDEX GPR that supplies a[idx] (NOT "
-                        "`count`; sweeping +5 selects which GPR feeds the index); +6 is INERT; +1 = address space; "
-                        "the additive IMMEDIATE index-offset lives at +9 bit7 (+1) / +10 (+2/unit) / +11 low (+512/"
-                        "unit). Vector width/count is at +8 (dst_width) / +12 (elem_size). RT-1a-FIX HW-validated.",
-                "iadd2 add/sub polarity (RT-1a-FIX)": "byte0 bit7 = ADD(1,0x9f) / SUBTRACT(0,0x1f) select. The DB "
-                        "previously had this INVERTED (labelled every add srcA_neg=1 and gave 0x1f d=srcA+srcB "
-                        "although 0x1f subtracts). Splice 0x9f->0x1f turns 10+20 into 10-20=-10. HW-validated.",
-                "0x07 (byte+1==0x00, byte+2==0x54)": "8  [LINK-REGISTER SAVE/RESTORE around a nested call in a "
-                        "non-leaf frame (link_save_restore); the byte+1 in {0x04,0x14} forms are the 6-byte "
-                        "threadgroup_barrier / pixel_order. EXP-0038]",
-                "0x18": "4  [HALF-LANE PACK (half_pack): assemble a half2's two fp16 lanes into one packed 32-bit "
-                        "register before the store. byte0 hi nibble = dst reg (0x08/0x18/0x28/0x38 = r0..r3). EXP-0038]",
-                "0xbf/0x3f/0xb7 cache bit": "the reduce length/match gate accepts byte+2 in {0x54,0x56} (bit17 = a "
-                        "source cache/last-use hint, not an op change; EXP-0038). NB the 0x37 derivative-vs-quad-"
-                        "reduce byte+2==0x56 disambiguation is deliberately NOT relaxed.",
-                # ---- EXP-O2C (RT completion tail + tensor operand decode) ----
-                "0x5f (byte+2 in {0x54,0x56})": "14  [RAY-TRACING ray-data / traversal-stack memory op (rt_ray_mem); "
-                        "the store/spill-side sibling of the 0xdf AS-load, carries the ray_data payload copy-in/out. "
-                        "EXP-O2C]",
-                "0xN2 (byte+2==0x27)": "10  [RAY-TRACING ray-vs-node transform / AABB box-test companion (rt_transform_test), "
-                        "byte+3==0x81 byte+4==0x22; ~4-5 per intersector. Gated on byte+2==0x27 and placed BEFORE the "
-                        "0x02/0x32 handlers (which return unconditionally). EXP-O2C]",
-                "0xNb (byte+2 in {0x80,0x81})": "4  [RAY register-marshalling MOVE (ray_move): byte+2==0x81 copies a "
-                        "computed reg into the block rt_intersect consumes, 0x80 zero-inits a component. Reused 35-38x "
-                        "for MPP matmul2d TRANSPOSE tile moves. EXP-O2C]",
-                "0xcf operand decode": "the 0xcf matrix_mac operands are now FULLY decoded (EXP-O2C splice): byte+5=A "
-                        "(left) operand, byte+6=B (right), byte+7=C accumulator src, byte+8=dst, byte+3=A sub-descriptor "
-                        "(load-bearing), byte+10=op-enable 0x24, byte+1=dtype, byte+2=mode (0x56 standalone SEMANTIC "
-                        "vs 0x54 tiled/MPP), byte+11 bit0=accumulate-enable. All MPP tensor ops lower to this one op.",
-                # ---- EXP-O2D (compute/fragment ISA tail) ----
-                "0x11": "6 if byte+1==0x03 (fp32->fp16 convert cvt_f2h); else 8 if byte+1 in {0x02,0x04} (NATIVE bfloat "
-                        "ALU add/mul, opsel byte+2 0x1c/0x1d) or 10 if also (byte+2 & 0x02) (bfloat fma, opsel 0x1e). "
-                        "LOAD-BEARING FIX (EXP-O2D): the old flat `8 if byte+2&0x02 else 6` mis-lengthed every bfloat op "
-                        "(bf_add 0x1c -> 6, bf_fma 0x1e -> 8) and desynced bfloat kernels. Disambiguate on byte+1 -- "
-                        "cvt_f2h and bf_add SHARE opsel byte+2==0x1c.",
-                "0xe7 (byte+1 in {0x06,0x16})": "12  [fragment COLOUR STORE (0x06 frag_color_store) / explicit "
-                        "imageblock<T>.write (0x16 = first tile store after a 0x87 setup, imageblock_store): byte+5 = "
-                        "imageblock field BYTE-OFFSET>>1 (vs MRT's RT index rt<<1), byte+7 = slice format. EXP-0029/O2D]",
-                "0x67 (byte+1 in {0x06,0x0e,0x16})": "12  [fragment TILEBUFFER READ (0x0e tile_read, programmable "
-                        "blend) / explicit imageblock<T>.read (0x06/0x16 tile variant, imageblock_load). EXP-0029/O2D]",
-                "0x07 (byte+2==0x54, byte+3==0x84)": "6  [DEVICE MEMORY FENCE (mem_fence): "
-                        "atomic_thread_fence(mem_device, seq_cst) = `07 04 54 84 0a 00`. byte+3 0x84 = device-memory "
-                        "FENCE (vs threadgroup_barrier's 0x85 device = 0x84|0x01, the 0x01 = the added EXECUTION "
-                        "barrier); byte+4 0x0a = device memory-class flag. Ordering realised by fence PRESENCE, not a "
-                        "bit on the 0x67 RMW op (relaxed emits no fence, seq_cst emits it; acquire/release REJECTED by "
-                        "MSL). mem_texture is a byte+4==0x06 pair that decodes as pixel_order. EXP-O2D]",
-                "get_sr SR 0x84": "simd_is_helper_thread (FS): the get_sr-family leader `04 84 11 06`, read then "
-                        "compared. Distinct from 0x82 simd_lane_id / 0x85 simd_group_id. EXP-O2D",
-                "simd_reduce byte+1==0x06 bit7": "FLOAT simd_product / prefix-product (bit7=1, byte0=0xbf) vs "
-                        "simd_sum (bit7=0, byte0=0x3f); byte+7 0x32 = FLOAT exclusive-scan. INTEGER product has no "
-                        "native reduce op (shuffle+multiply tree). EXP-O2D",
-                "simd_shuffle byte+1==0x06": "simd_shuffle_and_fill_up/down (fill data = a separate preceding 0x67 "
-                        "load) / rotate; modulo variant changes byte+6 (0x4a->0x42) + a tail modulo byte. EXP-O2D",
-            },
-        },
-        "scoreboard_model": {
-            "note": "EXP-0025 (HW-validated). Unlike G13 (Mesa agx_insert_waits.c: an explicit "
-                    "2-byte `wait` op + a 2-slot software scoreboard, AGX_MAX_PENDING=8), G17P emits "
-                    "NO per-op scoreboard wait in the compute stream. Long-latency ops (device "
-                    "load/store, atomics, texture sample/read) feed their consumers DIRECTLY.",
-            "mechanism": "HARDWARE register interlock: an async op marks its destination register "
-                    "pending; a consumer reading that register stalls in HW until the op retires. No "
-                    "wait instruction, no slot-assign field, no wait-mask field in the async ops.",
-            "max_in_flight": "HW-managed (bounded by the 96-GPR register file), not a compiler "
-                    "constant. >=20 independent device loads outstanding, all consumed correctly with "
-                    "no wait (manyload20). G13's 8-deep 2-slot software scoreboard has no G17P analog.",
-            "ordering": "device RAW hazards: HW interlock (no op). CROSS-LANE threadgroup-memory "
-                    "ordering: the explicit threadgroup_barrier (byte0 0x07, above). simdgroup_barrier "
-                    "emits no op (lockstep simd). No separate device-scope memory-fence op was observed "
-                    "in compute beyond the barrier's byte+3=0x85 device-scope variant.",
-            "danger": "Because there is no software wait to omit, a compiler CANNOT introduce the "
-                    "classic G13 silent-corruption bug for device RAW. The residual silent-corruption "
-                    "surface is the threadgroup_barrier: splicing its byte+3 fence scope 0x61->0x00 "
-                    "produced 128/256 stale-zero reads with STATUS OK (EXP-0025).",
-        },
-        "instructions": DB,
-    }
-    return json.dumps(out, indent=2)
+    """Serialize the exact authoritative db.json document.
+
+    Keeping a second handwritten export here previously allowed the public
+    scoreboard and length metadata to drift away from the decoder's own input.
+    """
+    return _json.dumps(_DB_DOC, indent=2)
 
 
 if __name__ == "__main__":
@@ -2987,7 +2817,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--json":
         print(to_json())
     else:
-        print(f"AGX G17P ISA DB: {len(DB)} instruction descriptors")
+        print(f"Apple9 G16G/G17P ISA DB: {len(DB)} instruction descriptors")
         hwv = [d for d in DB if d["provenance"].startswith("HW-VALIDATED")]
         print(f"  HW-VALIDATED: {len(hwv)}  -> {[d['mnemonic'] for d in hwv]}")
         for d in DB:

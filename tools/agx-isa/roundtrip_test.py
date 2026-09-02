@@ -352,24 +352,39 @@ SYNTH = [
     # falu2 (reg-reg), EXP-0006 HW-validated field layout. fadd d=srcA+srcB:
     #   dst reg0, srcA=reg0/32b, srcB=reg2/32b -> 09051c0100c0 (== fast-math fadd)
     ("falu2",  {"dst": 0, "srcA_size": 1, "srcA_reg": 2, "opsel": 0b100,
-                "opflags": 3, "srcB_size": 1, "srcB_reg": 0, "ctrl": 0,
-                "srcB_imm": 0, "srcA_class": 0, "srcB_class": 0, "srcB_neg": 0, "mod_hi": 0xc,
-                "srcA_reg_top": 0, "srcB_reg_top": 0}),
+                "srcA_aux": 0, "opflags": 3, "dst_mid": 0,
+                "srcB_size": 1, "srcB_reg": 0, "srcB_aux": 0, "ctrl": 0,
+                "srcB_imm": 0, "srcA_hi": 0, "srcB_file": 0,
+                "srcB_hi": 0, "srcB_neg": 0, "dst_hi": 0,
+                "scoreboard_slot": 6}),
     # fmul, same operands:
     ("falu2",  {"dst": 0, "srcA_size": 1, "srcA_reg": 2, "opsel": 0b101,
-                "opflags": 3, "srcB_size": 1, "srcB_reg": 0, "ctrl": 0,
-                "srcB_imm": 0, "srcA_class": 0, "srcB_class": 0, "srcB_neg": 0, "mod_hi": 0xc,
-                "srcA_reg_top": 0, "srcB_reg_top": 0}),
+                "srcA_aux": 0, "opflags": 3, "dst_mid": 0,
+                "srcB_size": 1, "srcB_reg": 0, "srcB_aux": 0, "ctrl": 0,
+                "srcB_imm": 0, "srcA_hi": 0, "srcB_file": 0,
+                "srcB_hi": 0, "srcB_neg": 0, "dst_hi": 0,
+                "scoreboard_slot": 6}),
     # fsub d = srcA + (-srcB): srcB_neg=1 (HW-validated a+b -> a-b):
     ("falu2",  {"dst": 0, "srcA_size": 1, "srcA_reg": 0, "opsel": 0b100,
-                "opflags": 3, "srcB_size": 1, "srcB_reg": 2, "ctrl": 0,
-                "srcB_imm": 0, "srcA_class": 0, "srcB_class": 0, "srcB_neg": 1, "mod_hi": 0xc,
-                "srcA_reg_top": 0, "srcB_reg_top": 0}),  # -> 09011c0500c8
+                "srcA_aux": 0, "opflags": 3, "dst_mid": 0,
+                "srcB_size": 1, "srcB_reg": 2, "srcB_aux": 0, "ctrl": 0,
+                "srcB_imm": 0, "srcA_hi": 0, "srcB_file": 0,
+                "srcB_hi": 0, "srcB_neg": 1, "dst_hi": 0,
+                "scoreboard_slot": 6}),  # -> 09011c0500c8
     # dst = reg5 exercises the b0[4:8] dst field (HW-validated):
     ("falu2",  {"dst": 5, "srcA_size": 1, "srcA_reg": 4, "opsel": 0b100,
-                "opflags": 3, "srcB_size": 1, "srcB_reg": 5, "ctrl": 0,
-                "srcB_imm": 0, "srcA_class": 0, "srcB_class": 0, "srcB_neg": 0, "mod_hi": 0xc,
-                "srcA_reg_top": 0, "srcB_reg_top": 0}),  # -> 59091c0b00c0
+                "srcA_aux": 0, "opflags": 3, "dst_mid": 0,
+                "srcB_size": 1, "srcB_reg": 5, "srcB_aux": 0, "ctrl": 0,
+                "srcB_imm": 0, "srcA_hi": 0, "srcB_file": 0,
+                "srcB_hi": 0, "srcB_neg": 0, "dst_hi": 0,
+                "scoreboard_slot": 6}),  # -> 59091c0b00c0
+    # EXP-M4-38: the same six-byte form reaches r0..r95 through split fields.
+    ("falu2",  {"dst": 15, "srcA_size": 1, "srcA_reg": 0, "srcA_aux": 0,
+                "opsel": 0b100, "opflags": 3, "dst_mid": 1,
+                "srcB_size": 1, "srcB_reg": 15, "srcB_aux": 0, "ctrl": 0,
+                "srcB_imm": 0, "srcA_hi": 1, "srcB_file": 0,
+                "srcB_hi": 1, "srcB_neg": 0, "dst_hi": 1,
+                "scoreboard_slot": 0}),
     # falu2i packed immediate: a + 1.0 (exp=0xb bias11, mant=0, sign=0) HW-validated:
     ("falu2i", {"dst": 0, "imm_flag": 1, "imm_mant": 0, "imm_exp": 0xb, "opsel": 0b100,
                 "imm_sign": 0, "opflags": 1, "srcA_size": 1, "srcA_reg": 0,
@@ -386,7 +401,12 @@ SYNTH = [
     ("falu3",   {"dst": 0x3, "srcA": 0x07, "op": 0x1e, "srcB": 0x0b, "ctrl_len": 0x81, "srcC": 0x0e, "ctrl": 0x02, "srcmods": 0x60}),
     # EXP-M4-13 R2 (n2_intalu): float min/max UNIFIED into low-nibble-2 iminmax.
     # fmin at dst r1 (byte0 0x12) -> reproduces the old fminmax bytes 12031e0501c0:
-    ("iminmax", {"dst": 0x1, "dst_full": 0x03, "fmt": 0x3, "srcA": 0x05, "sel": 0x1, "selhi": 0, "srcB": 0xc0}),
+    ("iminmax", {"dst": 0x1, "srcA_size": 1, "srcA_reg": 1,
+                  "srcA_aux": 0, "fmt": 0x3, "dst_mid": 0,
+                  "srcB_size": 1, "srcB_reg": 2, "srcB_aux": 0,
+                  "sel": 0x1, "selhi": 0, "srcA_hi": 0,
+                  "srcB_file": 0, "srcB_hi": 0, "src_modifier": 0,
+                  "dst_hi": 0, "scoreboard_slot": 6}),
     # ---- integer (EXP-0007) ----
     # iadd a+b: dst=reg0, addsub=1 (ADD opcode, byte0 0x9f -- RT-1a-FIX polarity),
     # lenbit=1 (10B), store_en=1. Reproduces the compiler's iadd bytes
@@ -401,9 +421,19 @@ SYNTH = [
                  "srcB_imm": 0x0, "srcB_imm_hi": 0x0, "srcB_ext": 0x8, "srcA": 0xa8,
                  "opc_tail": 0x17, "opc_tail2": 0x5}),
     # iminmax (n2_intalu unified schema): signed min (sel=0x7) at dst r0 -> 02011e0507c0.
-    ("iminmax", {"dst": 0x0, "dst_full": 0x01, "fmt": 0x3, "srcA": 0x05, "sel": 0x7, "selhi": 0, "srcB": 0xc0}),
+    ("iminmax", {"dst": 0x0, "srcA_size": 1, "srcA_reg": 0,
+                  "srcA_aux": 0, "fmt": 0x3, "dst_mid": 0,
+                  "srcB_size": 1, "srcB_reg": 2, "srcB_aux": 0,
+                  "sel": 0x7, "selhi": 0, "srcA_hi": 0,
+                  "srcB_file": 0, "srcB_hi": 0, "src_modifier": 0,
+                  "dst_hi": 0, "scoreboard_slot": 6}),
     # iminmax: unsigned max (sel=0x4) at dst r0 -> 02011e0504c0.
-    ("iminmax", {"dst": 0x0, "dst_full": 0x01, "fmt": 0x3, "srcA": 0x05, "sel": 0x4, "selhi": 0, "srcB": 0xc0}),
+    ("iminmax", {"dst": 0x0, "srcA_size": 1, "srcA_reg": 0,
+                  "srcA_aux": 0, "fmt": 0x3, "dst_mid": 0,
+                  "srcB_size": 1, "srcB_reg": 2, "srcB_aux": 0,
+                  "sel": 0x4, "selhi": 0, "srcA_hi": 0,
+                  "srcB_file": 0, "srcB_hi": 0, "src_modifier": 0,
+                  "dst_hi": 0, "scoreboard_slot": 6}),
     # ---- scalar ALU (EXP-0013) ----
     # cvt_f2i (float->int, byte+7 0x48 = signed): reproduces 27 07 56 00 02 00 b4 48 03 00
     ("cvt_f2i", {"mode": 0x56, "dst": 0x0, "src_class": 0x2, "src": 0x0, "cvtop": 0xb4, "signflag": 0x48, "dst_class": 0x3, "b9": 0x0}),
@@ -570,12 +600,33 @@ def test_imm_codec():
     return fails
 
 
+def test_compact_register_composites():
+    print("\n== (E) compact split fields reconstruct logical r0..r95 operands ==")
+    cases = {
+        "falu2": "f9015c1f0015",
+        "falu2_ext": "f9015c1f01150082",
+        "falu2_srcmod10": "f9015c1f021500800000",
+        "iminmax": "f2015e1f0515",
+        "half_alu": "f0005c1e0015",
+    }
+    expected = {"dst": 95, "srcA": 64, "srcB": 79}
+    fails = 0
+    for mnemonic, encoded in cases.items():
+        rec, _ = isadb.decode_one(bytes.fromhex(encoded), 0)
+        ok = rec["mnemonic"] == mnemonic and rec["operands"] == expected
+        fails += not ok
+        print(f"  [{'OK' if ok else 'FAIL'}] {mnemonic:18s} "
+              f"{encoded} -> {rec.get('operands')}")
+    return fails
+
+
 def main():
     f = 0
     f += test_real_roundtrip()
     f += test_synth_roundtrip()
     f += test_tokenize_programs()
     f += test_imm_codec()
+    f += test_compact_register_composites()
     print(f"\n{'ALL PASS' if f == 0 else str(f) + ' FAILURES'}")
     return 1 if f else 0
 

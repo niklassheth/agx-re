@@ -1,13 +1,13 @@
-# A18 Pro (G17P) AGX — Instruction Encoding Tables
+# Apple9 (G16G/G17P) AGX — Instruction Encoding Tables
 
-> **Generated** from `tools/agx-isa/db.json` by `tools/agx-isa/gen_encoding_tables.py` (2026-09-01). Regenerate after any DB change; do not hand-edit. This is the **authoritative, self-contained encoding table** a driver author reads to emit A18 Pro AGX instructions — 176 instruction descriptors.
+> **Generated** from `tools/agx-isa/db.json` by `tools/agx-isa/gen_encoding_tables.py` (2026-09-01). Regenerate after any DB change; do not hand-edit. This is the **authoritative, self-contained encoding table** a driver author reads to emit Apple9 AGX instructions — 176 instruction descriptors.
 
-**Clean-room:** every encoding here was learned from the compiled form of MSL **we wrote** (OWN-SHADER) — by byte-diffing our own shaders and by splicing bytes and running them on the real A18 Pro GPU (hardware validation). No Apple binary was disassembled. See `../../CLAUDE.md`.
+**Clean-room:** every encoding here was learned from the compiled form of MSL **we wrote** (OWN-SHADER) — by byte-diffing our own shaders and by splicing bytes and running them on the real Apple9 GPUs (hardware validation). No Apple binary was disassembled. See `../../CLAUDE.md`.
 
 ## How to read this
 
 - Bit numbering: an *N*-byte instruction is one **little-endian** integer. Bit 0 = bit 0 of byte 0; bit 16 = bit 0 of byte +2; so *byte offset +k, bit b* = bit (8·k + b).
-- **Length** is a function of byte 0 (the group) plus a per-group length bit/signature — the first parcel does *not* encode length on G17P. The full length rule is the byte-0 table in the [Length rule](#length-rule-byte-0) appendix and `tools/agx-isa/isadb.py::instr_length`.
+- **Length** is a function of byte 0 (the group) plus a per-group length bit/signature — the first parcel does *not* encode length on Apple9. The full length rule is the byte-0 table in the [Length rule](#length-rule-byte-0) appendix and `tools/agx-isa/isadb.py::instr_length`.
 - **Match** = the constant bits that identify the instruction. **Fields** = every non-constant bit, with its bit-range, type, and enum values where known.
 - Field **type**: `register` · `immediate` · `enum` · `modifier` · `opcode-select` · `raw/unmapped` (byte-diff-localized but not individually bit-decoded).
 
@@ -41,19 +41,22 @@
 | `srcA_size` | [8:9] (byte+1) | enum | `0x1`=b32; `0x0`=b16 |
 | `srcA_reg` | [9:15] | register |  |
 | `opsel` | [16:19] (byte+2) | opcode-select | `0x4`=fadd; `0x5`=fmul; `0x6`=fma; `0x7`=fmul_interp |
-| `opflags` | [19:24] | modifier |  |
+| `opflags` | [19:22] | modifier |  |
+| `dst_mid` | [22:24] | register |  |
 | `srcB_size` | [24:25] (byte+3) | enum | `0x1`=b32; `0x0`=b16 |
 | `srcB_reg` | [25:31] | register |  |
 | `ctrl` | [32:39] (byte+4) | modifier |  |
 | `srcB_imm` | [39:40] | enum | `0x0`=reg; `0x1`=immediate |
-| `srcA_class` | [40:41] (byte+5) | modifier |  |
-| `srcB_class` | [41:43] | enum | `0x0`=GPR (srcB_reg); `0x1`=non-GPR file / inline immediate (srcB_reg); `0x2`=reads 0.0; `0x3`=reads 0.0 |
+| `srcA_hi` | [40:41] (byte+5) | register |  |
+| `srcB_file` | [41:42] | enum | `0x0`=GPR; `0x1`=non-GPR / inline source |
+| `srcB_hi` | [42:43] | register |  |
 | `srcB_neg` | [43:44] | modifier |  |
-| `mod_hi` | [44:48] | modifier |  |
-| `srcA_reg_top` | [15:16] | modifier |  |
-| `srcB_reg_top` | [31:32] | modifier |  |
+| `dst_hi` | [44:45] | register |  |
+| `scoreboard_slot` | [45:48] | modifier |  |
+| `srcA_aux` | [15:16] | modifier |  |
+| `srcB_aux` | [31:32] | modifier |  |
 
-*d = op(srcA, [-]srcB)  ; 2-source float ALU. src operand byte = (reg<<1)|is32 (bit0=size; 7-bit reg field, GPR file = up to 96 addressable 32-bit regs, EXP-0020). dst here is the compact b0[4:8] nibble (r0..r15 only); a high GPR dst uses the 8-byte falu3 form (dst=byte+1, 7-bit) -- HW seen writing r64. srcB negate = bit43. srcB-immediate mode = bit39 (see falu2i). When bit39=1, srcB is NOT a GPR: byte+1's exponent nibble (bits[12:16], = instr bit15 = the 8s bit) SPLITS the two overloads -- exp>=8 (bit15=1) => packed minifloat immediate (falu2i), exp<8 (bit15=0) => UNIFORM-REGISTER source (falu2_uni). RT-1a-FIX HW-validated (supersedes the earlier `byte+2 bit4 / byte+5 bit1` guess, which was wrong).  [CORRECTED 2026-08-28] The source register operand is 6 BITS, not 7. Its former top bit (srcA_reg_top / srcB_reg_top) is HW-TESTED INERT for both addressing and retention -- refuted as a register-index bit (EXP-0099 H1: field value 67 reads r3, never the unwritten r67) AND refuted as a retention flag (EXP-0099 H2: outcome depends only on opflags bit19/bit20, identically whether the top bit is 0 or 1). Reconfirmed on falu2i, falu2_ext and falu3_srcmod12 (EXP-0119). ALIASING RULE (EXP-0112, HW-VALIDATED by a dense 15-point sweep with poison-register controls): a target register R resolves to r(R mod 64) for R in [64,112], and FAULTS the command buffer at R in {126,127}. That mod-64 aliasing is why value 67 reads r3. r64-95 have NO validated ALU-source path. LIFETIME FIELDS (EXP-0086/0089/0099/0119): opflags bit19 = release src0, bit20 = release src1, bit21 = destination publication. These are LOAD-BEARING, not hints: releasing a source that a LATER instruction reads makes that later read return zero, deterministically and without a fault, and the value is genuinely gone from the register file (it survives a memory round-trip and a threadgroup_barrier; an ordinary rewrite restores it). opflags bits 22/23 and mod_hi bit 44 are general silent CORRUPTORS (EXP-0105). ctrl bits 0/1 are the INSTRUCTION-LENGTH selector, not free bits (EXP-0119); ctrl bit4 is inert and bits 5/6 corrupt (EXP-0113). OPERAND SOURCE-CLASS MODEL (EXP-0138, HW, 294/294 exact across three runs; REPLACES the refuted `mod_lo`-as-modifier reading): `mod_lo` bit0 selects srcA's source class (the alternate class reads 0.0 at every index and is NOT the uniform file); bits[2:1] select srcB's class -- 0 = GPR, 1 = non-GPR file, 2 and 3 read 0.0 -- and **bit2 dominates bit1**. **INLINE FLOAT IMMEDIATE (largest find):** in srcB class 1, `srcB_reg` bit6 is LIVE (it is inert only in GPR mode, so no contradiction with EXP-0099/0112). Values 0..63 index the uniform file; **64..127 are an inline 8-bit minifloat immediate**: with k = v-64, e = k>>3, m = k&7, value = m*2^-5 when e==0 else (8+m)*2^(e-6). HW-confirmed at 10 points and re-verified independently by the orchestrator (k=0->0.0, 2->0.0625, 3->0.09375, 31->1.875, 32->2.0, 48->8.0, 56->16.0, 61->26.0, 62->28.0, 63->30.0). So `falu2` can take a float immediate DIRECTLY, and 126/127 do NOT fault in that mode.*
+*d = op(srcA, [-]srcB); compact two-source float ALU. The GPR fields are scattered: dst = dst | (dst_mid<<4) | (dst_hi<<6), srcA = srcA_reg | (srcA_hi<<6), and in GPR mode srcB = srcB_reg | (srcB_hi<<6). This r0..r95 map is hardware-validated on T8132 by EXP-M4-38 and matches the independently proven Apple9 FMA, integer-logic, and ISELECT register-bank architecture. srcA_aux/srcB_aux are descriptor auxiliaries, not GPR high bits; srcB_aux remains live in the non-GPR inline-source encoding. opflags bit19/20 release sources A/B and bit21 publishes the destination. srcB_imm bit39 and srcB_file bit41 select the non-GPR/inline overload; in that mode the descriptor can encode the measured 8-bit minifloat family, while srcB_hi is a GPR high bit only in GPR mode. srcB_neg bit43 negates source B. scoreboard_slot bits45..47 select the pending-result scoreboard slot. Metal normally allocates slots 6,1,2,3,4,5.*
 
 ### `falu2i` — 2-source float ALU, srcB packed minifloat immediate
 
@@ -131,14 +134,24 @@
 | Field | Bits | Type | Enum / values |
 |---|---|---|---|
 | `dst` | [4:8] | register |  |
-| `srcA` | [8:16] (byte+1) | register |  |
+| `srcA_half` | [8:9] (byte+1) | enum | `0x0`=low; `0x1`=high |
+| `srcA_reg` | [9:15] | register |  |
+| `srcA_aux` | [15:16] | modifier |  |
 | `opsel` | [16:19] (byte+2) | opcode-select | `0x4`=hadd; `0x5`=hmul |
-| `opflags` | [19:24] | modifier |  |
-| `srcB` | [24:32] (byte+3) | register |  |
+| `opflags` | [19:22] | modifier |  |
+| `dst_mid` | [22:24] | register |  |
+| `srcB_half` | [24:25] (byte+3) | enum | `0x0`=low; `0x1`=high |
+| `srcB_reg` | [25:31] | register |  |
+| `srcB_aux` | [31:32] | modifier |  |
 | `ctrl` | [32:40] (byte+4) | modifier |  |
-| `src_modifier` | [40:48] (byte+5) | modifier |  |
+| `srcA_hi` | [40:41] (byte+5) | register |  |
+| `srcB_file` | [41:42] | modifier |  |
+| `srcB_hi` | [42:43] | register |  |
+| `srcA_neg` | [43:44] | modifier |  |
+| `dst_hi` | [44:45] | register |  |
+| `scoreboard_slot` | [45:48] | modifier |  |
 
-*d(half) = op(h[byte+1], h[byte+3])  ; NATIVE half-precision (fp16) float ALU, 6-byte form. byte0 low nibble 0x0 is the family tag and byte0 HIGH nibble is the destination GPR. Operands are half-register descriptors h = (reg<<1)|is_high. byte+2 = op-select (low 3 bits: 4 = hadd, 5 = hmul) + opflags. byte+5 is the source/control modifier byte. A half2 (packed 2xfp16) op executes BOTH 16-bit lanes in ONE op, then a 0x18 pack assembles the 32-bit result; the HIGH-half sibling is `h_alu_hi` (byte0 low nibble 8). [CORRECTED 2026-08-30, EXP-0183 from EXP-0180's committed raw] **THE DESTINATION IS byte0's HIGH NIBBLE** (bits 4..7); the low nibble 0x0 is the family tag. The previous descriptor pinned the WHOLE of byte0 in `match`, so an emitter following it could only ever write r1, and the field it called `dst` (bits 8..15) is in fact a SOURCE half-register descriptor. Re-derived on G17P three independent ways, all cross-checked over EXP-0180's two gated runs (16,735 cases each, byte-identical): (1) the DSTNIB arm ran byte0 = n<<4 for n = 0..15 on two carriers -- the result lands in r[n]'s LOW 16 bits with r[n]'s HIGH 16 bits preserved for n = 0..14, and n = 15 is UNOBSERVABLE because the harness's own store index register is r15 (r15 is never non-zero in any of the 16,335 observed cases, so this is a carrier limit, not a hardware property -- the same limit EXP-0168 recorded for falu2.dst); (2) STRUCTURALLY, the seed program's fourteen SIX-BYTE half-adds are `[j<<4] [h_B] [(opflags<<3)|4] [h_A] [0x00] [0xC0]` and nothing but byte0 names register j -- the per-case identity `r_j.lo == fp16(h[byte+1] + h[byte+3])` holds in **228,690 checks per run with zero mismatches, in both runs**, for j = 0..13; (3) ARITHMETICALLY, the 8-byte fma anchor computes `r[byte0>>4].lo = fp16(h[byte+1] * h[byte+3] + h[byte+5])` on both carriers. Operand bytes are the ODD bytes (+1, +3, and +5 in the 8-byte form); the final byte of the instruction is the modifier byte. Half-register descriptor h = (reg<<1)|is_high. Same class as cvt_f2h_dst / bf_add_dst / n3_mov, which db.json already models this way, and identical in shape to the low-nibble-8 sibling `h_alu_hi`. INSTRUCTION LENGTH, MEASURED (EXP-0180 LEN arm; re-derived independently by EXP-0183 from the same raw, 32 of 32 cells, ZERO ambiguous cells and ZERO cross-run disagreements) as a function of (opsel = byte+2 & 7, m = byte+4 & 3): opsel 0-3 and 7 -> 10/10/10/8; opsel 4 (hadd) -> 6/8/10/6; opsel 5 (hmul) -> 6/8/10/8; opsel 6 (hfma) -> 6/8/10/12. **BOUND: bytes +6.. carry the marker chain in every LEN case, so a length dependence on byte +6 or later is UNTESTED.** This measured table is NOT the rule the tokenizer implements: EXP-0182 measured that adopting it verbatim costs 17 clean corpus files and 3,220 leftover bytes, because the G17P measurement and the M4 corpus disagree exactly on the compact forms -- precisely where the bound above says the measurement is silent. `isadb.instr_length` therefore implements only the nine (opsel, m) cells where BOTH sources agree. Recorded here so the disagreement is visible rather than smoothed away. SUPERSEDED HERE: the EXP-M4-14 reading in which byte+3 was `srcA` and byte+4 `srcB` -- byte+4 is refuted as an operand (see the `ctrl` field note) and the two sources are byte+1 and byte+3.*
+*d.half = op(srcA.half, srcB.half), with opsel 4=hadd and 5=hmul. srcA_half/srcB_half choose the low or high 16-bit lane; the physical GPRs use the common Apple9 split map: dst = dst | (dst_mid<<4) | (dst_hi<<6), srcA = srcA_reg | (srcA_hi<<6), and in GPR mode srcB = srcB_reg | (srcB_hi<<6). EXP-M4-38 validates this map on T8132, including exact low-half results and preservation of the unselected high half. srcA_aux/srcB_aux are descriptor auxiliaries. opflags carries source lifetime/publication state, ctrl selects compact versus longer forms, and srcA_neg negates source A. The scoreboard-slot position is inherited from the shared compact-ALU skeleton and was not independently swept for half ALU.*
 
 ### `falu_acc` — compact 4-byte float accumulate (reduction)
 
@@ -271,14 +284,24 @@
 | Field | Bits | Type | Enum / values |
 |---|---|---|---|
 | `dst` | [4:8] | register |  |
-| `srcA` | [8:16] (byte+1) | register |  |
-| `fmt` | [19:24] | modifier |  |
-| `srcB` | [24:32] (byte+3) | register |  |
+| `srcA_size` | [8:9] (byte+1) | enum | `0x0`=b16; `0x1`=b32 |
+| `srcA_reg` | [9:15] | register |  |
+| `srcA_aux` | [15:16] | modifier |  |
+| `fmt` | [19:22] | modifier |  |
+| `dst_mid` | [22:24] | register |  |
+| `srcB_size` | [24:25] (byte+3) | enum | `0x0`=b16; `0x1`=b32 |
+| `srcB_reg` | [25:31] | register |  |
+| `srcB_aux` | [31:32] | modifier |  |
 | `sel` | [32:35] (byte+4) | opcode-select | `0x0`=fmax; `0x1`=fmin; `0x4`=umax; `0x5`=umin; `0x6`=imax; `0x7`=imin |
 | `selhi` | [35:40] | modifier |  |
-| `dst_full` | [40:48] (byte+5) | modifier |  |
+| `srcA_hi` | [40:41] (byte+5) | register |  |
+| `srcB_file` | [41:42] | modifier |  |
+| `srcB_hi` | [42:43] | register |  |
+| `src_modifier` | [43:44] | modifier |  |
+| `dst_hi` | [44:45] | register |  |
+| `scoreboard_slot` | [45:48] | modifier |  |
 
-*d = min/max(a,b) by TYPE (32-bit int signed/unsigned, or float). byte0 hi nibble = dst r0..r15. byte1 = (dst<<1)|size. byte+2 = source-format marker (bits[16:19]==0b110). byte+3 = srcA. byte+4 = OP-SELECT (sel low 3 bits): 0=fmax 1=fmin 4=umax 5=umin 6=imax 7=imin. byte+5 = srcB.  [PROVENANCE FLAG 2026-08-28] Two independent experiments hit an unexplained anomaly here: splicing a REAL, IN-RANGE register field produced ZERO effect on output, and a hand-built program could not read back even a mov_imm-seeded low register (EXP-0105). EXP-0113 then found this family's spliced results NONDETERMINISTIC ACROSS RUNS -- identical bytes, different outcomes in 4/46 cases -- so the pilot impression that it could address r96-127 was an artifact, not a mechanism. Treat this descriptor's operand mapping as UNVALIDATED pending a dedicated experiment. **OPERAND SLOTS CORRECTED ON HARDWARE** -- EXP-0160 (G17P), re-derived independently in EXP-0165 (db_defects :: DEF-0160-2). db.json's operand names were shifted by one byte slot: byte+5 was called `srcB` and is NOT a register selector at all. Measured: with the anchor `02 01 1e 05 07 00`, the instruction computes imin(r0, r2) -> r0 in BOTH seed sets (10 and 7), and r2 -- the register byte+3 names under (reg<<1)|size -- is RELEASED TO ZERO, which identifies it as an operand. So byte+1 is the FIRST source descriptor and byte+3 the SECOND, exactly the falu2 slot layout. byte+5 has FOUR INERT BITS (3, 5, 6, 7 -- zero disagreeing pairs each over a dense 256-value sweep x 2 seed sets) and no value->register model fits it (reg = v>>1 and reg = v>>2 each explain 32 of 256 cases), so it cannot carry a register index; its live bits are 0, 1, 2 and 4 and its anchor value 0xc0 is falu2's standard `mods` default, i.e. it is the SOURCE-CLASS / MODIFIER byte. It keeps the historical name `dst_full` ONLY so its validation.json evidence row survives a rename this experiment is not allowed to make. **An emitter following the old descriptor would put the second operand's register number in the modifier byte and get a silent zero.***
+*d = min/max(srcA, srcB) with sel 0=fmax, 1=fmin, 4=umax, 5=umin, 6=imax, 7=imin. The operands use the common compact Apple9 split map: dst = dst | (dst_mid<<4) | (dst_hi<<6), srcA = srcA_reg | (srcA_hi<<6), and in GPR mode srcB = srcB_reg | (srcB_hi<<6). EXP-M4-38 validates every register bit on T8132. srcA_aux/srcB_aux are descriptor auxiliaries, not register high bits. fmt holds the source release/destination publication state; srcB_file and src_modifier retain unresolved source-mode controls. The scoreboard-slot position is inherited from the shared compact-ALU skeleton and was not independently swept for min/max.*
 
 ### `iunary` — integer unary (popcount / reduce)
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# gen_agx3_xml.py -- render our clean-room A18 Pro (G17P) AGX instruction DB
+# gen_agx3_xml.py -- render our clean-room Apple9 (G16G/G17P) AGX instruction DB
 # (tools/agx-isa/db.json, 75 descriptors) into Mesa's ISA-XML schema, producing
 # docs/isa/agx3.xml.
 #
 # WHY: Mesa's src/asahi/isa/ keeps its G13/G14 (Apple7/8) machine ISA as a GenXML
 # data file (AGX2.xml) that its build turns into a disassembler. This script emits
-# the *same shape of data file* for G17P (Apple9) so the Mesa team can drop
-# docs/isa/agx3.xml into src/asahi/isa/ and generate a G17P disassembler. It is a
+# the *same shape of data file* for Apple9 so the Mesa team can drop
+# docs/isa/agx3.xml into src/asahi/isa/ and generate a G16G/G17P disassembler. It is a
 # DATA/DOCUMENTATION generator -- we are not writing driver code.
 #
 # CLEAN-ROOM: every encoding fact rendered here comes from db.json, which was
@@ -376,7 +376,7 @@ def build():
 
     o = Out()
     o.raw("<!--")
-    o.raw("  Apple A18 Pro / G17P AGX shader ISA - Mesa ISA-XML rendering.")
+    o.raw("  Apple9 G16G/G17P AGX shader ISA - Mesa ISA-XML rendering.")
     o.raw("  GENERATED from tools/agx-isa/db.json by tools/agx-isa/gen_agx3_xml.py.")
     o.raw("  Do not hand-edit; regenerate after any DB change.")
     o.raw("")
@@ -387,14 +387,14 @@ def build():
     o.raw("  of MSL we wrote (own-shader byte-diff + on-hardware splice validation).")
     o.raw("  No Apple binary was disassembled. This file re-shapes our own data (db.json)")
     o.raw("  into the same GenXML schema Mesa uses for G13/G14 (src/asahi/isa/AGX2.xml)")
-    o.raw("  so the Mesa team can generate a G17P disassembler from it. See CLAUDE.md.")
+    o.raw("  so the Mesa team can generate a G16G/G17P disassembler from it. See CLAUDE.md.")
     o.raw("")
     o.raw("  BIT NUMBERING (identical to AGX2.xml): an N-byte instruction is one")
     o.raw("  little-endian integer; bit 0 = bit 0 of byte 0; byte +k bit b = bit 8*k+b.")
     o.raw("  bit=\"lo:hi\" is inclusive. An <exact>/attr value string is the little-endian")
     o.raw("  value of the listed bits (leftmost char = highest listed bit).")
     o.raw("")
-    o.raw("  LENGTH: unlike G13, the first parcel does NOT encode length on G17P; length")
+    o.raw("  LENGTH: unlike G13, the first parcel does NOT encode length on Apple9; length")
     o.raw("  is a function of byte 0 (group) + a per-group length bit/signature. Each <ins>")
     o.raw("  here is one concrete form with a fixed byte length; the full length rule lives")
     o.raw("  in tools/agx-isa/isadb.py::instr_length and docs/isa/encoding-tables.md.")

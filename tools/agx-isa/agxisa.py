@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# agxisa.py -- CLI front-end for the clean-room A18 Pro (G17P) AGX ISA database.
+# agxisa.py -- CLI front-end for the clean-room Apple9 (G16G/G17P) AGX ISA database.
 #
 # Subcommands (all driven by the single table in isadb.py):
 #   tokenize <hex>       split a raw _agc.main hex string into instructions
@@ -45,6 +45,9 @@ def cmd_disasm(hexstr):
         print(f"op        : {rec['op_mnemonic']}")
     print(f"length    : {rec['length']} bytes")
     print(f"fields    : {_fmt_fields(rec['fields'])}")
+    if rec.get("operands"):
+        print("operands  : " + " ".join(
+            f"{name}=r{reg}" for name, reg in rec["operands"].items()))
     print(f"semantics : {rec['semantics']}")
     print(f"provenance: {rec['provenance']}")
     return 0

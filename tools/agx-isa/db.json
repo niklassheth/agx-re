@@ -1,8 +1,8 @@
 {
- "isa": "Apple A18 Pro / G17P AGX (clean-room, OWN-SHADER derived)",
+ "isa": "Apple9 AGX / G16G and G17P (clean-room, OWN-SHADER derived)",
  "parcel_bytes": 2,
  "length_rule": {
-  "note": "G17P instructions are aligned to two-byte parcels, but the first parcel alone does not always encode the total length. Length is a family-local prefix decision: later prefix bytes select compact, normal, and extended forms. Direct G17P consumed-length measurements take precedence over older M4 corpus-resynchronisation heuristics. APPLE9_INSTRUCTION_LENGTHS.md is the Step-1 framing specification.",
+  "note": "Apple9 instructions are aligned to two-byte parcels, but the first parcel alone does not always encode the total length. Length is a family-local prefix decision: later prefix bytes select compact, normal, and extended forms. Direct hardware consumed-length measurements take precedence over older corpus-resynchronisation heuristics. APPLE9_INSTRUCTION_LENGTHS.md is the Step-1 framing specification.",
   "byte0_table": {
    "0x0e": 4,
    "lownibble_0xC": 4,
@@ -72,13 +72,47 @@
   }
  },
  "scoreboard_model": {
-  "note": "EXP-0025 (HW-validated). Unlike G13 (Mesa agx_insert_waits.c: an explicit 2-byte `wait` op + a 2-slot software scoreboard, AGX_MAX_PENDING=8), G17P emits NO per-op scoreboard wait in the compute stream. Long-latency ops (device load/store, atomics, texture sample/read) feed their consumers DIRECTLY.",
-  "mechanism": "HARDWARE register interlock: an async op marks its destination register pending; a consumer reading that register stalls in HW until the op retires. No wait instruction, no slot-assign field, no wait-mask field in the async ops.",
-  "max_in_flight": "HW-managed (bounded by the 96-GPR register file), not a compiler constant. >=20 independent device loads outstanding, all consumed correctly with no wait (manyload20). G13's 8-deep 2-slot software scoreboard has no G17P analog. NOTE: that '>= 20 outstanding, all consumed correctly' claim holds for ALU consumers ONLY -- see `device_store_hazard`.",
-  "ordering": "device RAW hazards: HW interlock (no op). CROSS-LANE threadgroup-memory ordering: the explicit threadgroup_barrier (byte0 0x07, above). simdgroup_barrier emits no op (lockstep simd). No separate device-scope memory-fence op was observed in compute beyond the barrier's byte+3=0x85 device-scope variant.",
-  "danger": "Because there is no software wait to omit, a compiler CANNOT introduce the classic G13 silent-corruption bug for device RAW. The residual silent-corruption surface is the threadgroup_barrier: splicing its byte+3 fence scope 0x61->0x00 produced 128/256 stale-zero reads with STATUS OK (EXP-0025).",
-  "device_store_hazard": "HW, G17P (EXP-0161 harness/pilot_seed.py, 8 controlled variants; re-derived in EXP-0165 -- db_defects :: DEF-0161-5). A `device_store`'s DATA-REGISTER read is NOT interlocked against a pending `device_load` into that register. With a single wave of 15 loads, the registers read by the FIRST ~5 stores issued afterwards come back with their PRE-LOAD value, silently and with STATUS OK. The effect follows the STORE order, not the load order: dumping r15..r0 instead of r0..r15 moved the stale set from r0..r4 to r11..r14. It reproduces with only 5 loads outstanding. It is a latency, not a capacity limit: inserting 4 filler ops leaves 5 registers stale, 16 filler ops leaves 3, and 64 filler ops leaves 0; issuing the whole load wave a second time also clears it completely (15/15 correct, stable over 8 consecutive dispatches). An emitter that stores a just-loaded register must separate the two, or re-load. This is the one known silent-corruption surface for device RAW on G17P and it contradicts the blanket reading of `mechanism` above."
+  "note": "Apple9 has six compiler-visible pending-result scoreboard slots, numbered 1..6. There is no separate wait opcode: asynchronous producers allocate a slot in their producer token and compatible consumers name that slot in their own encoding. The earlier register-only interlock model was refuted by the slot/token experiments and the compiler implementation now follows the explicit-slot model.",
+  "mechanism": "Metal normally allocates fresh async results in the repeating order 6,1,2,3,4,5, choosing the first free slot when gaps exist. Scalar and vector loads, texture operations, and atomic-return forms carry the allocation in producer-specific token bits. FALU2-shaped consumers use a three-bit slot selector; integer logic uses a six-bit one-hot mask. Slot 0 means no pending result. Source retain/release fields independently control whether a consumed value remains available.",
+  "capacity": "At most six independent pending groups are representable. Several producer results may intentionally share one slot when one instruction consumes them together. Before a seventh independent group, or before a consumer form that cannot name the required pending relationship, the compiler must materialize an older result through a supported consumer and then reuse the freed slot.",
+  "ordering": "The scoreboard handles producer-to-consumer readiness, not cross-lane memory ordering. Threadgroup and device ordering still require the explicit barrier/fence forms. A completed/materialized ordinary GPR value is consumed with slot 0.",
+  "device_store": "The observed direct load-forward store form (0x56) follows the native slot-6 pairing; the general materialized store form is 0x54. Until the store-side selector is independently decoded, the compiler only uses direct forwarding for an unmaterialized slot-6 device-load result and materializes other values before the ordinary store path."
  },
+ "register_composites": [
+  {
+   "name": "compact_binary_gpr",
+   "instructions": [
+    "falu2",
+    "falu2_ext",
+    "falu2_srcmod10",
+    "iminmax",
+    "half_alu"
+   ],
+   "operands": {
+    "dst": {
+     "parts": [
+      ["dst", 0],
+      ["dst_mid", 4],
+      ["dst_hi", 6]
+     ]
+    },
+    "srcA": {
+     "parts": [
+      ["srcA_reg", 0],
+      ["srcA_hi", 6]
+     ]
+    },
+    "srcB": {
+     "parts": [
+      ["srcB_reg", 0],
+      ["srcB_hi", 6]
+     ],
+     "when": ["srcB_file", 0]
+    }
+   },
+   "note": "EXP-M4-38 hardware-validates this common r0..r95 split map for every listed form on T8132."
+  }
+ ],
  "instructions": [
   {
    "mnemonic": "falu2",
@@ -128,8 +162,15 @@
     {
      "name": "opflags",
      "start": 19,
-     "width": 5,
+     "width": 3,
      "type": "mod"
+    },
+    {
+     "name": "dst_mid",
+     "start": 22,
+     "width": 2,
+     "type": "reg",
+     "note": "Destination register bits 4..5 (EXP-M4-38, T8132 hardware)."
     },
     {
      "name": "srcB_size",
@@ -164,22 +205,28 @@
      }
     },
     {
-     "name": "srcA_class",
+     "name": "srcA_hi",
      "start": 40,
      "width": 1,
-     "type": "mod"
+     "type": "reg",
+     "note": "Source-A register bit 6 (EXP-M4-38, T8132 hardware)."
     },
     {
-     "name": "srcB_class",
+     "name": "srcB_file",
      "start": 41,
-     "width": 2,
+     "width": 1,
      "type": "enum",
      "enum": {
-      "0": "GPR (srcB_reg)",
-      "1": "non-GPR file / inline immediate (srcB_reg)",
-      "2": "reads 0.0",
-      "3": "reads 0.0"
+      "0": "GPR",
+      "1": "non-GPR / inline source"
      }
+    },
+    {
+     "name": "srcB_hi",
+     "start": 42,
+     "width": 1,
+     "type": "reg",
+     "note": "Source-B register bit 6 when srcB_file=GPR (EXP-M4-38, T8132 hardware)."
     },
     {
      "name": "srcB_neg",
@@ -188,28 +235,36 @@
      "type": "mod"
     },
     {
-     "name": "mod_hi",
+     "name": "dst_hi",
      "start": 44,
-     "width": 4,
-     "type": "mod"
+     "width": 1,
+     "type": "reg",
+     "note": "Destination register bit 6 (EXP-M4-38, T8132 hardware)."
     },
     {
-     "name": "srcA_reg_top",
+     "name": "scoreboard_slot",
+     "start": 45,
+     "width": 3,
+     "type": "mod",
+     "note": "Pending-result scoreboard slot 0..7. Values 6,1,2,3,4,5 are the ordinary Metal allocation cycle."
+    },
+    {
+     "name": "srcA_aux",
      "start": 15,
      "width": 1,
      "type": "mod",
      "note": "HW-TESTED INERT for both addressing and retention (EXP-0099/0105/0113/0119, six families). Role UNKNOWN. NOT a register-index bit and NOT a retention flag."
     },
     {
-     "name": "srcB_reg_top",
+     "name": "srcB_aux",
      "start": 31,
      "width": 1,
      "type": "mod",
-     "note": "HW-TESTED INERT for both addressing and retention (EXP-0099/0105/0113/0119, six families). Role UNKNOWN. NOT a register-index bit and NOT a retention flag."
+     "note": "Not GPR register bit 6 and not a retention flag. It is inert for GPR addressing, but participates in the non-GPR/inline source descriptor."
     }
    ],
-   "semantics": "d = op(srcA, [-]srcB)  ; 2-source float ALU. src operand byte = (reg<<1)|is32 (bit0=size; 7-bit reg field, GPR file = up to 96 addressable 32-bit regs, EXP-0020). dst here is the compact b0[4:8] nibble (r0..r15 only); a high GPR dst uses the 8-byte falu3 form (dst=byte+1, 7-bit) -- HW seen writing r64. srcB negate = bit43. srcB-immediate mode = bit39 (see falu2i). When bit39=1, srcB is NOT a GPR: byte+1's exponent nibble (bits[12:16], = instr bit15 = the 8s bit) SPLITS the two overloads -- exp>=8 (bit15=1) => packed minifloat immediate (falu2i), exp<8 (bit15=0) => UNIFORM-REGISTER source (falu2_uni). RT-1a-FIX HW-validated (supersedes the earlier `byte+2 bit4 / byte+5 bit1` guess, which was wrong).  [CORRECTED 2026-08-28] The source register operand is 6 BITS, not 7. Its former top bit (srcA_reg_top / srcB_reg_top) is HW-TESTED INERT for both addressing and retention -- refuted as a register-index bit (EXP-0099 H1: field value 67 reads r3, never the unwritten r67) AND refuted as a retention flag (EXP-0099 H2: outcome depends only on opflags bit19/bit20, identically whether the top bit is 0 or 1). Reconfirmed on falu2i, falu2_ext and falu3_srcmod12 (EXP-0119). ALIASING RULE (EXP-0112, HW-VALIDATED by a dense 15-point sweep with poison-register controls): a target register R resolves to r(R mod 64) for R in [64,112], and FAULTS the command buffer at R in {126,127}. That mod-64 aliasing is why value 67 reads r3. r64-95 have NO validated ALU-source path. LIFETIME FIELDS (EXP-0086/0089/0099/0119): opflags bit19 = release src0, bit20 = release src1, bit21 = destination publication. These are LOAD-BEARING, not hints: releasing a source that a LATER instruction reads makes that later read return zero, deterministically and without a fault, and the value is genuinely gone from the register file (it survives a memory round-trip and a threadgroup_barrier; an ordinary rewrite restores it). opflags bits 22/23 and mod_hi bit 44 are general silent CORRUPTORS (EXP-0105). ctrl bits 0/1 are the INSTRUCTION-LENGTH selector, not free bits (EXP-0119); ctrl bit4 is inert and bits 5/6 corrupt (EXP-0113). OPERAND SOURCE-CLASS MODEL (EXP-0138, HW, 294/294 exact across three runs; REPLACES the refuted `mod_lo`-as-modifier reading): `mod_lo` bit0 selects srcA's source class (the alternate class reads 0.0 at every index and is NOT the uniform file); bits[2:1] select srcB's class -- 0 = GPR, 1 = non-GPR file, 2 and 3 read 0.0 -- and **bit2 dominates bit1**. **INLINE FLOAT IMMEDIATE (largest find):** in srcB class 1, `srcB_reg` bit6 is LIVE (it is inert only in GPR mode, so no contradiction with EXP-0099/0112). Values 0..63 index the uniform file; **64..127 are an inline 8-bit minifloat immediate**: with k = v-64, e = k>>3, m = k&7, value = m*2^-5 when e==0 else (8+m)*2^(e-6). HW-confirmed at 10 points and re-verified independently by the orchestrator (k=0->0.0, 2->0.0625, 3->0.09375, 31->1.875, 32->2.0, 48->8.0, 56->16.0, 61->26.0, 62->28.0, 63->30.0). So `falu2` can take a float immediate DIRECTLY, and 126/127 do NOT fault in that mode.",
-   "provenance": "HW-VALIDATED (EXP-0006): dst/srcA/srcB positions, (reg<<1)|size encoding, 16-bit-low-half read, srcB negate (a+b->a-b), and srcB-immediate mode all confirmed by splice-and-observe. opsel from EXP-0003/EXP-0005. op/cache/ctrl flag bits inferred."
+   "semantics": "d = op(srcA, [-]srcB); compact two-source float ALU. The GPR fields are scattered: dst = dst | (dst_mid<<4) | (dst_hi<<6), srcA = srcA_reg | (srcA_hi<<6), and in GPR mode srcB = srcB_reg | (srcB_hi<<6). This r0..r95 map is hardware-validated on T8132 by EXP-M4-38 and matches the independently proven Apple9 FMA, integer-logic, and ISELECT register-bank architecture. srcA_aux/srcB_aux are descriptor auxiliaries, not GPR high bits; srcB_aux remains live in the non-GPR inline-source encoding. opflags bit19/20 release sources A/B and bit21 publishes the destination. srcB_imm bit39 and srcB_file bit41 select the non-GPR/inline overload; in that mode the descriptor can encode the measured 8-bit minifloat family, while srcB_hi is a GPR high bit only in GPR mode. srcB_neg bit43 negates source B. scoreboard_slot bits45..47 select the pending-result scoreboard slot. Metal normally allocates slots 6,1,2,3,4,5.",
+   "provenance": "HW-VALIDATED (EXP-0006): base operand positions, sizes, negate, and immediate mode. EXP-0086/0089/0099/0119 establish source release and destination publication. EXP-M4-38-register-extension-audit validates the complete split r0..r95 destination and two-source GPR map on T8132 with exact outputs; the separate slot experiments establish bits45..47. opsel comes from EXP-0003/EXP-0005."
   },
   {
    "mnemonic": "falu2i",
@@ -532,8 +587,15 @@
     {
      "name": "srcA_reg",
      "start": 9,
-     "width": 7,
+     "width": 6,
      "type": "reg"
+    },
+    {
+     "name": "srcA_aux",
+     "start": 15,
+     "width": 1,
+     "type": "mod",
+     "note": "Descriptor auxiliary bit; not register bit 6 (EXP-M4-38)."
     },
     {
      "name": "opsel",
@@ -550,8 +612,15 @@
     {
      "name": "opflags",
      "start": 19,
-     "width": 5,
+     "width": 3,
      "type": "mod"
+    },
+    {
+     "name": "dst_mid",
+     "start": 22,
+     "width": 2,
+     "type": "reg",
+     "note": "Destination register bits 4..5 (EXP-M4-38, T8132 hardware)."
     },
     {
      "name": "srcB_size",
@@ -566,8 +635,15 @@
     {
      "name": "srcB_reg",
      "start": 25,
-     "width": 7,
+     "width": 6,
      "type": "reg"
+    },
+    {
+     "name": "srcB_aux",
+     "start": 31,
+     "width": 1,
+     "type": "mod",
+     "note": "Descriptor auxiliary bit; not register bit 6 (EXP-M4-38)."
     },
     {
      "name": "ctrl",
@@ -582,10 +658,28 @@
      "type": "mod"
     },
     {
-     "name": "mod_lo",
+     "name": "srcA_hi",
      "start": 40,
-     "width": 3,
-     "type": "mod"
+     "width": 1,
+     "type": "reg",
+     "note": "Source-A register bit 6 (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "srcB_file",
+     "start": 41,
+     "width": 1,
+     "type": "enum",
+     "enum": {
+      "0": "GPR",
+      "1": "non-GPR / inline source"
+     }
+    },
+    {
+     "name": "srcB_hi",
+     "start": 42,
+     "width": 1,
+     "type": "reg",
+     "note": "Source-B register bit 6 when srcB_file=GPR (EXP-M4-38, T8132 hardware)."
     },
     {
      "name": "srcB_neg",
@@ -594,10 +688,18 @@
      "type": "mod"
     },
     {
-     "name": "mod_hi",
+     "name": "dst_hi",
      "start": 44,
-     "width": 4,
-     "type": "mod"
+     "width": 1,
+     "type": "reg",
+     "note": "Destination register bit 6 (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "scoreboard_slot",
+     "start": 45,
+     "width": 3,
+     "type": "mod",
+     "note": "Scoreboard-slot position inherited from the shared compact FALU2 skeleton; EXP-M4-38 independently proves adjacent bit44 is destination bit 6."
     },
     {
      "name": "ext_tail",
@@ -606,8 +708,8 @@
      "type": "mod"
     }
    ],
-   "semantics": "d = saturate?( op(srcA,[+/-]srcB) ) ; 8-byte extended 2-source float ALU. op=opsel (0b100 fadd/0b101 fmul). Tail bytes inherit the HW-validated falu2_srcmod10 layout: ctrl (byte+4 low7), srcB_imm (bit39), mod_lo/srcB_neg/mod_hi (byte+5) -- srcB_neg (bit43, 0x08) = negate srcB (OWN-MSL byte-diff: saturate(a-b) sets byte+5=0x08); ext_tail (byte+6,+7) = the saturate/output-cache tail: byte+7 bit1 (0x02) = SATURATE clamp to [0,1] (OWN-MSL byte-diff: saturate(a+b)/saturate(a*b) set byte+7=0x82), bit7 (0x80) = output cache. Per-bit map beyond srcB_neg/saturate inherited from the srcmod family (needs splice).",
-   "provenance": "EXP-M4-13 R10 own-MSL byte-diff (k_sat): saturate(a+b)/saturate(a*b) -> 09 05 1c/1d 01 01 00 00 82 differ from plain fadd/fmul only by byte+4=0x01 length-select + byte+7=0x82 saturate; saturate(a-b) sets byte+5=0x08 = srcB_neg. Tail split inherits the HW-validated falu2_srcmod10 ctrl/mod field layout (same match bits); values beyond srcB_neg/saturate need splice."
+   "semantics": "d = saturate?(op(srcA, [+/-]srcB)); eight-byte extended two-source float ALU. Its first 48 bits use the same split r0..r95 register map, descriptor auxiliaries, source-B file selector, negate bit, and slot position as falu2. EXP-M4-38 executes this exact form across all low/mid/high destination and source fields on T8132; the scoreboard meaning is inherited from the shared FALU2 skeleton rather than independently swept in this form. ext_tail carries the extended saturate/output controls; byte+7 bit1 is the measured saturate clamp and bit7 is the native output-cache state.",
+   "provenance": "EXP-M4-13 R10 own-MSL byte-diff (k_sat): saturate(a+b)/saturate(a*b) -> 09 05 1c/1d 01 01 00 00 82 differ from plain fadd/fmul only by byte+4=0x01 length-select + byte+7=0x82 saturate; saturate(a-b) sets byte+5=0x08 = srcB_neg. Tail split inherits the HW-validated falu2_srcmod10 ctrl/mod field layout (same match bits); values beyond srcB_neg/saturate need splice. EXP-M4-38 hardware-validates the complete split r0..r95 destination and two-source GPR map for this exact eight-byte form on T8132."
   },
   {
    "mnemonic": "falu3_ext",
@@ -984,24 +1086,63 @@
      "type": "reg"
     },
     {
-     "name": "srcA",
+     "name": "srcA_size",
      "start": 8,
-     "width": 8,
-     "type": "reg",
-     "note": "byte+1 = the FIRST source descriptor, (reg<<1)|size -- the falu2 slot layout. HW, G17P (EXP-0160/EXP-0165, DEF-0160-2): the anchor `02 01 1e 05 07 00` computes imin(r0, r2) in both seed sets."
+     "width": 1,
+     "type": "enum",
+     "enum": {
+      "0": "b16",
+      "1": "b32"
+     }
+    },
+    {
+     "name": "srcA_reg",
+     "start": 9,
+     "width": 6,
+     "type": "reg"
+    },
+    {
+     "name": "srcA_aux",
+     "start": 15,
+     "width": 1,
+     "type": "mod",
+     "note": "Descriptor auxiliary bit; not register bit 6 (EXP-M4-38)."
     },
     {
      "name": "fmt",
      "start": 19,
-     "width": 5,
+     "width": 3,
      "type": "mod"
     },
     {
-     "name": "srcB",
-     "start": 24,
-     "width": 8,
+     "name": "dst_mid",
+     "start": 22,
+     "width": 2,
      "type": "reg",
-     "note": "byte+3 = the SECOND source descriptor, (reg<<1)|size. HW, G17P: the register it names (r2 at the anchor value 0x05) is RELEASED TO ZERO, which identifies it as an operand."
+     "note": "Destination register bits 4..5 (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "srcB_size",
+     "start": 24,
+     "width": 1,
+     "type": "enum",
+     "enum": {
+      "0": "b16",
+      "1": "b32"
+     }
+    },
+    {
+     "name": "srcB_reg",
+     "start": 25,
+     "width": 6,
+     "type": "reg"
+    },
+    {
+     "name": "srcB_aux",
+     "start": 31,
+     "width": 1,
+     "type": "mod",
+     "note": "Descriptor auxiliary bit; not register bit 6 (EXP-M4-38)."
     },
     {
      "name": "sel",
@@ -1024,15 +1165,49 @@
      "type": "mod"
     },
     {
-     "name": "dst_full",
+     "name": "srcA_hi",
      "start": 40,
-     "width": 8,
+     "width": 1,
+     "type": "reg",
+     "note": "Source-A register bit 6 (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "srcB_file",
+     "start": 41,
+     "width": 1,
      "type": "mod",
-     "note": "byte+5 = the SOURCE-CLASS / MODIFIER byte (falu2's `mods` slot; anchor value 0xc0 is falu2's standard default). NOT a register selector: bits 3, 5, 6 and 7 are INERT (0 of 512 flip-pairs differ each) and no value->register model fits (reg = v>>1 and reg = v>>2 each explain only 32 of 256). HISTORICAL NAME -- it is not `dst_full`; db.json's operand names were shifted one slot until 2026-08-30 (EXP-0160/EXP-0165, DEF-0160-2)."
+     "note": "Source-B file/mode selector; the GPR setting is zero."
+    },
+    {
+     "name": "srcB_hi",
+     "start": 42,
+     "width": 1,
+     "type": "reg",
+     "note": "Source-B register bit 6 in GPR mode (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "src_modifier",
+     "start": 43,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "dst_hi",
+     "start": 44,
+     "width": 1,
+     "type": "reg",
+     "note": "Destination register bit 6 (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "scoreboard_slot",
+     "start": 45,
+     "width": 3,
+     "type": "mod",
+     "note": "Scoreboard-slot position inherited from the shared compact-ALU skeleton; EXP-M4-38 independently proves adjacent bit44 is destination bit 6."
     }
    ],
-   "semantics": "d = min/max(a,b) by TYPE (32-bit int signed/unsigned, or float). byte0 hi nibble = dst r0..r15. byte1 = (dst<<1)|size. byte+2 = source-format marker (bits[16:19]==0b110). byte+3 = srcA. byte+4 = OP-SELECT (sel low 3 bits): 0=fmax 1=fmin 4=umax 5=umin 6=imax 7=imin. byte+5 = srcB.  [PROVENANCE FLAG 2026-08-28] Two independent experiments hit an unexplained anomaly here: splicing a REAL, IN-RANGE register field produced ZERO effect on output, and a hand-built program could not read back even a mov_imm-seeded low register (EXP-0105). EXP-0113 then found this family's spliced results NONDETERMINISTIC ACROSS RUNS -- identical bytes, different outcomes in 4/46 cases -- so the pilot impression that it could address r96-127 was an artifact, not a mechanism. Treat this descriptor's operand mapping as UNVALIDATED pending a dedicated experiment. **OPERAND SLOTS CORRECTED ON HARDWARE** -- EXP-0160 (G17P), re-derived independently in EXP-0165 (db_defects :: DEF-0160-2). db.json's operand names were shifted by one byte slot: byte+5 was called `srcB` and is NOT a register selector at all. Measured: with the anchor `02 01 1e 05 07 00`, the instruction computes imin(r0, r2) -> r0 in BOTH seed sets (10 and 7), and r2 -- the register byte+3 names under (reg<<1)|size -- is RELEASED TO ZERO, which identifies it as an operand. So byte+1 is the FIRST source descriptor and byte+3 the SECOND, exactly the falu2 slot layout. byte+5 has FOUR INERT BITS (3, 5, 6, 7 -- zero disagreeing pairs each over a dense 256-value sweep x 2 seed sets) and no value->register model fits it (reg = v>>1 and reg = v>>2 each explain 32 of 256 cases), so it cannot carry a register index; its live bits are 0, 1, 2 and 4 and its anchor value 0xc0 is falu2's standard `mods` default, i.e. it is the SOURCE-CLASS / MODIFIER byte. It keeps the historical name `dst_full` ONLY so its validation.json evidence row survives a rename this experiment is not allowed to make. **An emitter following the old descriptor would put the second operand's register number in the modifier byte and get a silent zero.**",
-   "provenance": "byte-diff EXP-M4-13 R2 (own-MSL): dst=byte0-hi PROVEN by an 8-reg sweep (8 live imin ops, byte0 hi nibbles e,d,b,9,7,5,3,1). op-select=byte+4 PROVEN (imin/imax/umin/umax/fmin/fmax differ only in byte+4 07/06/05/04/01/00). srcA/srcB/sel inherit EXP-0007 HW validation; fmt/selhi upper bits INFERRED. NOT HW-dispatch validated (M4 compile-only). OPERAND SLOTS SUPERSEDED AND CORRECTED: HW-VALIDATED (EXP-0160, G17P), re-derived in EXP-0165. This also supersedes the 2026-08-28 PROVENANCE FLAG above for the slot assignment specifically -- byte+1/byte+3 are now identified by a released-register observation, not by byte-diff."
+   "semantics": "d = min/max(srcA, srcB) with sel 0=fmax, 1=fmin, 4=umax, 5=umin, 6=imax, 7=imin. The operands use the common compact Apple9 split map: dst = dst | (dst_mid<<4) | (dst_hi<<6), srcA = srcA_reg | (srcA_hi<<6), and in GPR mode srcB = srcB_reg | (srcB_hi<<6). EXP-M4-38 validates every register bit on T8132. srcA_aux/srcB_aux are descriptor auxiliaries, not register high bits. fmt holds the source release/destination publication state; srcB_file and src_modifier retain unresolved source-mode controls. The scoreboard-slot position is inherited from the shared compact-ALU skeleton and was not independently swept for min/max.",
+   "provenance": "EXP-M4-13 R2 own-MSL byte-diff first located dst=byte0-hi and the byte+4 min/max selector. EXP-0007 validates the base min/max operation, and EXP-0160/0165 validates the released-register operand slots on G17P. EXP-M4-38 supersedes the earlier M4 compile-only register claim: exact T8132 hardware runs validate every bit of the split r0..r95 destination and two-source GPR map for this six-byte form. fmt/selhi and the non-GPR source modes remain only partially characterized."
   },
   {
    "mnemonic": "hminmax",
@@ -5866,11 +6041,27 @@
      "note": "DEF-0180-1, HW-VALIDATED on G17P, re-derived by EXP-0183. The destination GPR (r0..r15). Directly exercised at 14 of 16 values in EVERY one of EXP-0180's 33,470 gated cases (the seed program's own six-byte half-adds) and at 15 of 16 by the DSTNIB arm on the 8-byte sibling; value 15 is unobservable in that harness (r15 is its store index register), a carrier limit, not a hardware property."
     },
     {
-     "name": "srcA",
+     "name": "srcA_half",
      "start": 8,
-     "width": 8,
-     "type": "reg",
-     "note": "RETYPED (EXP-0183). Formerly `dst`. This is a SOURCE half-register descriptor h = (reg<<1)|is_high, not the destination -- see the descriptor semantics. Its span is unchanged (bits 8..15), so evidence recorded against those bits still applies; only the name and role change. Named `srcA` to match the low-nibble-8 sibling `h_alu_hi`, whose byte+1 is already `srcA`."
+     "width": 1,
+     "type": "enum",
+     "enum": {
+      "0": "low",
+      "1": "high"
+     }
+    },
+    {
+     "name": "srcA_reg",
+     "start": 9,
+     "width": 6,
+     "type": "reg"
+    },
+    {
+     "name": "srcA_aux",
+     "start": 15,
+     "width": 1,
+     "type": "mod",
+     "note": "Descriptor auxiliary bit; not register bit 6 (EXP-M4-38)."
     },
     {
      "name": "opsel",
@@ -5885,15 +6076,38 @@
     {
      "name": "opflags",
      "start": 19,
-     "width": 5,
+     "width": 3,
      "type": "mod"
     },
     {
-     "name": "srcB",
-     "start": 24,
-     "width": 8,
+     "name": "dst_mid",
+     "start": 22,
+     "width": 2,
      "type": "reg",
-     "note": "RENAMED (EXP-0183). Formerly `srcA`; span unchanged (bits 8..15 took the name `srcA` because byte+1 is the first source, matching `h_alu_hi`). Evidence recorded against bits 24..31 still applies."
+     "note": "Destination register bits 4..5 (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "srcB_half",
+     "start": 24,
+     "width": 1,
+     "type": "enum",
+     "enum": {
+      "0": "low",
+      "1": "high"
+     }
+    },
+    {
+     "name": "srcB_reg",
+     "start": 25,
+     "width": 6,
+     "type": "reg"
+    },
+    {
+     "name": "srcB_aux",
+     "start": 31,
+     "width": 1,
+     "type": "mod",
+     "note": "Descriptor auxiliary bit; not register bit 6 (EXP-M4-38)."
     },
     {
      "name": "ctrl",
@@ -5903,14 +6117,50 @@
      "note": "RETYPED (EXP-0183). Formerly `srcB`, on EXP-M4-14's claim that byte+4 is the second source of the 6-byte form. REFUTED from EXP-0180's raw: the seed program's own 6-byte hadds carry byte+4 = 0x00 = h0 = r0's LOW half, which is NON-ZERO in all 32,670 observed pre-vectors, yet the observed result is exactly fp16(h[byte+1] + h[byte+3]) in 228,690 checks per run with zero mismatches. byte+4 does not enter the arithmetic. Its low two bits are the measured LENGTH selector."
     },
     {
-     "name": "src_modifier",
+     "name": "srcA_hi",
      "start": 40,
-     "width": 8,
-     "type": "mod"
+     "width": 1,
+     "type": "reg",
+     "note": "Source-A register bit 6 (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "srcB_file",
+     "start": 41,
+     "width": 1,
+     "type": "mod",
+     "note": "Source-B file/mode selector; the GPR setting is zero."
+    },
+    {
+     "name": "srcB_hi",
+     "start": 42,
+     "width": 1,
+     "type": "reg",
+     "note": "Source-B register bit 6 in GPR mode (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "srcA_neg",
+     "start": 43,
+     "width": 1,
+     "type": "mod",
+     "note": "Negates source A in the measured compact half form."
+    },
+    {
+     "name": "dst_hi",
+     "start": 44,
+     "width": 1,
+     "type": "reg",
+     "note": "Destination register bit 6 (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "scoreboard_slot",
+     "start": 45,
+     "width": 3,
+     "type": "mod",
+     "note": "Scoreboard-slot position inherited from the shared compact-ALU skeleton; EXP-M4-38 independently proves adjacent bit44 is destination bit 6."
     }
    ],
-   "semantics": "d(half) = op(h[byte+1], h[byte+3])  ; NATIVE half-precision (fp16) float ALU, 6-byte form. byte0 low nibble 0x0 is the family tag and byte0 HIGH nibble is the destination GPR. Operands are half-register descriptors h = (reg<<1)|is_high. byte+2 = op-select (low 3 bits: 4 = hadd, 5 = hmul) + opflags. byte+5 is the source/control modifier byte. A half2 (packed 2xfp16) op executes BOTH 16-bit lanes in ONE op, then a 0x18 pack assembles the 32-bit result; the HIGH-half sibling is `h_alu_hi` (byte0 low nibble 8). [CORRECTED 2026-08-30, EXP-0183 from EXP-0180's committed raw] **THE DESTINATION IS byte0's HIGH NIBBLE** (bits 4..7); the low nibble 0x0 is the family tag. The previous descriptor pinned the WHOLE of byte0 in `match`, so an emitter following it could only ever write r1, and the field it called `dst` (bits 8..15) is in fact a SOURCE half-register descriptor. Re-derived on G17P three independent ways, all cross-checked over EXP-0180's two gated runs (16,735 cases each, byte-identical): (1) the DSTNIB arm ran byte0 = n<<4 for n = 0..15 on two carriers -- the result lands in r[n]'s LOW 16 bits with r[n]'s HIGH 16 bits preserved for n = 0..14, and n = 15 is UNOBSERVABLE because the harness's own store index register is r15 (r15 is never non-zero in any of the 16,335 observed cases, so this is a carrier limit, not a hardware property -- the same limit EXP-0168 recorded for falu2.dst); (2) STRUCTURALLY, the seed program's fourteen SIX-BYTE half-adds are `[j<<4] [h_B] [(opflags<<3)|4] [h_A] [0x00] [0xC0]` and nothing but byte0 names register j -- the per-case identity `r_j.lo == fp16(h[byte+1] + h[byte+3])` holds in **228,690 checks per run with zero mismatches, in both runs**, for j = 0..13; (3) ARITHMETICALLY, the 8-byte fma anchor computes `r[byte0>>4].lo = fp16(h[byte+1] * h[byte+3] + h[byte+5])` on both carriers. Operand bytes are the ODD bytes (+1, +3, and +5 in the 8-byte form); the final byte of the instruction is the modifier byte. Half-register descriptor h = (reg<<1)|is_high. Same class as cvt_f2h_dst / bf_add_dst / n3_mov, which db.json already models this way, and identical in shape to the low-nibble-8 sibling `h_alu_hi`. INSTRUCTION LENGTH, MEASURED (EXP-0180 LEN arm; re-derived independently by EXP-0183 from the same raw, 32 of 32 cells, ZERO ambiguous cells and ZERO cross-run disagreements) as a function of (opsel = byte+2 & 7, m = byte+4 & 3): opsel 0-3 and 7 -> 10/10/10/8; opsel 4 (hadd) -> 6/8/10/6; opsel 5 (hmul) -> 6/8/10/8; opsel 6 (hfma) -> 6/8/10/12. **BOUND: bytes +6.. carry the marker chain in every LEN case, so a length dependence on byte +6 or later is UNTESTED.** This measured table is NOT the rule the tokenizer implements: EXP-0182 measured that adopting it verbatim costs 17 clean corpus files and 3,220 leftover bytes, because the G17P measurement and the M4 corpus disagree exactly on the compact forms -- precisely where the bound above says the measurement is silent. `isadb.instr_length` therefore implements only the nine (opsel, m) cells where BOTH sources agree. Recorded here so the disagreement is visible rather than smoothed away. SUPERSEDED HERE: the EXP-M4-14 reading in which byte+3 was `srcA` and byte+4 `srcB` -- byte+4 is refuted as an operand (see the `ctrl` field note) and the two sources are byte+1 and byte+3.",
-   "provenance": "HW-VALIDATED (EXP-0033): half_add / half2_add / half2_mul read back exact for both packed lanes; op-select (0x1c/0x1d) mirrors the HW-validated 0x09 ALU and is the only byte differing between half2_add and half2_mul. HW-VALIDATED (splice, A18 EXP-M4-14): own-MSL pureh.metal k_pureadd with distinct per-lane inputs -- byte+3 sweep {0x02->a+b; 0x04/06/08->b} proves byte+3=srcA (RETYPED from srcB); byte+5 sweep {0xc0->a+b; 0xc8->-a+b (bit3 srcA-negate); 0xc1->srcA only; 0xc2/0xc4->srcB only; 0x80/0x40/0x00->0}; opsel (0x1c hadd vs 0x1d hmul, byte+2) reconfirmed against k_puremul. puresub/pureneg corroborate the byte+5 bit3 negate. The former raw 'tail' (byte+4/+5) is now split into srcB + src_modifier; src_modifier bit-pattern rule captured in semantics (not a clean value enum).  [SUPERSEDED IN PART 2026-08-30] EXP-0183 re-derived EXP-0180's DEF-0180-1 and DEF-0180-2 from that experiment's committed raw (raw/g17p_run02, raw/g17p_run03; PURE ANALYSIS, no new hardware run) and both survived. The destination moves to byte0's high nibble; byte+1 and byte+3 are the two sources; byte+4 is not an operand. EXP-M4-14, which supplied the superseded reading, has NO committed raw tree at all (EXP-0164), and EXP-0180 refuted six of its nine claims on hardware."
+   "semantics": "d.half = op(srcA.half, srcB.half), with opsel 4=hadd and 5=hmul. srcA_half/srcB_half choose the low or high 16-bit lane; the physical GPRs use the common Apple9 split map: dst = dst | (dst_mid<<4) | (dst_hi<<6), srcA = srcA_reg | (srcA_hi<<6), and in GPR mode srcB = srcB_reg | (srcB_hi<<6). EXP-M4-38 validates this map on T8132, including exact low-half results and preservation of the unselected high half. srcA_aux/srcB_aux are descriptor auxiliaries. opflags carries source lifetime/publication state, ctrl selects compact versus longer forms, and srcA_neg negates source A. The scoreboard-slot position is inherited from the shared compact-ALU skeleton and was not independently swept for half ALU.",
+   "provenance": "HW-VALIDATED (EXP-0033): half_add / half2_add / half2_mul read back exact for both packed lanes; op-select (0x1c/0x1d) mirrors the HW-validated 0x09 ALU and is the only byte differing between half2_add and half2_mul. EXP-0180/0183 correct the source-slot interpretation: destination is byte0 high nibble, byte+1 and byte+3 contain the two sources, and byte+4 is not an operand. EXP-M4-38 then hardware-validates every bit of the complete split r0..r95 destination and two-source GPR map on T8132, including exact selected-half output and preservation of the other half. Source modifiers outside the tested baseline remain only partially characterized."
   },
   {
    "mnemonic": "ibitcount",
@@ -10378,8 +10628,15 @@
     {
      "name": "srcA_reg",
      "start": 9,
-     "width": 7,
+     "width": 6,
      "type": "reg"
+    },
+    {
+     "name": "srcA_aux",
+     "start": 15,
+     "width": 1,
+     "type": "mod",
+     "note": "Descriptor auxiliary bit; not register bit 6 (EXP-M4-38)."
     },
     {
      "name": "opsel",
@@ -10396,8 +10653,15 @@
     {
      "name": "opflags",
      "start": 19,
-     "width": 5,
+     "width": 3,
      "type": "mod"
+    },
+    {
+     "name": "dst_mid",
+     "start": 22,
+     "width": 2,
+     "type": "reg",
+     "note": "Destination register bits 4..5 (EXP-M4-38, T8132 hardware)."
     },
     {
      "name": "srcB_size",
@@ -10412,8 +10676,15 @@
     {
      "name": "srcB_reg",
      "start": 25,
-     "width": 7,
+     "width": 6,
      "type": "reg"
+    },
+    {
+     "name": "srcB_aux",
+     "start": 31,
+     "width": 1,
+     "type": "mod",
+     "note": "Descriptor auxiliary bit; not register bit 6 (EXP-M4-38)."
     },
     {
      "name": "ctrl",
@@ -10428,10 +10699,28 @@
      "type": "mod"
     },
     {
-     "name": "mod_lo",
+     "name": "srcA_hi",
      "start": 40,
-     "width": 3,
-     "type": "mod"
+     "width": 1,
+     "type": "reg",
+     "note": "Source-A register bit 6 (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "srcB_file",
+     "start": 41,
+     "width": 1,
+     "type": "enum",
+     "enum": {
+      "0": "GPR",
+      "1": "non-GPR / inline source"
+     }
+    },
+    {
+     "name": "srcB_hi",
+     "start": 42,
+     "width": 1,
+     "type": "reg",
+     "note": "Source-B register bit 6 when srcB_file=GPR (EXP-M4-38, T8132 hardware)."
     },
     {
      "name": "srcB_neg",
@@ -10440,10 +10729,18 @@
      "type": "mod"
     },
     {
-     "name": "mod_hi",
+     "name": "dst_hi",
      "start": 44,
-     "width": 4,
-     "type": "mod"
+     "width": 1,
+     "type": "reg",
+     "note": "Destination register bit 6 (EXP-M4-38, T8132 hardware)."
+    },
+    {
+     "name": "scoreboard_slot",
+     "start": 45,
+     "width": 3,
+     "type": "mod",
+     "note": "Scoreboard-slot position inherited from the shared compact FALU2 skeleton; EXP-M4-38 independently proves adjacent bit44 is destination bit 6."
     },
     {
      "name": "ext_srcmod",
@@ -10452,8 +10749,8 @@
      "type": "mod"
     }
    ],
-   "semantics": "10-byte EXTENDED 2-source float ALU (abs-source form): the falu2 op in bits [0:48] (opsel 4=fadd / 5=fmul, bit17=0/bit18=1 -- identical to the 8-byte falu2_ext) plus a 32-bit source-modifier / trailing-operand word (byte+6..+9). Length 10 = base 6 + 4 modifier bytes (HW model 6+2*(byte+4&3), byte+4 low2==2 => abs source slot). The abs()-around-a-source sibling of falu2_ext.",
-   "provenance": "byte-diff (EXP-M4-13 R7): SAME match bits as the HW-VALIDATED falu2_ext (EXP-M4-10), one modifier word longer. [0:48] = HW-VALIDATED falu2 layout; ext_srcmod located (the abs/coord modifier region that grows the op to 10 bytes), exact sub-split/values inferred (need splice). Tight match => no false resync landings."
+   "semantics": "Ten-byte two-source float ALU with the same first-48-bit split r0..r95 register, lifetime, source-file, negate, and slot layout as falu2 and falu2_ext. EXP-M4-38 validates every split register component on this exact form on T8132; the scoreboard meaning is inherited from the shared FALU2 skeleton rather than independently swept in this form. ext_srcmod is the four-byte source-modifier tail used by abs/coordinate variants.",
+   "provenance": "byte-diff (EXP-M4-13 R7): SAME match bits as the HW-VALIDATED falu2_ext (EXP-M4-10), one modifier word longer. EXP-M4-38 hardware-validates the complete split r0..r95 destination and two-source GPR map in the first 48 bits of this exact ten-byte form on T8132. ext_srcmod is located in the abs/coordinate modifier tail, but its exact sub-fields and values remain inferred."
   },
   {
    "mnemonic": "falu3_srcmod12",
