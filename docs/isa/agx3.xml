@@ -46,6 +46,17 @@
     <value value="1" label="non-GPR / inline source">non_GPR_inline_source</value>
   </enum>
 
+  <enum kind="falu2i_scoreboard_slot" name="falu2i scoreboard_slot">
+    <value value="0" label="ordinary/materialized source">ordinary_materialized_source</value>
+    <value value="1" label="pending slot 1">pending_slot_1</value>
+    <value value="2" label="pending slot 2">pending_slot_2</value>
+    <value value="3" label="pending slot 3">pending_slot_3</value>
+    <value value="4" label="pending slot 4">pending_slot_4</value>
+    <value value="5" label="pending slot 5">pending_slot_5</value>
+    <value value="6" label="pending slot 6">pending_slot_6</value>
+    <value value="7" label="reserved/aliasing behavior; do not emit">reserved_aliasing_behavior_do_not_emit</value>
+  </enum>
+
   <enum kind="funary_mod" name="funary mod">
     <value value="0">mov</value>
     <value value="2">abs</value>
@@ -94,6 +105,11 @@
     <value value="7">s_lt</value>
   </enum>
 
+  <enum kind="cvt_f2i_round_mode" name="cvt_f2i round_mode">
+    <value value="0" label="round-to-nearest-even">round_to_nearest_even</value>
+    <value value="1" label="round-toward-zero">round_toward_zero</value>
+  </enum>
+
   <enum kind="ilogic_op_base" name="ilogic op_base">
     <value value="0" label="xor-base">xor_base</value>
     <value value="1" label="and/or-base">and_or_base</value>
@@ -105,34 +121,29 @@
   </enum>
 
   <enum kind="fspecial_fnclass" name="fspecial fnclass">
-    <value value="0" label="rcp|round -- on the std-SFU datapath (fnsel 0xb0): 0x2f -&gt; rint, 0xaf -&gt; +inf (rcp needs fnsel 0x10)">rcp_round_on_the_std_SFU_datapath_0x2f_rint_0xaf_inf</value>
+    <value value="0" label="rcp|round -- reciprocal uses byte7 0x48/byte8 0x20; on the std-SFU datapath byte7 0x40 gives 0x2f -&gt; rint, 0xaf -&gt; +inf">rcp_round_reciprocal_uses_byte7_0x48_byte8_0x20_on_the_std_SFU_datapath_byte7_0x40_gives_0x2f_rint_0xaf_inf</value>
     <value value="1" label="rsqrt|sqrt">rsqrt_sqrt</value>
     <value value="2" label="exp2|log2 (fn_hi selects: 0 -&gt; log2, 1 -&gt; exp2; HW-confirmed by computed value on G17P)">exp2_log2</value>
     <value value="3" label="sincos/tan primitive -- on 0x2f returns NaN for 11 of 12 positive finite inputs; on 0xaf indistinguishable from class 1 (rsqrt)">sincos_tan_primitive_on_0x2f_returns_NaN_for_11_of_12_positive_finite_inputs_on_0xaf_indistinguishable_from_class_1</value>
     <value value="4" label="NOT a separate class: 4 = class 0 with bit 2 set, which stores nothing at all on both datapaths (HW, G17P)">NOT_a_separate_class_4_class_0_with_bit_2_set_which_stores_nothing_at_all_on_both_datapaths</value>
   </enum>
 
-  <enum kind="fspecial_src_cache" name="fspecial src_cache">
-    <value value="84" label="uncached (later consumer of a shared/computed source)">uncached</value>
-    <value value="86" label="cached source (fresh operand)">cached_source</value>
-  </enum>
-
   <enum kind="fspecial_src_class" name="fspecial src_class">
-    <value value="2" label="16-bit / alt operand class">16_bit_alt_operand_class</value>
-    <value value="3" label="32-bit GPR source">32_bit_GPR_source</value>
+    <value value="2" label="standalone/direct-store result (native hint)">standalone_direct_store_result</value>
+    <value value="3" label="result used by following ALU (native hint)">result_used_by_following_ALU</value>
   </enum>
 
   <enum kind="fspecial_fnsel" name="fspecial fnsel">
-    <value value="0" label="(inferred)">v0</value>
+    <value value="0" label="reciprocal, source retained">reciprocal_source_retained</value>
     <value value="2" label="rcp alt-operand form">rcp_alt_operand_form</value>
-    <value value="16" label="rcp datapath">rcp_datapath</value>
+    <value value="16" label="reciprocal, source released (core 0x00 | release bit 0x10)">reciprocal_source_released</value>
     <value value="32" label="compound range-reduce (inferred)">compound_range_reduce</value>
     <value value="138" label="(inferred)">v138</value>
     <value value="142" label="(inferred)">v142</value>
     <value value="144" label="(inferred)">v144</value>
-    <value value="146" label="sqrt / sincos datapath">sqrt_sincos_datapath</value>
-    <value value="172" label="SFU f16 datapath">SFU_f16_datapath</value>
-    <value value="176" label="std SFU f32 (rsqrt/exp2/log2/round)">std_SFU_f32</value>
+    <value value="146" label="sqrt / sincos datapath, source released (core 0x82 | release bit 0x10)">sqrt_sincos_datapath_source_released</value>
+    <value value="172" label="SFU f16 datapath, source retained (core 0xac)">SFU_f16_datapath_source_retained</value>
+    <value value="176" label="std SFU f32, source released (core 0xa0 | release bit 0x10)">std_SFU_f32_source_released</value>
   </enum>
 
   <enum kind="fspecial_precsel" name="fspecial precsel">
@@ -547,7 +558,6 @@
   <enum kind="ibitcount_form" name="ibitcount form">
     <value value="4">reverse</value>
     <value value="5" label="count/scan">count_scan</value>
-    <value value="21" label="observed on our own k_pc_two (occurrence 1); role UNNAMED -- DEF-0202-4">observed_on_our_own_k_pc_two_role_UNNAMED_DEF_0202_4</value>
   </enum>
 
   <enum kind="ibitcount_op_enable" name="ibitcount op_enable">
@@ -758,7 +768,7 @@
   </group>
 
   <!-- falu2i: d = op(srcA, K) -->
-  <!-- provenance: HW-VALIDATED (EXP-0006): every K in {0,+-0.0625..30} spliced and the runtime output equalled a+K (raw/validate_imm_dst.log). -->
+  <!-- provenance: HW-VALIDATED (EXP-0006): every K in {0,+-0.0625..30} spliced and the runtime output equalled a+K (raw/validate_imm_dst.log). EXP-M4-44 (T8132) ... -->
   <group name="falu2i" length="6" label="d = op(srcA, K)">
     <exact bit="0:3">1001</exact>
     <exact bit="39">1</exact>
@@ -772,7 +782,8 @@
     <modifier name="srcA_size" bit="24" kind="opsize"/>
     <src name="srcA_reg" bit="25:30"/>
     <modifier name="ctrl_lo" bit="32:38"/>
-    <modifier name="mods" bit="40:47"/>
+    <modifier name="mods" bit="40:44"/>
+    <modifier name="scoreboard_slot" bit="45:47" kind="falu2i_scoreboard_slot"/>
     <modifier name="srcA_reg_top" bit="31"/>
 
     <ins name="fadd" opsel="100"/>
@@ -902,9 +913,8 @@
     <exact bit="0:6">0011111</exact>
     <exact bit="7">addsub</exact>
     <modifier name="lenbit" bit="8"/>
-    <modifier name="srcB_reg_hi" bit="9:15"/>
-    <modifier name="b2_bit0" bit="16"/>
-    <modifier name="store_en" bit="17"/>
+    <modifier name="srcB_reg_hi" bit="9:11"/>
+    <modifier name="pending_mask" bit="12:17"/>
     <modifier name="b2_fmt" bit="18:23"/>
     <dest name="dst" bit="24:31"/>
     <modifier name="opmode" bit="32:39"/>
@@ -925,9 +935,8 @@
     <exact bit="0:6">0011111</exact>
     <modifier name="b0bit7" bit="7"/>
     <modifier name="lenbit" bit="8"/>
-    <modifier name="b1hi" bit="9:15"/>
-    <modifier name="b2_bit0" bit="16"/>
-    <modifier name="store_en" bit="17"/>
+    <modifier name="b1hi" bit="9:11"/>
+    <modifier name="pending_mask" bit="12:17"/>
     <modifier name="b2_fmt" bit="18:23"/>
     <dest name="dst" bit="24:31"/>
     <modifier name="opmode" bit="32:39"/>
@@ -1047,8 +1056,9 @@
   <ins name="ishift" length="10" label="ARITHMETIC (sign-preserving) shift-right by an immediate is the HW-VALIDATED member of this BROAD ...">
     <exact bit="0:7">10100111</exact>
     <exact bit="8">1</exact>
-    <modifier name="form" bit="9:15"/>
-    <modifier name="src_cache" bit="16:23"/>
+    <modifier name="form" bit="9:11"/>
+    <modifier name="pending_mask" bit="12:17"/>
+    <modifier name="src_cache" bit="18:23"/>
     <src name="srcA" bit="24:31"/>
     <modifier name="src_class" bit="32:39"/>
     <src name="opB" bit="40:47"/>
@@ -1063,9 +1073,8 @@
   <ins name="ibfe" length="12" label="bitfield-extract extract_bits(a, off, cnt) (3-operand 12-byte form)">
     <exact bit="0:7">10100111</exact>
     <exact bit="8">0</exact>
-    <modifier name="lenhi" bit="9:15"/>
-    <modifier name="b2_bit0" bit="16"/>
-    <modifier name="store_en" bit="17"/>
+    <modifier name="lenhi" bit="9:11"/>
+    <modifier name="pending_mask" bit="12:17"/>
     <modifier name="b2_fmt" bit="18:23"/>
     <dest name="dst" bit="24:31"/>
     <modifier name="b4" bit="32:39"/>
@@ -1104,15 +1113,18 @@
   <!-- provenance: HW-VALIDATED (EXP-0013): int(3.9)/int(-3.9)/int(2.5) = 3/-3/2 (trunc); splicing byte+7 0x48->0x08 turns the signed f2i into the unsigned f2u convert ... -->
   <ins name="cvt_f2i" length="10" label="d = (int|uint)(a)">
     <exact bit="0:7">00100111</exact>
-    <exact bit="8:15">00000111</exact>
-    <modifier name="mode" bit="16:23"/>
+    <exact bit="8:11">0111</exact>
+    <modifier name="pending_mask" bit="12:17"/>
+    <modifier name="mode" bit="18:23"/>
     <dest name="dst" bit="24:31"/>
     <modifier name="src_class" bit="32:39"/>
     <src name="src" bit="40:47"/>
     <!-- opcode cvtop = f2int -->
     <exact bit="48:55">10110100</exact>
     <modifier name="signflag" bit="56:63"/>
-    <modifier name="dst_class" bit="64:71"/>
+    <modifier name="result_format" bit="64"/>
+    <modifier name="round_mode" bit="65" kind="cvt_f2i_round_mode"/>
+    <modifier name="result_aux" bit="66:71"/>
     <modifier name="b9" bit="72:79"/>
   </ins>
 
@@ -1120,9 +1132,10 @@
   <!-- provenance: HW-VALIDATED (EXP-0013): float(-3)/float(1000000) exact; splicing byte+7 0x60->0x20 converts -1 as unsigned (4294967295 -> ~4.29e9) on hardware. ... -->
   <group name="cvt_i2f" length="8" label="d = float(a)">
     <exact bit="0:7">10100111</exact>
-    <exact bit="8:15">00000111</exact>
+    <exact bit="8:11">0111</exact>
     <exact bit="48:55">cvtop</exact>
-    <modifier name="mode" bit="16:23"/>
+    <modifier name="pending_mask" bit="12:17"/>
+    <modifier name="mode" bit="18:23"/>
     <dest name="dst" bit="24:31"/>
     <modifier name="src_class" bit="32:39"/>
     <src name="src" bit="40:47"/>
@@ -1207,8 +1220,8 @@
     <exact bit="0:6">0101111</exact>
     <modifier name="fn_hi" bit="7" kind="fspecial_fn_hi"/>
     <modifier name="fnclass" bit="8:11" kind="fspecial_fnclass"/>
-    <modifier name="src_ext" bit="12:15"/>
-    <modifier name="src_cache" bit="16:23" kind="fspecial_src_cache"/>
+    <modifier name="pending_mask" bit="12:17"/>
+    <modifier name="src_cache" bit="18:23"/>
     <dest name="dst" bit="24:31"/>
     <modifier name="src_class" bit="32:39" kind="fspecial_src_class"/>
     <src name="src" bit="40:47"/>
@@ -1385,6 +1398,29 @@
     <dest name="dst" bit="4:7"/>
     <immediate name="imm7" bit="8:14"/>
     <modifier name="imm_top" bit="15"/>
+  </ins>
+
+  <!-- mov_imm32: Write an untyped raw 32-bit literal to a scalar GPR -->
+  <!-- provenance: HW-VALIDATED (EXP-M4-37, T8132): 33 one-bit payload programs recover all 32 literal bits; a 256-case destination probe, 16-case preseed probe, and ... -->
+  <ins name="mov_imm32" length="8" label="Write an untyped raw 32-bit literal to a scalar GPR">
+    <exact bit="0:3">1100</exact>
+    <exact bit="15">1</exact>
+    <exact bit="16:20">00010</exact>
+    <exact bit="24">0</exact>
+    <exact bit="32">0</exact>
+    <exact bit="37:39">000</exact>
+    <exact bit="40:41">00</exact>
+    <exact bit="44:47">0000</exact>
+    <exact bit="60:63">0000</exact>
+    <dest name="dst" bit="4:7"/>
+    <immediate name="imm0_6" bit="8:14"/>
+    <modifier name="modifier" bit="21"/>
+    <dest name="dst_hi" bit="22:23"/>
+    <immediate name="imm25_31" bit="25:31"/>
+    <immediate name="imm7_10" bit="33:36"/>
+    <immediate name="imm11_12" bit="42:43"/>
+    <immediate name="imm13_20" bit="48:55"/>
+    <immediate name="imm21_24" bit="56:59"/>
   </ins>
 
   <!-- uniform_mov: d(GPR) = uniform_register[usrc] -->
@@ -2077,11 +2113,10 @@
   <ins name="ibitcount" length="8" label="single-op bit-count / bit-scan (8B)">
     <exact bit="0:6">0100111</exact>
     <exact bit="9">0</exact>
-    <exact bit="16">0</exact>
     <exact bit="18:23">010101</exact>
     <modifier name="fn_hi" bit="7" kind="ibitcount_fn_hi"/>
-    <modifier name="form" bit="8 10:15" kind="ibitcount_form"/>
-    <modifier name="cache" bit="17"/>
+    <modifier name="form" bit="8 10:11" kind="ibitcount_form"/>
+    <modifier name="pending_mask" bit="12:17"/>
     <dest name="dst" bit="24:31"/>
     <modifier name="op_enable" bit="32:39" kind="ibitcount_op_enable"/>
     <src name="src" bit="40:47"/>
@@ -2463,10 +2498,9 @@
   <!-- provenance: byte-diff EXP-M4-13 R2 (own-MSL): the shl_reg(0x27)/shr_log(0xa7) 12-byte ops are byte-identical except byte0 -> byte0 bit7 = direction; 0x27 = the ... -->
   <group name="ibfins" length="12" label="d = shift-left / bitfield-insert (integer)">
     <exact bit="0:7">00100111</exact>
-    <exact bit="16">0</exact>
     <exact bit="18:23">010101</exact>
-    <exact bit="8:15">form</exact>
-    <modifier name="cache" bit="17"/>
+    <exact bit="8:11">form</exact>
+    <modifier name="pending_mask" bit="12:17"/>
     <dest name="dst" bit="24:31"/>
     <modifier name="b4" bit="32:39"/>
     <immediate name="mask_imm" bit="40:47"/>
@@ -2478,11 +2512,9 @@
     <modifier name="b10" bit="80:87"/>
     <modifier name="b11" bit="88:95"/>
 
-    <ins name="insert_mask_narrow" form="00000000" label="insert/mask/narrow"/>
-    <ins name="addr_matrix_prep" form="00000010" label="addr/matrix-prep"/>
-    <ins name="shl" form="00010000" label="shl(reg)"/>
-    <ins name="insert" form="00010001" label="insert(var)"/>
-    <ins name="shl_merge" form="00100000" label="shl/merge(var)"/>
+    <ins name="insert_mask_narrow" form="0000" label="insert/mask/narrow"/>
+    <ins name="shl_insert" form="0001" label="shl(reg)/insert(var)"/>
+    <ins name="addr_matrix_prep" form="0010" label="addr/matrix-prep"/>
   </group>
 
   <!-- atomic_tg: THREADGROUP (shared-memory) atomic read-modify-write -->
@@ -3016,27 +3048,6 @@
     <modifier name="opdesc" bit="24:31"/>
     <immediate name="immword" bit="32:79"/>
   </ins>
-
-  <!-- cvt_i2f_src: d = float(a) -->
-  <!-- provenance: inferred (OWN-MSL byte-diff, EXP-M4-13 R5): reproduced by our own compilation of `o=float(int)+float(int)` / `float(uint)+float(uint)` and the ... -->
-  <group name="cvt_i2f_src" length="8" label="d = float(a)">
-    <exact bit="0:7">10100111</exact>
-    <exact bit="8:15">00010111</exact>
-    <exact bit="48:55">cvtop</exact>
-    <modifier name="src_cache" bit="16:23"/>
-    <dest name="dst_desc" bit="24:31"/>
-    <modifier name="src_class" bit="32:39"/>
-    <src name="src" bit="40:47"/>
-    <modifier name="signflag" bit="56:63"/>
-
-    <ins name="i2f_sibling2" cvtop="10001100" label="i2f[sibling2]"/>
-    <ins name="i2f_sibling" cvtop="10001110" label="i2f[sibling]"/>
-    <ins name="i2f_16_16" cvtop="10100000" label="i2f[16-&gt;16]"/>
-    <ins name="i2f_16_32" cvtop="10100100" label="i2f[16-&gt;32]"/>
-    <ins name="i2f_32_16" cvtop="10101000" label="i2f[32-&gt;16]"/>
-    <ins name="int2f_32_32" cvtop="10101100" label="int2f[32-&gt;32]"/>
-    <ins name="i2f_8_32" cvtop="10110100" label="i2f[8-&gt;32]"/>
-  </group>
 
   <!-- copysign: d = copysign(a, b) = |a| with the sign bit of b (float) -->
   <!-- provenance: inferred (OWN-MSL byte-diff, EXP-M4-13 R5): our own compilation of `copysign(a[i],b[i])` (float) emits `07 c2 88 00` byte-exact vs the committed ... -->

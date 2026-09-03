@@ -89,9 +89,9 @@
   {
    "mnemonic": "ibitcount",
    "field": "form",
-   "width": 8,
-   "free_bits": 7,
-   "legal_values": 128,
+   "width": 4,
+   "free_bits": 3,
+   "legal_values": 8,
    "label": "hardware-run",
    "instruction_emittable": true,
    "emitter_grade_label": true

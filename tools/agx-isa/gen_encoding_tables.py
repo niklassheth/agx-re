@@ -43,7 +43,7 @@ FAMILY = [
         ("icmpsel", "compare -> select 0/1 (full condition codes)"),
     ]),
     ("Conversions / pack", [
-        ("cvt_f2i", "float/half -> int/uint convert (round to zero)"),
+        ("cvt_f2i", "float/half -> int/uint convert (RTE/RTZ selectable)"),
         ("cvt_i2f", "int/uint -> float/half convert"),
         ("mov_zext16", "16-bit zero-extend / narrow move"),
         ("pack_convert", "pack_float_to_unorm/snorm2x16 (compute)"),
@@ -56,6 +56,7 @@ FAMILY = [
     ("Move / special register", [
         ("get_sr", "read a special register (thread/threadgroup/simd IDs, dims, VS/FS)"),
         ("mov_imm", "2-byte small-immediate move (constant-folded builtins)"),
+        ("mov_imm32", "8-byte untyped raw 32-bit literal write"),
         ("uniform_mov", "copy a uniform register into a GPR"),
         ("stop", "conventional program-end word"),
     ]),

@@ -1464,6 +1464,17 @@ def instr_length(buf, off=0):
     if b0 == 0xa0 and _b1 == 0x00 and _b2 == 0x00:          return 4   # a0 00 00 00: loop-header compact
                                        # init op (EXP-M4-12 S4: k_cf_loop@0x44, get_sr -> [4] -> iadd2;
                                        # reproduced in cf_for/cf_break). Distinct from the 2-byte `a0 0c`.
+    # EXP-M4-37: eight-byte scalar raw-literal write.  This must precede the
+    # get_sr/small-mov rules because both share the low-nibble-c leader.  The
+    # fixed-zero payload holes make the signature substantially tighter than
+    # merely checking byte+1 bit7 and the mode-2 selector.
+    if lo == 0x0c and off + 7 < len(buf):
+        b1, b2, b3 = buf[off + 1], buf[off + 2], buf[off + 3]
+        b4, b5, b7 = buf[off + 4], buf[off + 5], buf[off + 7]
+        if (b1 & 0x80) and (b2 & 0x1f) == 0x02 and not (b3 & 0x01) \
+                and not (b4 & 0xe1) and not (b5 & 0xf3) \
+                and not (b7 & 0xf0):
+            return 8
     # ---- get_sr special-register read / mov_imm (EXP-0031, HW-validated) ----
     # byte0 low-3-bits == 0b100: either the 0xNc preamble form or the 0xN4 datapath
     # form; byte1 = the SR number; byte+2/+3 = a 32-bit-source suffix whose byte+3
@@ -2046,39 +2057,39 @@ def instr_length(buf, off=0):
     # 0x27 (base) and 0xa7 (=0x27|0x80) form a broad unary/convert/shift group whose
     # length is selected by byte+1 (the form field), NOT simply by b1 bit0. Observed
     # (HW-validated by clean tokenization of our own convert/shift kernels, EXP-0013):
-    #   0xa7: b1==0x07 -> 8  (int/uint -> float convert)
-    #         b1  odd  -> 10 (arithmetic shift-right immediate: a7 .. 10B)
-    #         b1  even -> 12 (logical shift-r = bitfield-extract form: a7 .. 12B)
-    #   0x27: b1==0x07 -> 10 (float/half -> int/uint convert)
-    #         b1==0x05 -> 8  (popcount / integer unary reduce)   [EXP-0007]
-    #         b1 in {0x00,0x10} -> 12 (bitfield-extract / shift prep stage)
+    #   0xa7: b1 low nibble 0x07 -> 8  (int/uint -> float convert)
+    #         b1 low nibble 4/5 -> 8  (bit-count/scan)
+    #         b1 bit0 -> 10, otherwise 12 for the remaining forms
+    #   0x27: b1 low nibble 0x07 -> 10 (float/half -> int/uint convert)
+    #         b1 low nibble 0x05 -> 8  (popcount / integer unary reduce)
+    #         b1 low nibble in {0x00,0x01,0x02} -> 12 (bitfield/rotate/prep)
     #         else     -> 8  (other unary)
+    # EXP-M4-42 establishes that b1's high nibble is pending-mask bits 0..3,
+    # so every family-local form decision below deliberately ignores it.
     if b0 == 0xa7:
         b1v = buf[off + 1]
-        if b1v in (0x07, 0x17):
-            return 8                   # int/uint -> float/half convert (EXP-0013 HW; EXP-M4-01
-                                       # adds b1==0x17, the sibling convert form: k_cvt_fi@68 /
-                                       # k_cvt_half@48 `a7 17 54 .. 8e 60` are 8B, anchored by the
-                                       # FOLLOWING `a7 07 54 ..` cvt_i2f. The old odd->10 rule ate
-                                       # into that next op and exposed its tail as a spurious 0x54.
-        if b1v in (0x04, 0x05):
+        form = b1v & 0x0f
+        if form == 0x07:
+            return 8                   # int/uint -> float/half convert (EXP-0013, EXP-M4-42)
+        if form in (0x04, 0x05):
             return 8                   # bit-count/scan: reverse_bits / find-MSB (EXP-0033 HW)
-        return 10 if (b1v & 0x01) else 12
+        return 10 if (form & 0x01) else 12
     if b0 == 0x27:
         b1v = buf[off + 1]
+        form = b1v & 0x0f
         # EXP-M4-13 R2 (n7_fence): shift-left-by-reg / bitfield-INSERT variable-operand form
         # (ibfins). byte+1 in {0x11,0x20} currently fell to the 8-byte else-branch, orphaning
         # the operand tail into an 0xf0 desync. The 12-byte operand form has byte+8 in {0xc0,0xf0}
         # (register/immediate operand descriptor); genuine 8-byte 0x27 ops never do. Narrowly
-        # gated on byte+1 in {0x11,0x20} so popcount/ibitcount(0x05)/cvt(0x07) are untouched.
-        if b1v in (0x11, 0x20) and off + 8 < len(buf) and buf[off + 2] in (0x54, 0x56) \
+        # gated on low-nibble forms 0/1 so pending-mask variants are framed identically.
+        if form in (0x00, 0x01) and off + 8 < len(buf) and (buf[off + 2] & 0xfc) == 0x54 \
                 and buf[off + 8] in (0xc0, 0xf0):
             return 12                  # ibfins (shl-by-reg / insert-var, EXP-M4-13 R2)
-        if b1v == 0x07:
+        if form == 0x07:
             return 10                  # float -> int convert (EXP-0013 HW)
-        if b1v == 0x01:
+        if form == 0x01:
             return 12                  # ROTATE-by-immediate funnel shift (EXP-0033 HW)
-        if b1v in (0x00, 0x02, 0x10):
+        if form in (0x00, 0x02):
             return 12                  # bitfield-extract / shift-prep / matrix-load prep stage.
                                        # EXP-M4-01: byte+1==0x02 is the 12-byte matrix-load prep form
                                        # (k_matrix@58 `27 02 54 .. f0 11 01 00`, anchored iadd2..iadd2);
@@ -2606,6 +2617,7 @@ PARCEL_BYTES = _DB_DOC.get("parcel_bytes")
 LENGTH_RULE = _DB_DOC.get("length_rule")
 SCOREBOARD_MODEL = _DB_DOC.get("scoreboard_model")
 REGISTER_COMPOSITES = _DB_DOC.get("register_composites", [])
+IMMEDIATE_COMPOSITES = _DB_DOC.get("immediate_composites", [])
 LENGTH_RULE_GAPS = _DB_DOC.get("length_rule_gaps")
 
 # Index by mnemonic for the assembler.
@@ -2632,13 +2644,13 @@ def _matches(desc, v):
     return True
 
 
-def _decode_register_composites(mnemonic, fields):
-    """Reconstruct logical registers from DB-described scattered fields."""
+def _decode_composites(groups, member_key, mnemonic, fields):
+    """Reconstruct logical values from DB-described scattered fields."""
     out = {}
-    for group in REGISTER_COMPOSITES:
+    for group in groups:
         if mnemonic not in group.get("instructions", ()):
             continue
-        for operand, spec in group.get("operands", {}).items():
+        for operand, spec in group.get(member_key, {}).items():
             condition = spec.get("when")
             if condition is not None:
                 field, expected = condition
@@ -2651,12 +2663,21 @@ def _decode_register_composites(mnemonic, fields):
     return out
 
 
+def _decode_register_composites(mnemonic, fields):
+    return _decode_composites(REGISTER_COMPOSITES, "operands", mnemonic, fields)
+
+
+def _decode_immediate_composites(mnemonic, fields):
+    return _decode_composites(IMMEDIATE_COMPOSITES, "values", mnemonic, fields)
+
+
 def decode_one(buf, off=0):
     """Decode a single instruction at buf[off].
 
     Returns (record, length) where record is a dict:
       {mnemonic, op_mnemonic(if any), fields:{name:value},
-       operands:{logical_name:register}, length, hex, provenance, semantics}
+       operands:{logical_name:register}, immediates:{logical_name:value},
+       length, hex, provenance, semantics}
     Raises ValueError if length is unknown or no descriptor matches.
     """
     length = instr_length(buf, off)
@@ -2688,6 +2709,7 @@ def decode_one(buf, off=0):
         "op_mnemonic": op_mnem,
         "fields": fields,
         "operands": _decode_register_composites(desc["mnemonic"], fields),
+        "immediates": _decode_immediate_composites(desc["mnemonic"], fields),
         "length": length,
         "hex": raw.hex(),
         "provenance": desc["provenance"],

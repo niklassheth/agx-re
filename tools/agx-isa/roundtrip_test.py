@@ -178,6 +178,9 @@ REAL_INSTRS = {
     "get_sr tgpg (24 a8 10 06)":          "24a81006",   # dst r2, SR 0xa8 threadgroups_per_grid.x
     "get_sr lane (54 82 14 66)":          "54821466",   # dst r5, SR 0x82 simd_lane_id (0xN4 form)
     "mov_imm 32 (0c 20)":                 "0c20",       # threads_per_simdgroup=32 (constant-fold)
+    "mov_imm32 r0 0x12345678":            "0cf802121808a201",
+    "mov_imm32 r18 1.0f":                 "2c80423e0000000c",
+    "mov_imm32 r63 0xffffffff":           "fcffc2fe1e0cff0f",
     "half_alu hadd (10 85 24 84 00 c0)":  "1085248400c0",  # native fp16 add (EXP-0033)
     "half_alu ext10 (m=2)":               "10021c03020000000000",  # direct length map, EXP-0180
     "half high compact dst7 (78 0d 18 11)":"780d1811",      # operand-independent 4B, EXP-0203
@@ -388,11 +391,13 @@ SYNTH = [
     # falu2i packed immediate: a + 1.0 (exp=0xb bias11, mant=0, sign=0) HW-validated:
     ("falu2i", {"dst": 0, "imm_flag": 1, "imm_mant": 0, "imm_exp": 0xb, "opsel": 0b100,
                 "imm_sign": 0, "opflags": 1, "srcA_size": 1, "srcA_reg": 0,
-                "ctrl_lo": 0, "mods": 0xc0, "srcA_reg_top": 0}),             # -> 09b1140180c0
+                "ctrl_lo": 0, "mods": 0, "scoreboard_slot": 6,
+                "srcA_reg_top": 0}),                                          # -> 09b1140180c0
     # a + (-2.0): exp=0xc, sign=1:
     ("falu2i", {"dst": 0, "imm_flag": 1, "imm_mant": 0, "imm_exp": 0xc, "opsel": 0b100,
                 "imm_sign": 1, "opflags": 1, "srcA_size": 1, "srcA_reg": 0,
-                "ctrl_lo": 0, "mods": 0xc0, "srcA_reg_top": 0}),             # -> 09c11c0180c0
+                "ctrl_lo": 0, "mods": 0, "scoreboard_slot": 6,
+                "srcA_reg_top": 0}),                                          # -> 09c11c0180c0
     # EXP-M4-13 R10 (falu_int_frag retype): the old raw 16-bit 'ext' field split into
     # ctrl (byte+6) + srcmods (byte+7); same bytes (ext=0xc002 -> ctrl=0x02, srcmods=0xc0).
     ("falu3",   {"dst": 0x0, "srcA": 0x01, "op": 0x1e, "srcB": 0x05, "ctrl_len": 0x81, "srcC": 0x08, "ctrl": 0x02, "srcmods": 0xc0}),
@@ -409,15 +414,15 @@ SYNTH = [
                   "dst_hi": 0, "scoreboard_slot": 6}),
     # ---- integer (EXP-0007) ----
     # iadd a+b: dst=reg0, addsub=1 (ADD opcode, byte0 0x9f -- RT-1a-FIX polarity),
-    # lenbit=1 (10B), store_en=1. Reproduces the compiler's iadd bytes
+    # lenbit=1 (10B), pending slot 6. Reproduces the compiler's iadd bytes
     # 9f 01 56 00 02 08 00 a8 17 05. (EXP-M4-13 R6 refined field schema.)
-    ("iadd2",   {"addsub": 0x1, "lenbit": 0x1, "srcB_reg_hi": 0x0, "b2_bit0": 0x0,
-                 "store_en": 0x1, "b2_fmt": 0x15, "dst": 0x0, "opmode": 0x2,
+    ("iadd2",   {"addsub": 0x1, "lenbit": 0x1, "srcB_reg_hi": 0x0,
+                 "pending_mask": 0x20, "b2_fmt": 0x15, "dst": 0x0, "opmode": 0x2,
                  "srcB_imm": 0x8, "srcB_imm_hi": 0x0, "srcB_ext": 0x0, "srcA": 0xa8,
                  "opc_tail": 0x17, "opc_tail2": 0x5}),
     # isub a-b (RT-1a-FIX): addsub=0 (SUBTRACT opcode, byte0 0x1f). 1f 01 56 00 02 00 10 a8 17 05.
-    ("iadd2",   {"addsub": 0x0, "lenbit": 0x1, "srcB_reg_hi": 0x0, "b2_bit0": 0x0,
-                 "store_en": 0x1, "b2_fmt": 0x15, "dst": 0x0, "opmode": 0x2,
+    ("iadd2",   {"addsub": 0x0, "lenbit": 0x1, "srcB_reg_hi": 0x0,
+                 "pending_mask": 0x20, "b2_fmt": 0x15, "dst": 0x0, "opmode": 0x2,
                  "srcB_imm": 0x0, "srcB_imm_hi": 0x0, "srcB_ext": 0x8, "srcA": 0xa8,
                  "opc_tail": 0x17, "opc_tail2": 0x5}),
     # iminmax (n2_intalu unified schema): signed min (sel=0x7) at dst r0 -> 02011e0507c0.
@@ -436,29 +441,28 @@ SYNTH = [
                   "dst_hi": 0, "scoreboard_slot": 6}),
     # ---- scalar ALU (EXP-0013) ----
     # cvt_f2i (float->int, byte+7 0x48 = signed): reproduces 27 07 56 00 02 00 b4 48 03 00
-    ("cvt_f2i", {"mode": 0x56, "dst": 0x0, "src_class": 0x2, "src": 0x0, "cvtop": 0xb4, "signflag": 0x48, "dst_class": 0x3, "b9": 0x0}),
+    ("cvt_f2i", {"pending_mask": 0x20, "mode": 0x15, "dst": 0x0, "src_class": 0x2, "src": 0x0, "cvtop": 0xb4, "signflag": 0x48, "result_format": 1, "round_mode": 1, "result_aux": 0, "b9": 0x0}),
     # EXP-0238 register-reach canaries for the same canonical signed conversion form.
-    ("cvt_f2i", {"mode": 0x56, "dst": 0x0, "src_class": 0x2, "src": 0xff, "cvtop": 0xb4, "signflag": 0x48, "dst_class": 0x3, "b9": 0x0}),
-    ("cvt_f2i", {"mode": 0x56, "dst": 0xbf, "src_class": 0x2, "src": 0x0, "cvtop": 0xb4, "signflag": 0x48, "dst_class": 0x3, "b9": 0x0}),
-    ("cvt_f2i", {"mode": 0x56, "dst": 0x7e, "src_class": 0x2, "src": 0xfc, "cvtop": 0xb4, "signflag": 0x48, "dst_class": 0x3, "b9": 0x0}),
+    ("cvt_f2i", {"pending_mask": 0x20, "mode": 0x15, "dst": 0x0, "src_class": 0x2, "src": 0xff, "cvtop": 0xb4, "signflag": 0x48, "result_format": 1, "round_mode": 1, "result_aux": 0, "b9": 0x0}),
+    ("cvt_f2i", {"pending_mask": 0x20, "mode": 0x15, "dst": 0xbf, "src_class": 0x2, "src": 0x0, "cvtop": 0xb4, "signflag": 0x48, "result_format": 1, "round_mode": 1, "result_aux": 0, "b9": 0x0}),
+    ("cvt_f2i", {"pending_mask": 0x20, "mode": 0x15, "dst": 0x7e, "src_class": 0x2, "src": 0xfc, "cvtop": 0xb4, "signflag": 0x48, "result_format": 1, "round_mode": 1, "result_aux": 0, "b9": 0x0}),
     # cvt_i2f (int->float, byte+7 0x60 = signed): a7 07 56 00 02 00 ac 60
-    ("cvt_i2f", {"mode": 0x56, "dst": 0x0, "src_class": 0x2, "src": 0x0, "cvtop": 0xac, "signflag": 0x60}),
+    ("cvt_i2f", {"pending_mask": 0x20, "mode": 0x15, "dst": 0x0, "src_class": 0x2, "src": 0x0, "cvtop": 0xac, "signflag": 0x60}),
     # cvt_f2h (fp32->fp16): 11 03 1c 81 00 c2
     ("cvt_f2h", {"b1": 0x03, "op": 0x1c, "src": 0x81, "b4": 0x00, "tail": 0xc2}),
     # fspecial floor (round-mode byte+8 = 0x02): 2f 00 56 00 02 00 b0 40 02 00
-    # EXP-M4-13 R7 refined field names (fn_hi/fnclass/dst/src_cache/src/src_class/
-    # src_ext/fnsel/precsel/roundmode/sched_flag); SAME bytes as the old b2/b6/b7 form.
-    ("fspecial", {"fn_hi": 0, "fnclass": 0x0, "dst": 0x0, "src_cache": 0x56, "src": 0x00,
-                  "src_class": 0x02, "src_ext": 0x00, "fnsel": 0xb0, "precsel": 0x40,
+    # EXP-M4-42 splits bits12..17 into pending_mask and byte+2's residual mode.
+    ("fspecial", {"fn_hi": 0, "fnclass": 0x0, "dst": 0x0, "src_cache": 0x15, "src": 0x00,
+                  "src_class": 0x02, "pending_mask": 0x20, "fnsel": 0xb0, "precsel": 0x40,
                   "roundmode": 0x02, "sched_flag": 0x00}),
     # fspecial rcp (SFU 1/x, fn_hi=1 byte0->0xaf, fnclass=0): af 00 56 00 02 00 10 48 20 00
-    ("fspecial", {"fn_hi": 1, "fnclass": 0x0, "dst": 0x0, "src_cache": 0x56, "src": 0x00,
-                  "src_class": 0x02, "src_ext": 0x00, "fnsel": 0x10, "precsel": 0x48,
+    ("fspecial", {"fn_hi": 1, "fnclass": 0x0, "dst": 0x0, "src_cache": 0x15, "src": 0x00,
+                  "src_class": 0x02, "pending_mask": 0x20, "fnsel": 0x10, "precsel": 0x48,
                   "roundmode": 0x20, "sched_flag": 0x00}),
     # fspecial rsqrt at dst r2 (EXP-M4-13 R7): byte+1 = fnclass(1) | dst(2)<<4 = 0x21;
     # exercises the dst field split -> af 21 56 00 02 00 b0 40 00 00.
-    ("fspecial", {"fn_hi": 1, "fnclass": 0x1, "dst": 0x2, "src_cache": 0x56, "src": 0x00,
-                  "src_class": 0x02, "src_ext": 0x00, "fnsel": 0xb0, "precsel": 0x40,
+    ("fspecial", {"fn_hi": 1, "fnclass": 0x1, "dst": 0x2, "src_cache": 0x15, "src": 0x00,
+                  "src_class": 0x02, "pending_mask": 0x20, "fnsel": 0xb0, "precsel": 0x40,
                   "roundmode": 0x00, "sched_flag": 0x00}),
     # fspecial_est reciprocal seed (byte0 0x29, byte+2 0x25, subop 0x09): 29 81 25 09 00 c2
     ("fspecial_est", {"dst": 0x2, "srcA": 0x81, "subop": 0x09, "b4": 0x00, "b5": 0xc2}),
@@ -620,6 +624,81 @@ def test_compact_register_composites():
     return fails
 
 
+def test_mov_imm32_composites():
+    print("\n== (F) mov_imm32 reconstructs its six-bit destination and raw value ==")
+    cases = {
+        "0cf802121808a201": (0, 0x12345678),
+        "2c80423e0000000c": (18, 0x3f800000),
+        "2c8482000c001008": (34, 0x01020304),
+        "fcffc2fe1e0cff0f": (63, 0xffffffff),
+    }
+    fails = 0
+    for encoded, (dst, value) in cases.items():
+        rec, _ = isadb.decode_one(bytes.fromhex(encoded), 0)
+        ok = (rec["mnemonic"] == "mov_imm32" and
+              rec["operands"] == {"dst": dst} and
+              rec["immediates"] == {"value": value})
+        fails += not ok
+        print(f"  [{'OK' if ok else 'FAIL'}] {encoded} -> "
+              f"dst={rec.get('operands')} value={rec.get('immediates')}")
+    return fails
+
+
+def test_pending_dependency_fields():
+    """EXP-M4-42/44: wide masks and compact selectors stay structurally distinct."""
+    print("\n== (G) pending dependency mask and compact slot selector ==")
+    wide = {
+        "iadd2":    "9f015600020800a81705",
+        "imad":     "9f00560002080040d02f2a00",
+        "ishift":   "a7015600020008786200",
+        "ibfe":     "a700560002001000f0118100",
+        "ibfins":   "2700540003143204f0100500",
+        "ibitcount": "2705560002005c04",
+        "cvt_i2f":  "a70756000200ac60",
+        "cvt_f2i":  "270756000200b4080200",
+        "fspecial": "af005600020010482000",
+    }
+    masks = (0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x21, 0x30, 0x3f)
+    fails = 0
+    for mnemonic, encoded in wide.items():
+        base = bytearray.fromhex(encoded)
+        expected_len = len(base)
+        ok = True
+        for mask in masks:
+            raw = bytearray(base)
+            raw[1] = (raw[1] & 0x0f) | ((mask & 0x0f) << 4)
+            raw[2] = (raw[2] & 0xfc) | ((mask >> 4) & 0x03)
+            rec, length = isadb.decode_one(bytes(raw), 0)
+            ok &= (rec["mnemonic"] == mnemonic and length == expected_len and
+                   rec["fields"].get("pending_mask") == mask)
+        fails += not ok
+        print(f"  [{'OK' if ok else 'FAIL'}] {mnemonic:10s} masks 00..3f retain {expected_len}B framing")
+
+    compact = bytearray.fromhex("09b1140180c0")
+    ok = True
+    for slot in range(8):
+        raw = bytearray(compact)
+        raw[5] = (raw[5] & 0x1f) | (slot << 5)
+        rec, length = isadb.decode_one(bytes(raw), 0)
+        ok &= (rec["mnemonic"] == "falu2i" and length == 6 and
+               rec["fields"]["scoreboard_slot"] == slot and
+               rec["fields"]["mods"] == 0)
+    fails += not ok
+    print(f"  [{'OK' if ok else 'FAIL'}] falu2i    selectors 0..7 decode at bits45..47")
+
+    ok = True
+    for byte8 in range(4):
+        raw = bytearray.fromhex("270756000200b4080000")
+        raw[8] = byte8
+        rec, length = isadb.decode_one(bytes(raw), 0)
+        ok &= (rec["mnemonic"] == "cvt_f2i" and length == 10 and
+               rec["fields"]["result_format"] == (byte8 & 1) and
+               rec["fields"]["round_mode"] == ((byte8 >> 1) & 1))
+    fails += not ok
+    print(f"  [{'OK' if ok else 'FAIL'}] cvt_f2i   byte+8 format/round split, byte+9 retained")
+    return fails
+
+
 def main():
     f = 0
     f += test_real_roundtrip()
@@ -627,6 +706,8 @@ def main():
     f += test_tokenize_programs()
     f += test_imm_codec()
     f += test_compact_register_composites()
+    f += test_mov_imm32_composites()
+    f += test_pending_dependency_fields()
     print(f"\n{'ALL PASS' if f == 0 else str(f) + ' FAILURES'}")
     return 1 if f else 0
 

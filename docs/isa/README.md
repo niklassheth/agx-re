@@ -22,7 +22,7 @@ never from Apple binaries. See `../../CLAUDE.md`.
 > put an arbitrary legal value in a field and get the documented behaviour. The per-field
 > labelling standard that separates the two is [`../evidence-classification.md`](../evidence-classification.md)
 > (row `DOC-02`), and the live measured state is the `coverage` block of
-> `tools/agx-isa/validation.json` (`generated: 2026-08-28`, `db_sha256 eaca7256…`).
+> `tools/agx-isa/validation.json` (`generated: 2026-09-03`, `db_sha256 00afaf3d…`).
 
 **Measured state — `target: G16G` (Apple M4).** Every field label below was established by an
 experiment that ran on the **local M4 / G16G**. It is **not** relabelled G17P and does not
@@ -30,35 +30,34 @@ transfer: see "Target status" at the end of this section.
 
 | | |
 |---|---|
-| Instructions in the database | **171** |
-| Instructions **EMITTABLE** | **38** |
-| Instructions **decodable, not yet emittable** | **133** |
-| Fields total | **1036** |
-| Fields at **emitter grade** (`hardware-run` 349 + `isolated-byte-diff` 94) | **443 = 42.8 %** |
+| Instructions in the database | **176** |
+| Instructions **EMITTABLE** | **35** |
+| Instructions **decodable, not yet emittable** | **141** |
+| Fields total | **1109** |
+| Fields at **emitter grade** (`hardware-run` 531 + `isolated-byte-diff` 67) | **598 = 53.9 %** |
 
 Per-label field counts, strongest first, with what each one licenses a compiler back-end to do:
 
 | label | fields | % | what an emitter may do with it | CODEX ladder |
 |---|---|---|---|---|
-| `hardware-run` | 349 | 33.7 % | Emit **arbitrary values inside the field's recorded `range`**. The field was given values the compiler would never choose — boundaries, holes, out-of-range — spliced into a real program and executed. | `HW-VALIDATED` |
-| `isolated-byte-diff` | 94 | 9.1 % | Emit **only at the tested points**. An isolated byte change in code compiled from our own MSL ran with the predicted effect, but the range was not swept. | `HW-VALIDATED` (point) |
-| `corpus-correlation` | 182 | 17.6 % | **Do not synthesize.** Meaning inferred from co-variation across our own compiled shaders; nothing was executed. Reproduce the observed value. | `STRUCTURAL` |
-| `tokenization-only` | 203 | 19.6 % | **Do not synthesize.** The field exists so length/framing round-trips; its semantics are unknown. | `STRUCTURAL` |
-| `single-template-inference` | 13 | 1.3 % | **Do not synthesize.** Read out of exactly one example — could be a constant, a don't-care, or load-bearing. | `INFERRED` |
+| `hardware-run` | 531 | 47.9 % | Emit **arbitrary values inside the field's recorded `range`**. The field was given values the compiler would never choose — boundaries, holes, out-of-range — spliced into a real program and executed. | `HW-VALIDATED` |
+| `isolated-byte-diff` | 67 | 6.0 % | Emit **only at the tested points**. An isolated byte change in code compiled from our own MSL ran with the predicted effect, but the range was not swept. | `HW-VALIDATED` (point) |
+| `corpus-correlation` | 75 | 6.8 % | **Do not synthesize.** Meaning inferred from co-variation across our own compiled shaders; nothing was executed. Reproduce the observed value. | `STRUCTURAL` |
+| `tokenization-only` | 148 | 13.3 % | **Do not synthesize.** The field exists so length/framing round-trips; its semantics are unknown. | `STRUCTURAL` |
+| `single-template-inference` | 32 | 2.9 % | **Do not synthesize.** Read out of exactly one example — could be a constant, a don't-care, or load-bearing. | `INFERRED` |
 | `api-accept-reject` | 0 | 0 % | A statement about what Metal/the compiler service accepts, **not** about the hardware field. | `INFERRED` |
 | `host-private` | 0 | 0 % | Not a field userspace fills. | *(out of scope)* |
-| `untested` | 195 | 18.8 % | A **gap**. It is listed so you can see it, not so you can fill it by guessing. This is the default for any field with no explicit label. | `UNKNOWN` |
+| `untested` | 256 | 23.1 % | A **gap**. It is listed so you can see it, not so you can fill it by guessing. This is the default for any field with no explicit label. | `UNKNOWN` |
 
-**The 38 emittable mnemonics** (every emitter-filled field at `hardware-run` or
+**The 35 emittable mnemonics** (every emitter-filled field at `hardware-run` or
 `isolated-byte-diff`; `tools/agx-isa/validation.json` → `coverage.emittable_mnemonics`):
 
-`copysign` · `cvt_f2h` · `cvt_f2i` · `cvt_i2f` · `cvt_i2f_src` · `device_load` · `device_store` ·
-`falu2` · `frame_prologue` · `get_sr` · `half_alu` · `half_alu_ext8` · `ibitcount` · `if_push` ·
-`iunary` · `link_save_restore` · `matrix_mac` · `mov_imm` · `n3_sample_read` · `pack_convert` ·
-`pixel_order` · `psel` · `reg_move_c0` · `reg_move_c1` · `reg_move_c2var` · `reg_move_c9` ·
-`reg_move_cb` · `sel` · `spill_frame_marker` · `stop` · `tex_addr_setup` ·
-`threadgroup_barrier` · `tile_read` · `tile_read_mrt` · `uniform_mov` · `unpack_convert` ·
-`vtx_coord_xform` · `vtx_out_pos`
+`bf_add_dst` · `bf_alu` · `bf_fma_dst` · `carry_gen` · `cvt_bf16` · `cvt_f2h` ·
+`cvt_f2h_dst` · `cvt_i2f` · `device_store` · `falu2` · `falu2_uni` · `falu3` ·
+`falu3_ext` · `falu3_srcmod12` · `falu_acc` · `fspecial` · `h_coord_hi` ·
+`half_alu_ext8` · `hminmax` · `ibitcount` · `isel10` · `iter_at` · `iter_flat` ·
+`mov_imm` · `mov_zext16` · `n3_mov` · `pack_convert` · `pixel_order` · `psel` ·
+`reg_move_cb` · `rtq_state_move` · `sel` · `simd_shuffle` · `sr_read_wide` · `uniform_mov`
 
 > ⚠️ **Read "emittable" strictly.** It means *every emitter-filled field of that descriptor is
 > `hardware-run` or `isolated-byte-diff`*. It does **not** mean the instruction covers every
@@ -345,7 +344,7 @@ EXP-0112 correctly found bit 6 inert (`r(R mod 64)` aliasing).
 
   | byte | what it actually is | rule | evidence (G17P) |
   |---|---|---|---|
-  | byte+1 high nibble | **inert** | — | 16/16 both runs |
+  | byte+1 high nibble | pending-mask bits 0..3 | bit 4→slot 1, bit 7→slot 4 | full slot cross, EXP-M4-42 |
   | **byte+3** | **destination** register | `reg = v >> 1`; bit 0 aliases | all 192 safe values per run, r0..r95 |
   | **byte+5** | **source** register | `reg = v >> 2`; bits 0..1 alias | all 256 values per run, r0..r63 |
 
@@ -371,12 +370,15 @@ EXP-0112 correctly found bit 6 inert (`r(R mod 64)` aliasing).
   `simd_{ballot,reduce,shuffle}.dst`, `imageblock_store.src`), where `(v & 0xC0) == 0xC0` faults
   and the same plus bit 1 **hangs** — so it is a property of the register file, not of `fspecial`.
 
-- **Canonical `fspecial` register lifecycle (G17P, EXP-0237).** For the ten-byte materialized-
-  source FP32 direct-round form, the source byte exhaustively names and releases r0..r63; it cannot
-  represent r64..r95. The destination byte directly writes all r0..r95. Eight source=destination
-  cases across the r0/r15/r16/r31/r32/r47/r48/r63 boundaries prove that release happens before
-  result publication, so the new result wins. These access sets belong to this form and are not
-  inherited by `fspecial_est`, pending-producer forms, or other source classes/datapaths.
+- **Canonical `fspecial` register lifecycle (G17P EXP-0237; corrected on G16G by EXP-M4-41/42).**
+  Byte+5 names r0..r63 and byte+3 writes r0..r95. Source release is not inherent in byte+5:
+  **byte+6 bit 4 is the independent source last-use control**. Native reciprocal emits `0x00`
+  when the source remains live and `0x10` when it dies; a bit-only mutation preserves `1/x` but
+  makes a later source read return zero. Instruction bits 12..17 are the six-slot pending dependency
+  mask: byte+1's high nibble names slots 1..4, and byte+2's low bits name slots 5 and 6. Thus `0x54`
+  means no dependency, `0x55` slot 5, `0x56` slot 6, and `0x57` both; unions are legal. This
+  supersedes EXP-M4-41's initial boolean handoff interpretation. Byte+4 bit 1 is required for a
+  nonzero result, while bit 0 is only a native low-pressure result-use correlation so far.
 
 - **Canonical `cvt_f2i` register lifecycle (G17P, EXP-0238).** In the ten-byte materialized-source
   FP32-to-signed-I32 form, byte+5 exhaustively selects and releases `r[byte5 >> 2]`, so it directly
@@ -1061,7 +1063,9 @@ op + a 2-slot software scoreboard, `AGX_MAX_PENDING=8`).
 Two mechanisms; a compiler picks by fast-math vs precise:
 - **Special-function unit (SFU)** — the `fspecial` group (byte0 `0x2f`/`0xaf`, 10 B) computes each as a
   **single op**. Function = (byte0 bit7, byte+1): `0xaf`+`00/01/02` = **rcp / rsqrt / exp2**;
-  `0x2f`+`00/01/02` = **round / sqrt / log2**. Accuracy: rcp/rsqrt 0 ULP, sqrt/exp2/log2 ~1 ULP.
+  `0x2f`+`00/01/02` = **round / sqrt / log2**. Byte+6 bit 4 is source release, not part of the
+  reciprocal opcode. Accuracy: the T8132 reciprocal has `max |D*r-1| = 7.14e-8` over every
+  `D=1..1024` (~23.74 effective bits); rsqrt/sqrt/exp2/log2 remain about 0--1 ULP in their tested sets.
 - **Estimate + Newton-Raphson (precise mode)** — `fspecial_est` (byte0 `0x29`, 6 B: `29 81 25 <fn> 00 c2`;
   byte+2=`0x25` discriminator; **byte+3 = function**: `0x09` rcp / `0x0b` rsqrt / `0x0d` sqrt). The
   estimate is a classic **~8-bit seed** (measured rcp ~8.0, rsqrt ~7.9, sqrt ~7.5 good mantissa bits);
@@ -1519,20 +1523,25 @@ byte; `0x2A 0xAA` → **snorm16**; `0x4A 0xCA` → **unorm16** (the anchor's for
 which register is read**. This also explains why our own compiler emits `…1cca` for unorm2x16
 and `…1caa` for snorm2x16 — a **format** difference `db.json` attributes to a register.
 
-**The `cvt_*` cluster shares one operand layout.** `cvt_i2f`, `cvt_i2f_src` and `cvt_f2i` share
-a byte layout confirmed byte for byte; **`cvt_f2h` and `cvt_f2h_dst` are the same encoding.**
+**The `cvt_*` cluster shares one operand layout.** `cvt_i2f` and `cvt_f2i` share the eight-byte
+core; **`cvt_f2h` and `cvt_f2h_dst` are the same encoding.** The former `cvt_i2f_src` descriptor
+was not a separate opcode: byte+1 `0x17` is ordinary `cvt_i2f` form 7 with pending-mask slot 1 set.
 
-| byte | `cvt_i2f` | `cvt_i2f_src` | `cvt_f2i` |
-|---|---|---|---|
-| +1 | bits 1,2 set | bits 1,2 set | bits 0,1,2 set |
-| +2 (`mode`) | `(v & 3) != 0` | **INERT, all 256** | `(v & 3) != 0` |
-| +3 (`dst`) | **`reg << 1`**, 6 registers observed | same | same |
-| +4 (`src_class`) | bit 1 | bit 1 | bit 1 |
-| +5 (`src`) | **`reg << 2`** | **`reg << 4`** | **`reg << 2`** |
-| +6 (`cvtop`) | `bits 0,2,7 == 0,1,1` | same | bits 1,2,6 don't-care |
-| +7 (`signflag`) | bit 5 | bit 5 | `bits 3,5 == 1,0` |
-| +8 (`dst_class`) | — | — | bit 1 |
-| +9 (`b9`) | — | — | **INERT, all 256** |
+| bytes/bits | `cvt_i2f` | `cvt_f2i` |
+|---|---|---|
+| bits 12..17 | six-slot pending dependency mask | same |
+| +2 high six bits | residual operand mode | same |
+| +3 (`dst`) | **`reg << 1`** | same |
+| +4 (`src_class`) | source descriptor | same |
+| +5 (`src`) | **`reg << 2`** | **`reg << 2`** |
+| +6 (`cvtop`) | conversion/width selector | conversion selector |
+| +7 (`signflag`) | bit 6 signed/unsigned source | bit 6 signed/unsigned result |
+| +8 continuation | — | bit 0 result format; bit 1 RTE(0)/RTZ(1) |
+| +9 continuation | — | reserved/inert in the tested envelope |
+
+`cvt_i2f` is eight bytes. `cvt_f2i` is ten bytes: its eight-byte core is followed by a two-byte
+result/rounding continuation, hardware-proven by EXP-M4-43. The continuation is not an independent
+compact instruction.
 
 Sweeping byte+3 moves the conversion result into **six different output slots** at predictable
 field values (`slot6←{0,1}`, `slot5←{6,7}`, `slot4←{10,11}`, `slot3←{14,15}`, `slot2←{18,19}`,

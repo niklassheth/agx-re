@@ -1,6 +1,6 @@
 # Apple9 (G16G/G17P) AGX — Instruction Encoding Tables
 
-> **Generated** from `tools/agx-isa/db.json` by `tools/agx-isa/gen_encoding_tables.py` (2026-09-01). Regenerate after any DB change; do not hand-edit. This is the **authoritative, self-contained encoding table** a driver author reads to emit Apple9 AGX instructions — 176 instruction descriptors.
+> **Generated** from `tools/agx-isa/db.json` by `tools/agx-isa/gen_encoding_tables.py` (2026-09-03). Regenerate after any DB change; do not hand-edit. This is the **authoritative, self-contained encoding table** a driver author reads to emit Apple9 AGX instructions — 176 instruction descriptors.
 
 **Clean-room:** every encoding here was learned from the compiled form of MSL **we wrote** (OWN-SHADER) — by byte-diffing our own shaders and by splicing bytes and running them on the real Apple9 GPUs (hardware validation). No Apple binary was disassembled. See `../../CLAUDE.md`.
 
@@ -74,10 +74,11 @@
 | `srcA_size` | [24:25] (byte+3) | enum | `0x1`=b32; `0x0`=b16 |
 | `srcA_reg` | [25:31] | register |  |
 | `ctrl_lo` | [32:39] (byte+4) | modifier |  |
-| `mods` | [40:48] (byte+5) | modifier |  |
+| `mods` | [40:45] (byte+5) | modifier |  |
+| `scoreboard_slot` | [45:48] | modifier | `0x0`=ordinary/materialized source; `0x1`=pending slot 1; `0x2`=pending slot 2; `0x3`=pending slot 3; `0x4`=pending slot 4; `0x5`=pending slot 5; `0x6`=pending slot 6; `0x7`=reserved/aliasing behavior; do not emit |
 | `srcA_reg_top` | [31:32] | modifier |  |
 
-*d = op(srcA, K)  ; srcB is the packed non-IEEE float immediate K = imm_decode(b1, sign). exp(bits12:16,bias11) mant(bits9:12) flag(bit8) sign(bit19). Range +-{0,1/32..30}. HW-VALIDATED EXP-0006.  [CORRECTED 2026-08-28] srcA_reg is 6 BITS with an inert top bit -- see falu2's corrected note; the refutation was independently reproduced on falu2i by construction (EXP-0105). falu2i additionally requires mods = 0xC0 (bits 6+7 together; neither alone) when its operand is LOAD-SOURCED (EXP-0101).*
+*d = op(srcA, K)  ; srcB is the packed non-IEEE float immediate K = imm_decode(b1, sign). exp(bits12:16,bias11) mant(bits9:12) flag(bit8) sign(bit19). Range +-{0,1/32..30}. HW-VALIDATED EXP-0006.  [CORRECTED 2026-08-28] srcA_reg is 6 BITS with an inert top bit -- see falu2's corrected note; the refutation was independently reproduced on falu2i by construction (EXP-0105). Bits 45..47 are a numeric pending-result selector: 0 is the ordinary/materialized path and 1..6 name producer slots 1..6. The old observation that load-sourced operands require byte+5 high bits 0xC0 is therefore the native slot-6 encoding, not an indivisible modifier pair. Selector 7 remains unresolved and must not be emitted.*
 
 ### `falu2_uni` — 2-source float ALU, srcB UNIFORM-register source (a + uniform)
 
@@ -201,18 +202,18 @@
 | Field | Bits | Type | Enum / values |
 |---|---|---|---|
 | `fn_hi` | [7:8] | enum | `0x0`=direct (0x2f: sqrt/log2/round-family/sincos); `0x1`=reciprocal (0xaf: rcp/rsqrt/exp2) |
-| `fnclass` | [8:12] (byte+1) | opcode-select | `0x0`=rcp|round -- on the std-SFU datapath (fnsel 0xb0): 0x2f -> rint, 0xaf -> +inf (rcp needs fnsel 0x10); `0x1`=rsqrt|sqrt; `0x2`=exp2|log2 (fn_hi selects: 0 -> log2, 1 -> exp2; HW-confirmed by computed value on G17P); `0x3`=sincos/tan primitive -- on 0x2f returns NaN for 11 of 12 positive finite inputs; on 0xaf indistinguishable from class 1 (rsqrt); `0x4`=NOT a separate class: 4 = class 0 with bit 2 set, which stores nothing at all on both datapaths (HW, G17P) |
-| `src_ext` | [12:16] | modifier |  |
-| `src_cache` | [16:24] (byte+2) | modifier | `0x56`=cached source (fresh operand); `0x54`=uncached (later consumer of a shared/computed source) |
+| `fnclass` | [8:12] (byte+1) | opcode-select | `0x0`=rcp|round -- reciprocal uses byte7 0x48/byte8 0x20; on the std-SFU datapath byte7 0x40 gives 0x2f -> rint, 0xaf -> +inf; `0x1`=rsqrt|sqrt; `0x2`=exp2|log2 (fn_hi selects: 0 -> log2, 1 -> exp2; HW-confirmed by computed value on G17P); `0x3`=sincos/tan primitive -- on 0x2f returns NaN for 11 of 12 positive finite inputs; on 0xaf indistinguishable from class 1 (rsqrt); `0x4`=NOT a separate class: 4 = class 0 with bit 2 set, which stores nothing at all on both datapaths (HW, G17P) |
+| `pending_mask` | [12:18] | modifier |  |
+| `src_cache` | [18:24] | modifier | `0x15`=canonical operand mode (byte+2 high six bits) |
 | `dst` | [24:32] (byte+3) | register |  |
-| `src_class` | [32:40] (byte+4) | enum | `0x3`=32-bit GPR source; `0x2`=16-bit / alt operand class |
+| `src_class` | [32:40] (byte+4) | enum | `0x3`=result used by following ALU (native hint); `0x2`=standalone/direct-store result (native hint) |
 | `src` | [40:48] (byte+5) | register |  |
-| `fnsel` | [48:56] (byte+6) | opcode-select | `0x10`=rcp datapath; `0xb0`=std SFU f32 (rsqrt/exp2/log2/round); `0x92`=sqrt / sincos datapath; `0xac`=SFU f16 datapath; `0x2`=rcp alt-operand form; `0x8a`=(inferred); `0x8e`=(inferred); `0x90`=(inferred); `0x0`=(inferred); `0x20`=compound range-reduce (inferred) |
+| `fnsel` | [48:56] (byte+6) | opcode-select | `0x10`=reciprocal, source released (core 0x00 | release bit 0x10); `0xb0`=std SFU f32, source released (core 0xa0 | release bit 0x10); `0x92`=sqrt / sincos datapath, source released (core 0x82 | release bit 0x10); `0xac`=SFU f16 datapath, source retained (core 0xac); `0x2`=rcp alt-operand form; `0x8a`=(inferred); `0x8e`=(inferred); `0x90`=(inferred); `0x0`=reciprocal, source retained; `0x20`=compound range-reduce (inferred) |
 | `precsel` | [56:64] (byte+7) | modifier | `0x40`=f32 result; `0x48`=rcp f32; `0x60`=f16 result; `0x44`=(inferred); `0xc0`=log2 negate (inferred); `0x0`=(inferred) |
 | `roundmode` | [64:72] (byte+8) | enum | `0x0`=nearest / none; `0x2`=floor; `0x4`=ceil; `0x6`=trunc; `0x20`=reciprocal-precision flag (rcp/1-op SFU); `0x1`=DO NOT EMIT -- bit 0 set returns NaN in every lane for every input on the rsqrt and log2 SFU datapaths (HW, G17P) |
 | `sched_flag` | [72:80] (byte+9) | modifier |  |
 
-*d[dst] = SFU(src). Function = (byte0 bit7 `fn_hi`, byte+1-lo `fnclass`). OPERAND BYTES CORRECTED ON HARDWARE -- EXP-0161 (G17P), re-derived independently in EXP-0165 (db_defects :: DEF-0161-1). The pre-2026-08-30 descriptor had the DESTINATION and the SOURCE in the wrong bytes, which an emitter could not detect: the program runs, faults nothing, and writes the wrong register. The measured model is: **byte+3 is the DESTINATION register**, packed `reg = v >> 1` (bit 0 is HW-tested don't-care on the f32 datapath and is NOT the project-standard is32 bit -- the compiler's own f32 rsqrt encodes byte+3 = 0x00); **byte+5 is the SOURCE register**, packed `reg = v >> 2` (bits 0-1 HW-tested don't-care); and **byte+1's HIGH nibble is HW-TESTED INERT** -- all 16 values reproduce the unmutated result exactly, in two independent carriers and two gated runs, and the result always lands in the same register. It is retained under its historical name `src_ext` only so the per-field evidence chain in validation.json survives; it is NOT a source-register extension and NOT the destination. EVIDENCE: 16-register architectural dumps -- sweeping byte+5 moves which register is READ (it is released to zero) in blocks of 4 and the computed rsqrt matches that register's seed exactly (60/60 fit, 0 misfits, both runs); sweeping byte+3 moves which register RECEIVES the result in blocks of 2 (28/28 fit, 0 misfits, both runs); an exact-mask search over all 256 masks returns exactly `(v & 0xFE) == 0` for byte+3 and `(v & 0xFC) == 0` for byte+5, i.e. exactly the free bits the model predicts. GENERATED: 20/20 `r_i = rsqrt(r_j)` encodings for arbitrary i,j -- encodings the compiler never emitted -- predicted host-side and executed correctly (the old model scores 10 fail + 10 unpredictable on the same 20). This also EXPLAINS rather than contradicts EXP-0138's byte+3 report ('only 2 and 3 give the correct rsqrt; 188 values silently return 0.0; 6 and 7 leave the poison intact'): that is exactly what a DESTINATION selector does in a carrier whose store reads r1. REGISTER RANGE / DO-NOT-EMIT REGION: byte+3 = v gives destination r[v>>1], so v = 0..191 reaches r0..r95 -- the whole 96-GPR file -- and v = 192..255 would name r96..r127, which do not exist. Every one of those 64 values HANGS or FAULTS the command buffer (EXP-0161 danger arm: 45 of 64 gave a genuine kIOGPUCommandBufferCallbackErrorHang, 19 were only ever observed as innocent victims of their neighbours' resets, 0 ever worked; EXP-0138 independently recorded 60 faults plus three watchdog hangs at 192/193/194 on M4). An emitter must never encode a destination register >= 96 here. The safe region 0..191 is dense and clean in three EXP-0161 carriers; EXP-0237 additionally executes all 192 safe values with register-specific exact results in two quiet generated direct-round runs, and shows bit 0 aliases in that envelope. SOURCE RANGE: byte+5 = v gives source r[v>>2], so the exhausted field reaches r0..r63 only and cannot represent physical r64..r95. EXP-0237 executes all 256 source-byte values in two quiet generated direct-round runs, identifies each source arithmetically, proves post-read release, and shows bits 0-1 alias in that envelope. FUNCTION SELECT (measured BY COMPUTED VALUE on G17P, EXP-0161 + EXP-0165 re-derivation, db_defects :: DEF-0161-3 as corrected): on the standard-SFU datapath (byte+6/+7 = 0xb0/0x40) `fnclass` bit 3 is a DON'T-CARE -- v and v+8 are identical in every one of the 8 pairs, in three carriers -- but bit 2 is NOT a blanket don't-care, which is where EXP-0161's own summary over-generalised. Measured map: with fn_hi=1 (byte0 0xaf): class&3 = 1 -> rsqrt, 2 -> exp2, 3 -> rsqrt (same as 1), 0 -> returns +inf for every input; and bit 2 is inert for class&3 in {1,2,3} but live at class&3 = 0 (classes 4/12 store nothing at all). With fn_hi=0 (byte0 0x2f): class&3 = 0 -> rint, 1 -> rsqrt, 2 -> log2, 3 -> a primitive that returns NaN for 11 of 12 positive-finite inputs (consistent with the sincos/tan range-reduction primitive this enum has always named, not proof of it); and bit 2 is live at class&3 in {0,1} (class 4/12 store nothing; class 5/13 FAULT the command buffer) and inert at {2,3}. So the pre-existing `fn_hi` enum is now HW-CONFIRMED ON G17P BY COMPUTED VALUE at class 2 (0 -> log2, 1 -> exp2), and the `fnclass` enum's 0/1/2/3 rows are confirmed for the DIRECT (0x2f) family. Note that on this datapath class 0 does NOT compute rcp -- rcp needs fnsel 0x10. ROUND MODE / NaN BIT (db_defects :: DEF-0161-4, HW, G17P): on the rsqrt (0xaf) and log2 (0x2f) SFU datapaths byte+8 has exactly ONE live bit, bit 0, and setting it returns NaN in ALL 12 output lanes for EVERY input -- 128 of 256 values, in two carriers x two gated runs, 128/128 each time -- while all 128 even values reproduce the correct result bit-for-bit. **An emitter must never set byte+8 bit 0.** The round-mode enum below (0 nearest / 2 floor / 4 ceil / 6 trunc) is a claim about the DIRECT ROUND family only. EXP-0237 re-tests value 2 as floor by exact computed value over 912 positive direct-round cases; the relative 0/4/6 map remains untested in that carrier. On the two earlier rsqrt/log2 SFU datapaths, values 2/4/6 are indistinguishable from 0. OTHER FIELDS, accept-rules measured densely over all 256 values (G17P, the accepted set is the set that reproduces the unmutated result): `src_cache` byte+2 (v & 0x02) == 0x02 in the natural carriers and fully inert in the synthesized one -- carrier-dependent, do not assume inert; `src_class` byte+4 (v & 0x02) == 0x02, one live bit, clearing it silently zeroes; `fnsel` byte+6 (v & 0x99) == 0x90, 16 of 256, identical in all three carriers; `precsel` byte+7 (v & 0x64) == 0x40 (32 of 256) in the natural carriers, looser ((v & 0x60) == 0x40) in the synthesized one; `sched_flag` byte+9 HW-TESTED INERT over all 256 values in both carriers. The op itself: one hardware special-function op; fast-math emits it directly (~1 ULP). exp/exp10 = exp2(x*k); log/log10 = log2(x)*k; pow = exp2(b*log2(a)); a/b = a*rcp(b). `emit_unsafe` is RETAINED, but its meaning has changed: the descriptor geometry is no longer wrong (EXP-0165 fixed it) -- the flag now marks the two documented do-not-emit regions, byte+3 >= 192 and byte+8 bit 0.*
+*d[dst] = SFU(src). Function = (byte0 bit7 `fn_hi`, byte+1-lo `fnclass`). OPERAND BYTES CORRECTED ON HARDWARE -- EXP-0161 (G17P), re-derived independently in EXP-0165 (db_defects :: DEF-0161-1). The pre-2026-08-30 descriptor had the DESTINATION and the SOURCE in the wrong bytes, which an emitter could not detect: the program runs, faults nothing, and writes the wrong register. The measured model is: **byte+3 is the DESTINATION register**, packed `reg = v >> 1` (bit 0 is HW-tested don't-care on the f32 datapath and is NOT the project-standard is32 bit -- the compiler's own f32 rsqrt encodes byte+3 = 0x00); **byte+5 is the SOURCE register**, packed `reg = v >> 2` (bits 0-1 HW-tested don't-care); and **bits12..17 are a six-bit pending-result dependency mask** -- bit12 names slot1 through bit17 naming slot6, and multiple bits request the union (EXP-M4-42). The earlier low-pressure-inert interpretation of byte+1's high nibble and EXP-M4-41's initial boolean 0x54/0x56 handoff interpretation are superseded. EVIDENCE: 16-register architectural dumps -- sweeping byte+5 moves which register is READ (it is released to zero) in blocks of 4 and the computed rsqrt matches that register's seed exactly (60/60 fit, 0 misfits, both runs); sweeping byte+3 moves which register RECEIVES the result in blocks of 2 (28/28 fit, 0 misfits, both runs); an exact-mask search over all 256 masks returns exactly `(v & 0xFE) == 0` for byte+3 and `(v & 0xFC) == 0` for byte+5, i.e. exactly the free bits the model predicts. GENERATED: 20/20 `r_i = rsqrt(r_j)` encodings for arbitrary i,j -- encodings the compiler never emitted -- predicted host-side and executed correctly (the old model scores 10 fail + 10 unpredictable on the same 20). This also EXPLAINS rather than contradicts EXP-0138's byte+3 report ('only 2 and 3 give the correct rsqrt; 188 values silently return 0.0; 6 and 7 leave the poison intact'): that is exactly what a DESTINATION selector does in a carrier whose store reads r1. REGISTER RANGE / DO-NOT-EMIT REGION: byte+3 = v gives destination r[v>>1], so v = 0..191 reaches r0..r95 -- the whole 96-GPR file -- and v = 192..255 would name r96..r127, which do not exist. Every one of those 64 values HANGS or FAULTS the command buffer (EXP-0161 danger arm: 45 of 64 gave a genuine kIOGPUCommandBufferCallbackErrorHang, 19 were only ever observed as innocent victims of their neighbours' resets, 0 ever worked; EXP-0138 independently recorded 60 faults plus three watchdog hangs at 192/193/194 on M4). An emitter must never encode a destination register >= 96 here. The safe region 0..191 is dense and clean in three EXP-0161 carriers; EXP-0237 additionally executes all 192 safe values with register-specific exact results in two quiet generated direct-round runs, and shows bit 0 aliases in that envelope. SOURCE RANGE: byte+5 = v gives source r[v>>2], so the exhausted field reaches r0..r63 only and cannot represent physical r64..r95. EXP-0237 executes all 256 source-byte values in two quiet generated direct-round runs, identifies each source arithmetically, and shows bits 0-1 alias in that envelope. Source release is controlled independently by byte+6 bit 4 (EXP-M4-41). FUNCTION SELECT (measured BY COMPUTED VALUE on G17P, EXP-0161 + EXP-0165 re-derivation, db_defects :: DEF-0161-3 as corrected): on the standard-SFU datapath (byte+6/+7 = 0xb0/0x40) `fnclass` bit 3 is a DON'T-CARE -- v and v+8 are identical in every one of the 8 pairs, in three carriers -- but bit 2 is NOT a blanket don't-care, which is where EXP-0161's own summary over-generalised. Measured map: with fn_hi=1 (byte0 0xaf): class&3 = 1 -> rsqrt, 2 -> exp2, 3 -> rsqrt (same as 1), 0 -> returns +inf for every input; and bit 2 is inert for class&3 in {1,2,3} but live at class&3 = 0 (classes 4/12 store nothing at all). With fn_hi=0 (byte0 0x2f): class&3 = 0 -> rint, 1 -> rsqrt, 2 -> log2, 3 -> a primitive that returns NaN for 11 of 12 positive-finite inputs (consistent with the sincos/tan range-reduction primitive this enum has always named, not proof of it); and bit 2 is live at class&3 in {0,1} (class 4/12 store nothing; class 5/13 FAULT the command buffer) and inert at {2,3}. So the pre-existing `fn_hi` enum is now HW-CONFIRMED ON G17P BY COMPUTED VALUE at class 2 (0 -> log2, 1 -> exp2), and the `fnclass` enum's 0/1/2/3 rows are confirmed for the DIRECT (0x2f) family. Note that on this datapath class 0 does NOT compute rcp -- rcp needs fnsel 0x10. ROUND MODE / NaN BIT (db_defects :: DEF-0161-4, HW, G17P): on the rsqrt (0xaf) and log2 (0x2f) SFU datapaths byte+8 has exactly ONE live bit, bit 0, and setting it returns NaN in ALL 12 output lanes for EVERY input -- 128 of 256 values, in two carriers x two gated runs, 128/128 each time -- while all 128 even values reproduce the correct result bit-for-bit. **An emitter must never set byte+8 bit 0.** The round-mode enum below (0 nearest / 2 floor / 4 ceil / 6 trunc) is a claim about the DIRECT ROUND family only. EXP-0237 re-tests value 2 as floor by exact computed value over 912 positive direct-round cases; the relative 0/4/6 map remains untested in that carrier. On the two earlier rsqrt/log2 SFU datapaths, values 2/4/6 are indistinguishable from 0. OTHER FIELDS, accept-rules measured densely over all 256 values (G17P, the accepted set is the set that reproduces the unmutated result): bits12..17 form the pending dependency mask; byte+2 0x54/0x55/0x56/0x57 therefore mean no dependency/slot5/slot6/slots5+6, while byte+2 high six bits retain operand-mode value 0x15; `src_class` byte+4 (v & 0x02) == 0x02, one live bit, clearing it silently zeroes; `fnsel` byte+6 (v & 0x99) == 0x90, 16 of 256, identical in all three carriers; `precsel` byte+7 (v & 0x64) == 0x40 (32 of 256) in the natural carriers, looser ((v & 0x60) == 0x40) in the synthesized one; `sched_flag` byte+9 HW-TESTED INERT over all 256 values in both carriers. The op itself: one hardware special-function op; fast-math emits it directly (~1 ULP). exp/exp10 = exp2(x*k); log/log10 = log2(x)*k; pow = exp2(b*log2(a)); a/b = a*rcp(b). `emit_unsafe` is RETAINED, but its meaning has changed: the descriptor geometry is no longer wrong (EXP-0165 fixed it) -- the flag now marks the two documented do-not-emit regions, byte+3 >= 192 and byte+8 bit 0.*
 
 ### `fspecial_est` — transcendental estimate seed (rcp/rsqrt/sqrt NR seed)
 
@@ -238,9 +239,8 @@
 |---|---|---|---|
 | `addsub` | [7:8] | opcode-select | `0x1`=iadd; `0x0`=isub |
 | `lenbit` | [8:9] (byte+1) | modifier |  |
-| `srcB_reg_hi` | [9:16] | modifier |  |
-| `b2_bit0` | [16:17] (byte+2) | modifier |  |
-| `store_en` | [17:18] | modifier |  |
+| `srcB_reg_hi` | [9:12] | modifier |  |
+| `pending_mask` | [12:18] | modifier |  |
 | `b2_fmt` | [18:24] | modifier |  |
 | `dst` | [24:32] (byte+3) | register |  |
 | `opmode` | [32:40] (byte+4) | modifier |  |
@@ -251,7 +251,7 @@
 | `opc_tail` | [64:72] (byte+8) | modifier |  |
 | `opc_tail2` | [72:80] (byte+9) | modifier |  |
 
-*d = srcA + srcB (addsub=1, byte0 0x9f) | d = srcA - srcB (addsub=0, byte0 0x1f)  ; integer 2-source add/sub. byte0 bit7 (addsub) is the ADD/SUBTRACT selector: the compiler emits 0x9f for + and 0x1f for -, and splicing a real add's byte0 0x9f->0x1f turns 10+20 into 10-20=-10 on hardware (RT-1a-FIX -- corrects the earlier INVERTED `srcA_neg`/semantics). dst=b3 (reg<<1)|size, a full 8-bit byte -> 7-bit reg (r0..r127), so unlike the 6-byte falu2's 4-bit dst nibble the integer dst reaches the whole GPR file (up to 96 regs, EXP-0020). srcB may be an 8-bit inline immediate K in [0,255] encoded as (K<<1) at b5:b6bit0 (NOT a minifloat -- EXP-0007). A source may name a UNIFORM register: uniform srcB sets byte+5 bit4 (0x10), uniform srcA sets byte+6 (0x30) -- HW byte-diff EXP-0020. EXP-M4-13 R6 (own-MSL byte-diff): signed and unsigned add/sub are BYTE-IDENTICAL (the 10-byte 2-src add is sign-agnostic; there is no separate sign field). The srcB immediate is a 9-bit field (srcB_imm b5[0:8] + srcB_imm_hi b6bit0) stored (K<<1): addi{1,5,7,255}->b5=0x02/0x0a/0x0e/0xfe, b6bit0=1 at 255. srcB REGISTER NUMBER is scattered (srcB_reg_hi b1[1:8] + srcB_imm/b5 + srcB_ext b6[1:8]); the srcB-is-register-vs-immediate TYPE flips opc_tail/opc_tail2 (b8 bit1, b9 bit0) and srcA b7 bit5 -- reg-srcB tail = a8 17 05, imm-srcB tail = 88 15 04. DESTINATION BOUNDS (EXP-0139 DEF-0139-4 + EXP-0146, HW): EXP-0112's r(R mod 64) register-ALIASING rule does NOT transfer to this field -- at dst=140/141 (register 70, which would alias r6) the sum did not appear in r6. The fault boundary is also much lower here: dst byte 0xBE..0xFF (register index >= 95) raises a contained GPU ADDRESS FAULT, reproducibly over 60..66 dense values (5/5 attempts each, healthy baselines). Independently corroborates EXP-0020's ~96-entry GPR file from a different family and method. Emitter bound for this form: destination register <= 94. NATIVE 64-BIT ADD EXISTS (EXP-0146, HW-VALIDATED): the claim that '64-bit SUB uses the single native 0x1f op' while 64-bit ADD needs the iadd2 -> carry_gen -> psel -> high-add chain is only a statement about what the Apple compiler emits. Flipping ONLY the addsub bit of the 64-bit subtract (byte0 0x1f -> 0x9f) yields an EXACT single-instruction 64-bit ADD, verified on two independent 8-row boundary input sets (including 2^64-1 + 1 = 0 and 2^63 + 2^63 = 0), in both gated runs and 5/5 repetitions. A native 64-bit register-pair ADD exists and is emittable. ⚠ OPERAND MODEL CORRECTED (EXP-0154, HW-VALIDATED on G17P, 248/248): **`srcB_ext` is the srcA REGISTER SELECTOR in `reg<<2` packing — it is NOT a modifier.** The full model is `d = r[srcB_ext>>2] + r[srcB_imm>>2]`, matching 128/128 across a dense 7-bit sweep for all 16 observable registers r0..r15, with every value selecting an unseeded register (>=r16) reading 0 exactly as predicted (128/128). Re-verified independently by the orchestrator from the raw register dumps. **This SUPERSEDES EXP-0128/EXP-0139's 'srcA always reads r0'** — it read r0 only because `srcB_ext` happened to be 0 in every compiler-emitted anchor. Consequences for an emitter: db.json types `srcB_ext` as `mod`, which is wrong; and the field currently named `srcA` (byte+7 = 0xa8) is therefore NOT the srcA register selector. **Do NOT adopt EXP-0146's carrier-scoped `(v & 0x7C) == 0x00` rule** — it fits that carrier's ok-set only because it encodes 'srcA must be r0', and shipped as a modifier constraint it would tell an emitter that bits 2..6 must be zero when those bits are how you CHOOSE THE REGISTER. The field is not width-dependent.*
+*d = srcA + srcB (addsub=1, byte0 0x9f) | d = srcA - srcB (addsub=0, byte0 0x1f)  ; integer 2-source add/sub. byte0 bit7 (addsub) is the ADD/SUBTRACT selector: the compiler emits 0x9f for + and 0x1f for -, and splicing a real add's byte0 0x9f->0x1f turns 10+20 into 10-20=-10 on hardware (RT-1a-FIX -- corrects the earlier INVERTED `srcA_neg`/semantics). dst=b3 (reg<<1)|size, a full 8-bit byte -> 7-bit reg (r0..r127), so unlike the 6-byte falu2's 4-bit dst nibble the integer dst reaches the whole GPR file (up to 96 regs, EXP-0020). srcB may be an 8-bit inline immediate K in [0,255] encoded as (K<<1) at b5:b6bit0 (NOT a minifloat -- EXP-0007). A source may name a UNIFORM register: uniform srcB sets byte+5 bit4 (0x10), uniform srcA sets byte+6 (0x30) -- HW byte-diff EXP-0020. EXP-M4-13 R6 (own-MSL byte-diff): signed and unsigned add/sub are BYTE-IDENTICAL (the 10-byte 2-src add is sign-agnostic; there is no separate sign field). The srcB immediate is a 9-bit field (srcB_imm b5[0:8] + srcB_imm_hi b6bit0) stored (K<<1): addi{1,5,7,255}->b5=0x02/0x0a/0x0e/0xfe, b6bit0=1 at 255. The former reading of byte+1 high bits as part of a scattered srcB register number is superseded: only residual bits9..11 retain the historical srcB_reg_hi name, while bits12..17 are the pending dependency mask; the srcB-is-register-vs-immediate TYPE flips opc_tail/opc_tail2 (b8 bit1, b9 bit0) and srcA b7 bit5 -- reg-srcB tail = a8 17 05, imm-srcB tail = 88 15 04. DESTINATION BOUNDS (EXP-0139 DEF-0139-4 + EXP-0146, HW): EXP-0112's r(R mod 64) register-ALIASING rule does NOT transfer to this field -- at dst=140/141 (register 70, which would alias r6) the sum did not appear in r6. The fault boundary is also much lower here: dst byte 0xBE..0xFF (register index >= 95) raises a contained GPU ADDRESS FAULT, reproducibly over 60..66 dense values (5/5 attempts each, healthy baselines). Independently corroborates EXP-0020's ~96-entry GPR file from a different family and method. Emitter bound for this form: destination register <= 94. NATIVE 64-BIT ADD EXISTS (EXP-0146, HW-VALIDATED): the claim that '64-bit SUB uses the single native 0x1f op' while 64-bit ADD needs the iadd2 -> carry_gen -> psel -> high-add chain is only a statement about what the Apple compiler emits. Flipping ONLY the addsub bit of the 64-bit subtract (byte0 0x1f -> 0x9f) yields an EXACT single-instruction 64-bit ADD, verified on two independent 8-row boundary input sets (including 2^64-1 + 1 = 0 and 2^63 + 2^63 = 0), in both gated runs and 5/5 repetitions. A native 64-bit register-pair ADD exists and is emittable. ⚠ OPERAND MODEL CORRECTED (EXP-0154, HW-VALIDATED on G17P, 248/248): **`srcB_ext` is the srcA REGISTER SELECTOR in `reg<<2` packing — it is NOT a modifier.** The full model is `d = r[srcB_ext>>2] + r[srcB_imm>>2]`, matching 128/128 across a dense 7-bit sweep for all 16 observable registers r0..r15, with every value selecting an unseeded register (>=r16) reading 0 exactly as predicted (128/128). Re-verified independently by the orchestrator from the raw register dumps. **This SUPERSEDES EXP-0128/EXP-0139's 'srcA always reads r0'** — it read r0 only because `srcB_ext` happened to be 0 in every compiler-emitted anchor. Consequences for an emitter: db.json types `srcB_ext` as `mod`, which is wrong; and the field currently named `srcA` (byte+7 = 0xa8) is therefore NOT the srcA register selector. **Do NOT adopt EXP-0146's carrier-scoped `(v & 0x7C) == 0x00` rule** — it fits that carrier's ok-set only because it encodes 'srcA must be r0', and shipped as a modifier constraint it would tell an emitter that bits 2..6 must be zero when those bits are how you CHOOSE THE REGISTER. The field is not width-dependent.*
 
 ### `imad` — integer multiply-add (imul = c=0)
 
@@ -261,9 +261,8 @@
 |---|---|---|---|
 | `b0bit7` | [7:8] | modifier |  |
 | `lenbit` | [8:9] (byte+1) | modifier |  |
-| `b1hi` | [9:16] | modifier |  |
-| `b2_bit0` | [16:17] (byte+2) | modifier |  |
-| `store_en` | [17:18] | modifier |  |
+| `b1hi` | [9:12] | modifier |  |
+| `pending_mask` | [12:18] | modifier |  |
 | `b2_fmt` | [18:24] | modifier |  |
 | `dst` | [24:32] (byte+3) | register |  |
 | `opmode` | [32:40] (byte+4) | modifier |  |
@@ -321,20 +320,20 @@
 
 ### `ibitcount` — bit-count / bit-scan (popcount/reverse_bits/find-MSB)
 
-- **Length:** 8 bytes  ·  **Match:** bits[0:7]==0x27, bits[9:10]==0x0, bits[16:17]==0x0, bits[18:24]==0x15  ·  **Provenance:** HW-validated
+- **Length:** 8 bytes  ·  **Match:** bits[0:7]==0x27, bits[9:10]==0x0, bits[18:24]==0x15  ·  **Provenance:** HW-validated
 
 | Field | Bits | Type | Enum / values |
 |---|---|---|---|
 | `fn_hi` | [7:8] | opcode-select | `0x0`=popcount(b1=0x05); `0x1`=reverse_bits(b1=0x04)|find_msb(b1=0x05) |
-| `form` | [8:16] (byte+1) | opcode-select | `0x4`=reverse; `0x5`=count/scan; `0x15`=observed on our own k_pc_two (occurrence 1); role UNNAMED -- DEF-0202-4 |
-| `cache` | [17:18] | modifier |  |
+| `form` | [8:12] (byte+1) | opcode-select | `0x4`=reverse; `0x5`=count/scan |
+| `pending_mask` | [12:18] | modifier |  |
 | `dst` | [24:32] (byte+3) | register |  |
 | `op_enable` | [32:40] (byte+4) | modifier | `0x2`=op computes (bit1 set); `0x3`=op computes (bit1 set) |
 | `src` | [40:48] (byte+5) | register |  |
 | `srcdesc` | [48:56] (byte+6) | modifier | `0x0`=passthrough/move (source returned raw, no count) |
 | `tail` | [56:64] (byte+7) | modifier |  |
 
-*single-op bit-count / bit-scan (8B). HW-VALIDATED (splice, A18 EXP-M4-14, own-MSL iunary.metal popcount `27 05 56 00 02 00 5c 04`, inputs [15,16,65535,0x40000001], baseline popcount [4,1,16,2]): the SUB-OP is selected by (byte0 bit7 fn_hi + byte+1 form), NOT by byte+4 -- splice byte0 0x27->0xa7 -> [3,4,15,30]=find_msb; splice (0xa7, byte+1 0x05->0x04) -> reverse_bits (matches k_reverse). CORRECTION: byte+4 is an op-ENABLE gate (op_enable), NOT the sub-op selector -- splicing byte+4 0x02->0x03 KEEPS popcount [4,1,16,2] (only bit1 matters: 0x02/0x03/0x06/0x07/0x0a compute, 0x00/0x01/0x04/0x05 -> result 0); this corrects the former "optype 0x02 popcount vs 0x03 find_msb" label (correlation, not causation). cache (byte+2 bit17, writeback-enable): only 0x54/0x55 (bit1 clear) break the stored result, 0x56 standalone writes back; all other byte+2 bits inert. dst (byte+3) = destination reg (reg<<1, r0=0x00): sweeping to 0x02/04/06/08 breaks delivery ([0,0,0,0]). src (byte+5) = source reg (reg<<2, r0=0x00): non-zero points at an empty register -> popcount(0)=0. srcdesc (byte+6) = source operand descriptor: 0x00 degenerates the op to identity (returns the raw input, popcount NOT applied), bit6 (0x40) must be set for the GPR source to be read (0x3c/0x9c -> 0; 0x5c/0x4e/0x58 read normally). tail (byte+7, 0x04 marker). TAIL RULE (EXP-0139 DEF-0139-3, HW, dense 0..255 x2 gated launches): only BIT 2 of `tail` is load-bearing -- all 128 values with bit2 set compute the correct popcount, all 128 with bit2 clear return a wrong constant. The former '0x04 marker in every observed instance' was a single-template inference.*
+*single-op bit-count / bit-scan (8B). HW-VALIDATED (splice, A18 EXP-M4-14, own-MSL iunary.metal popcount `27 05 56 00 02 00 5c 04`, inputs [15,16,65535,0x40000001], baseline popcount [4,1,16,2]): the SUB-OP is selected by (byte0 bit7 fn_hi + byte+1 form), NOT by byte+4 -- splice byte0 0x27->0xa7 -> [3,4,15,30]=find_msb; splice (0xa7, byte+1 0x05->0x04) -> reverse_bits (matches k_reverse). CORRECTION: byte+4 is an op-ENABLE gate (op_enable), NOT the sub-op selector -- splicing byte+4 0x02->0x03 KEEPS popcount [4,1,16,2] (only bit1 matters: 0x02/0x03/0x06/0x07/0x0a compute, 0x00/0x01/0x04/0x05 -> result 0); this corrects the former "optype 0x02 popcount vs 0x03 find_msb" label (correlation, not causation). bits12..17 form the pending dependency mask: 0x54 has no dependency, 0x55 names slot5, 0x56 names slot6, and 0x57 names both slots5+6 (EXP-M4-42). dst (byte+3) = destination reg (reg<<1, r0=0x00): sweeping to 0x02/04/06/08 breaks delivery ([0,0,0,0]). src (byte+5) = source reg (reg<<2, r0=0x00): non-zero points at an empty register -> popcount(0)=0. srcdesc (byte+6) = source operand descriptor: 0x00 degenerates the op to identity (returns the raw input, popcount NOT applied), bit6 (0x40) must be set for the GPR source to be read (0x3c/0x9c -> 0; 0x5c/0x4e/0x58 read normally). tail (byte+7, 0x04 marker). TAIL RULE (EXP-0139 DEF-0139-3, HW, dense 0..255 x2 gated launches): only BIT 2 of `tail` is load-bearing -- all 128 values with bit2 set compute the correct popcount, all 128 with bit2 clear return a wrong constant. The former '0x04 marker in every observed instance' was a single-template inference.*
 
 ### `carry_gen` — u64 carry-generate (unsigned-overflow compare for 64-bit add)
 
@@ -372,8 +371,9 @@
 
 | Field | Bits | Type | Enum / values |
 |---|---|---|---|
-| `form` | [9:16] | modifier |  |
-| `src_cache` | [16:24] (byte+2) | modifier |  |
+| `form` | [9:12] | modifier |  |
+| `pending_mask` | [12:18] | modifier |  |
+| `src_cache` | [18:24] | modifier |  |
 | `srcA` | [24:32] (byte+3) | register |  |
 | `src_class` | [32:40] (byte+4) | modifier |  |
 | `opB` | [40:48] (byte+5) | register |  |
@@ -382,7 +382,7 @@
 | `op8` | [64:72] (byte+8) | immediate |  |
 | `pad9` | [72:80] (byte+9) | immediate |  |
 
-*ARITHMETIC (sign-preserving) shift-right by an immediate is the HW-VALIDATED member of this BROAD 10-byte 0xa7 bucket (byte+1 bit0==1). d = a >> shamt: shift amount at byte+6 encoded as (shamt<<2) -- CONFIRMED EXP-M4-13 R8 own-MSL: >>1/2/4/8 -> byte+6 0x04/0x08/0x10/0x20 (k_ashr1/2/4/8), with byte+7 = 0x78 (arithmetic-shift-right op-type) and byte+2 = 0x56 flipping to 0x54 when the source is a computed/consumed register (k_ashr2_srcB). byte+3/+5 carry the operand-register bits (advance in k_ashr2_two). NOTE: this descriptor is length-selected (every odd-b1 10-byte 0xa7) and so also absorbs the 0xa7 10-byte INTERPOLATION / RT datapath siblings (byte+1==0x81, byte+2==0x22 -- corpus-dominant, 138/188); for those, byte+6/+8/+9 are operand/coefficient words, not a shift amount. Logical >> by immediate uses the 12-byte bitfield-extract form (ibfe); register-operand shifts are multi-instr with a 0x2b prep stage. Per-op-select tail semantics of the non-shift siblings NOT reconstructed (rule 5).*
+*ARITHMETIC (sign-preserving) shift-right by an immediate is the HW-VALIDATED member of this BROAD 10-byte 0xa7 bucket (byte+1 bit0==1). d = a >> shamt: shift amount at byte+6 encoded as (shamt<<2) -- CONFIRMED EXP-M4-13 R8 own-MSL: >>1/2/4/8 -> byte+6 0x04/0x08/0x10/0x20 (k_ashr1/2/4/8), with byte+7 = 0x78 (arithmetic-shift-right op-type) and byte+1 high nibble plus byte+2 low two bits forming the six-slot pending dependency mask; the observed 0x54/0x56 byte+2 change is mask 0 versus slot 6 (k_ashr2_srcB). byte+3/+5 carry the operand-register bits (advance in k_ashr2_two). NOTE: this descriptor is length-selected (every odd-b1 10-byte 0xa7) and so also absorbs the 0xa7 10-byte INTERPOLATION / RT datapath siblings (byte+1==0x81, byte+2==0x22 -- corpus-dominant, 138/188); for those, byte+6/+8/+9 are operand/coefficient words, not a shift amount. Logical >> by immediate uses the 12-byte bitfield-extract form (ibfe); register-operand shifts are multi-instr with a 0x2b prep stage. Per-op-select tail semantics of the non-shift siblings NOT reconstructed (rule 5).*
 
 ### `ibfe` — bitfield-extract / logical shift-right
 
@@ -390,9 +390,8 @@
 
 | Field | Bits | Type | Enum / values |
 |---|---|---|---|
-| `lenhi` | [9:16] | modifier |  |
-| `b2_bit0` | [16:17] (byte+2) | modifier |  |
-| `store_en` | [17:18] | modifier |  |
+| `lenhi` | [9:12] | modifier |  |
+| `pending_mask` | [12:18] | modifier |  |
 | `b2_fmt` | [18:24] | modifier |  |
 | `dst` | [24:32] (byte+3) | register |  |
 | `b4` | [32:40] (byte+4) | modifier |  |
@@ -407,7 +406,7 @@
 | `width` | [84:90] | immediate |  |
 | `b11hi` | [90:96] | modifier |  |
 
-*bitfield-extract extract_bits(a, off, cnt) (3-operand 12-byte form). Also the lowering for LOGICAL (unsigned) shift-right by an immediate: a>>k = extract_bits(a, k, 32-k). EXP-M4-13 R6 (own-MSL byte-diff): the bitfield OFFSET immediate is offset = b6>>2 (start bit50, PROVEN off 1/3/4/5/6/8 -> b6 0x04/0x0c/0x10/0x14/0x18/0x20); the WIDTH immediate is width = (b10|b11<<8)>>4 (start bit84, PROVEN width 1/4/8/12/16 -> 0x10/0x40/0x80/0xc0/0x100). An unsigned shift-right a>>k lowers to offset=k, width=0 (width=0 => extract-to-MSB / all remaining bits). SIGNED (sign-extending) extract_bits sets sign_ext (b6 bit1) and clears srcC_flags bit0 (b9 0x11->0x10); unsigned zero-extends. dst=b3 (reg<<1)|size PROVEN by a dst sweep (b3 0x0c/0x0a/0x06 = r6/r5/r3). WIDTH IS TAKEN MOD 32, OFFSET IS LITERAL (EXP-0139 DEF-0139-2, HW, dense 0..63): `width` is taken MOD 32 -- the mod-32 model fits 64/64 stable values while a literal/clamp-at-32 model fits only 37/64, so width == 0 (mod 32) is the no-mask (extract-to-MSB) case and width=32 behaves exactly like width=0. `offset` on the SAME instruction obeys the OPPOSITE rule: it is literal, and 32..63 shift the field out entirely (result 0). The asymmetry is load-bearing for an emitter. ⚠ `sign_ext` (byte+6 bit 1) IS NOT THE SIGN CONTROL -- DEF-0171-3 (EXP-0171, G17P; re-derived in EXP-0175). It is DENSE-INERT over both its sub-values in BOTH compiler anchors -- the unsigned `extract_bits` form (a7 00 56 04 02 00 10 00 f0 11 61 00) and the SIGNED one (a7 00 56 02 03 00 12 00 f0 10 61 00) -- on three carriers x two gated runs, while byte+6 AS A WHOLE moves 254 of its 256 values on every one of those carriers, so the instrument demonstrably has detection power. db.json's earlier 'signed sets sign_ext' was a CORRELATION ACROSS TWO COMPILER FORMS, not a control. The two anchors differ in byte+3 (0x04->0x02), byte+4 (0x02->0x03), byte+6 (0x10->0x12) and byte+9 `srcC_flags` (0x11->0x10); the attribution of signedness to srcC_flags bit 0 is INFERRED -- byte+9 was not swept. The field keeps its name only so its validation.json evidence row survives; treat its role as UNKNOWN. LABEL NOTE (EXP-0175): `b2_bit0`'s promotion from proven inertness rests on carriers of which only ONE STYLE has any detection power on byte+2 -- the SYNTH carrier moves 0 of 256 there -- so it is single-style evidence.*
+*bitfield-extract extract_bits(a, off, cnt) (3-operand 12-byte form). Also the lowering for LOGICAL (unsigned) shift-right by an immediate: a>>k = extract_bits(a, k, 32-k). EXP-M4-13 R6 (own-MSL byte-diff): the bitfield OFFSET immediate is offset = b6>>2 (start bit50, PROVEN off 1/3/4/5/6/8 -> b6 0x04/0x0c/0x10/0x14/0x18/0x20); the WIDTH immediate is width = (b10|b11<<8)>>4 (start bit84, PROVEN width 1/4/8/12/16 -> 0x10/0x40/0x80/0xc0/0x100). An unsigned shift-right a>>k lowers to offset=k, width=0 (width=0 => extract-to-MSB / all remaining bits). SIGNED (sign-extending) extract_bits sets sign_ext (b6 bit1) and clears srcC_flags bit0 (b9 0x11->0x10); unsigned zero-extends. dst=b3 (reg<<1)|size PROVEN by a dst sweep (b3 0x0c/0x0a/0x06 = r6/r5/r3). WIDTH IS TAKEN MOD 32, OFFSET IS LITERAL (EXP-0139 DEF-0139-2, HW, dense 0..63): `width` is taken MOD 32 -- the mod-32 model fits 64/64 stable values while a literal/clamp-at-32 model fits only 37/64, so width == 0 (mod 32) is the no-mask (extract-to-MSB) case and width=32 behaves exactly like width=0. `offset` on the SAME instruction obeys the OPPOSITE rule: it is literal, and 32..63 shift the field out entirely (result 0). The asymmetry is load-bearing for an emitter. ⚠ `sign_ext` (byte+6 bit 1) IS NOT THE SIGN CONTROL -- DEF-0171-3 (EXP-0171, G17P; re-derived in EXP-0175). It is DENSE-INERT over both its sub-values in BOTH compiler anchors -- the unsigned `extract_bits` form (a7 00 56 04 02 00 10 00 f0 11 61 00) and the SIGNED one (a7 00 56 02 03 00 12 00 f0 10 61 00) -- on three carriers x two gated runs, while byte+6 AS A WHOLE moves 254 of its 256 values on every one of those carriers, so the instrument demonstrably has detection power. db.json's earlier 'signed sets sign_ext' was a CORRELATION ACROSS TWO COMPILER FORMS, not a control. The two anchors differ in byte+3 (0x04->0x02), byte+4 (0x02->0x03), byte+6 (0x10->0x12) and byte+9 `srcC_flags` (0x11->0x10); the attribution of signedness to srcC_flags bit 0 is INFERRED -- byte+9 was not swept. The field keeps its name only so its validation.json evidence row survives; treat its role as UNKNOWN. SCOREBOARD CORRECTION (EXP-M4-42): bits12..17, including the former `b2_bit0` and `store_en` positions, are one six-slot pending dependency mask; the older per-bit labels are superseded.*
 
 ### `icmpsel` — compare -> select 0/1 (full condition codes)
 
@@ -432,37 +431,41 @@
 
 ## Conversions / pack
 
-### `cvt_f2i` — float/half -> int/uint convert (round to zero)
+### `cvt_f2i` — float/half -> int/uint convert (RTE/RTZ selectable)
 
-- **Length:** 10 bytes  ·  **Match:** byte+0==0x27, byte+1==0x07  ·  **Provenance:** HW-validated
+- **Length:** 10 bytes  ·  **Match:** byte+0==0x27, bits[8:12]==0x7  ·  **Provenance:** HW-validated
 
 | Field | Bits | Type | Enum / values |
 |---|---|---|---|
-| `mode` | [16:24] (byte+2) | modifier |  |
+| `pending_mask` | [12:18] | modifier |  |
+| `mode` | [18:24] | modifier |  |
 | `dst` | [24:32] (byte+3) | register |  |
 | `src_class` | [32:40] (byte+4) | modifier |  |
 | `src` | [40:48] (byte+5) | register |  |
 | `cvtop` | [48:56] (byte+6) | opcode-select | `0xb4`=f2int |
 | `signflag` | [56:64] (byte+7) | modifier |  |
-| `dst_class` | [64:72] (byte+8) | modifier |  |
+| `result_format` | [64:65] (byte+8) | modifier |  |
+| `round_mode` | [65:66] | enum | `0x0`=round-to-nearest-even; `0x1`=round-toward-zero |
+| `result_aux` | [66:72] | modifier |  |
 | `b9` | [72:80] (byte+9) | modifier |  |
 
-*d = (int|uint)(a)  ; float/half -> integer convert, round toward zero (truncation). byte+7 bit6 (0x40) = signed (int) vs unsigned (uint). byte+3 = dst reg (dst<<1), byte+5 = src reg (src<<2) -- BOTH byte-diff PROVEN (EXP-M4-13 R9) by a reversed-lane float4<->int4 chain: byte+3 steps 0,2,4,6 with the RESULT lane while byte+5 steps 0x18,0x14,0x10,0x0c with the SOURCE lane (the two move in opposite directions, so dst and src are separately located). Canonical generated signed FP32-to-I32 recipe (EXP-0238): `27 07 56 (D<<1) 02 (S<<2) b4 48 03 00`, D=0..95 and S=0..63. It reads then releases the source; if source equals destination, release precedes result publication and the integer result wins. byte+2 = result-routing/source-cache mode (same field as the byte+1==0x17 sibling cvt_i2f_src: 0x54 result-consumed-by-following-ALU vs 0x56 standalone). byte+4 = source format/class descriptor; byte+8 = dest format/width descriptor; byte+9 = reserved 0x00. Mode/class exact per-VALUE maps are role-typed (byte-diff located), not independently splice-proven (no fabricated value map).*
+*d = (int|uint)(a)  ; float/half -> integer convert with continuation-selected rounding. byte+7 bit6 (0x40) = signed (int) vs unsigned (uint). byte+3 = dst reg (dst<<1), byte+5 = src reg (src<<2) -- BOTH byte-diff PROVEN (EXP-M4-13 R9) by a reversed-lane float4<->int4 chain: byte+3 steps 0,2,4,6 with the RESULT lane while byte+5 steps 0x18,0x14,0x10,0x0c with the SOURCE lane (the two move in opposite directions, so dst and src are separately located). Canonical generated signed FP32-to-I32 recipe (EXP-0238): `27 07 56 (D<<1) 02 (S<<2) b4 48 03 00`, D=0..95 and S=0..63. It reads then releases the source; if source equals destination, release precedes result publication and the integer result wins. bits12..17 are the six-slot pending dependency mask: byte+1's high nibble names slots1..4 and byte+2's low bits name slots5..6; byte+2 high six bits are residual operand mode. byte+4 is the source format/class descriptor. Float-to-integer is ten bytes: an eight-byte core plus a two-byte continuation. byte+8 bit0 participates in destination format/sign/saturation, byte+8 bit1 selects RTE(0) versus RTZ(1), and byte+9 is reserved/inert in the tested envelope (EXP-M4-42/43). Mode/class exact per-VALUE maps are role-typed (byte-diff located), not independently splice-proven (no fabricated value map).*
 
 ### `cvt_i2f` — int/uint -> float/half convert
 
-- **Length:** 8 bytes  ·  **Match:** byte+0==0xa7, byte+1==0x07  ·  **Provenance:** HW-validated
+- **Length:** 8 bytes  ·  **Match:** byte+0==0xa7, bits[8:12]==0x7  ·  **Provenance:** HW-validated
 
 | Field | Bits | Type | Enum / values |
 |---|---|---|---|
-| `mode` | [16:24] (byte+2) | modifier |  |
+| `pending_mask` | [12:18] | modifier |  |
+| `mode` | [18:24] | modifier |  |
 | `dst` | [24:32] (byte+3) | register |  |
 | `src_class` | [32:40] (byte+4) | modifier |  |
 | `src` | [40:48] (byte+5) | register |  |
 | `cvtop` | [48:56] (byte+6) | opcode-select | `0xac`=int2f[32->32]; `0xa0`=i2f[16->16]; `0xa4`=i2f[16->32]; `0xa8`=i2f[32->16]; `0xb4`=i2f[8->32]; `0x8e`=i2f[sibling] |
 | `signflag` | [56:64] (byte+7) | modifier |  |
 
-*d = float(a)  ; integer/uint -> float convert (round to nearest even). byte+7 bit6 (0x40) = signed source (i2f) vs unsigned (u2f). byte+3 = dst reg (dst<<1), byte+5 = src reg (src<<2) -- BOTH byte-diff PROVEN (EXP-M4-13 R9) by a reversed-lane int4->float4 chain: byte+3 steps 0,2,4,6 with the RESULT lane while byte+5 steps 0x18,0x14,0x10,0x0c with the SOURCE lane (opposite directions => the two operands are separately located). byte+2 = result-routing/source-cache mode (0x54 result-consumed vs 0x56 standalone, same field as sibling cvt_i2f_src); byte+4 = source format/class descriptor. Mode/class role-typed (located), no fabricated per-value map.*
+*d = float(a)  ; integer/uint -> float convert (round to nearest even). byte+7 bit6 (0x40) selects signed source (i2f) versus unsigned (u2f). byte+3 = dst reg (dst<<1), byte+5 = src reg (src<<2). Bits12..17 are a six-slot pending dependency mask; the formerly separate byte+1==0x17 sibling is the same conversion with pending slot 1 set. byte+4 is the source format/class descriptor. Residual mode/class values remain role-typed rather than fully mapped.*
 
 ### `mov_zext16` — 16-bit zero-extend / narrow move
 
@@ -575,6 +578,24 @@
 | `imm_top` | [15:16] | modifier |  |
 
 *d[dst] = imm7  ; 2-byte move of a small immediate into a GPR. The compiler uses it for constant-folded built-ins (e.g. threads_per_simdgroup = 32 = 0x20). IMM WIDTH CORRECTED (EXP-0128, refined by EXP-0140): only SEVEN bits are load-bearing. EXP-0140 CORRECTS the mechanism -- with imm_top=1 the instruction does NOT write the destination register AT ALL, and unpadded it CONSUMES THE FOLLOWING 2-byte instruction. EXP-0128 reported a 'silent zero' only because its read-back buffer was zero-initialised; against a buffer poisoned with 0xDEADBEEF the register is seen to keep its previous value (seed 7 retained under a padded control; the poison word survives unpadded). So bit 7 SELECTS A DIFFERENT, LONGER INSTRUCTION -- it does not extend the immediate and it does not zero. `imm_top` (bit 15) is that inert 8th bit. An emitter MUST range-check to 0..127 and lower larger constants some other way; combined with iadd2's N=0 self-read this silent zero produced two real GPU hangs during EXP-0128's pilot. TOKENIZATION HOLE (EXP-0140): imm7 == 12 is the ONLY immediate in 0..127 that does not tokenize under the current length rule -- byte+1 = 0x0C makes the 2-byte pair look like the 4-byte 0x?c preamble/get_sr group. Checked exhaustively over 0..127. An emitter must avoid imm7 == 12 or pad around it. IMMEDIATE IS 7 BITS (EXP-0140, HW, poisoned read-back): with imm_top = 1 (immediate 128..255) the instruction does NOT write the destination register at all, and unpadded it CONSUMES the following 2-byte instruction. EXP-0128 read this as a 'silent zero' only because its read-back buffer was zero-initialised; against a poisoned buffer the register is seen to keep its previous value (0xDEADBEEF survives). An emitter must treat the immediate as 7 bits: bit 7 selects a different (longer) instruction, it does not extend the immediate. DECODER GAP (EXP-0140, static): the 2-byte encoding with imm7 == 12 does not tokenize under the current length rule -- byte+1 = 0x0C makes the pair look like the 4-byte low-nibble-0xC preamble/get_sr group. It is the ONLY immediate in 0..127 with this property, checked exhaustively over all 16 dst values. Decoder defect, not necessarily a hardware one; fixing it is a LENGTH-RULE change and is deferred to a corpus A/B.*
+
+### `mov_imm32` — 8-byte untyped raw 32-bit literal write
+
+- **Length:** 8 bytes  ·  **Match:** bits[0:4]==0xc, bits[15:16]==0x1, bits[16:21]==0x2, bits[24:25]==0x0, bits[32:33]==0x0, bits[37:40]==0x0, bits[40:42]==0x0, bits[44:48]==0x0, bits[60:64]==0x0  ·  **Provenance:** HW-validated
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `dst` | [4:8] | register |  |
+| `imm0_6` | [8:15] (byte+1) | immediate |  |
+| `modifier` | [21:22] | modifier |  |
+| `dst_hi` | [22:24] | register |  |
+| `imm25_31` | [25:32] | immediate |  |
+| `imm7_10` | [33:37] | immediate |  |
+| `imm11_12` | [42:44] | immediate |  |
+| `imm13_20` | [48:56] (byte+6) | immediate |  |
+| `imm21_24` | [56:60] (byte+7) | immediate |  |
+
+*Write an untyped raw 32-bit literal to a scalar GPR. The destination is dst | (dst_hi<<4), reaching exactly r0..r63; byte+2 bit5 is an independent modifier and is not a destination bit. The literal is reconstructed as imm0_6 | (imm7_10<<7) | (imm11_12<<11) | (imm13_20<<13) | (imm21_24<<21) | (imm25_31<<25). Metal uses modifier=0 for the compiler-emitted scalar form. EXP-M4-37 validates all 32 payload bits, all four destination banks, and exact consumers on T8132. Mode 3 is a distinct ten-byte tuple-publication form and is not represented by this descriptor.*
 
 ### `uniform_mov` — copy a uniform register into a GPR
 
@@ -1444,7 +1465,7 @@
 
 ### `ibfins`
 
-- **Length:** 12 bytes  ·  **Match:** byte+0==0x27, bits[16:17]==0x0, bits[18:24]==0x15
+- **Length:** 12 bytes  ·  **Match:** byte+0==0x27, bits[18:24]==0x15
 
 ### `atomic_tg`
 
@@ -1590,10 +1611,6 @@
 
 - **Length:** 10 bytes  ·  **Match:** bits[0:4]==0x2
 
-### `cvt_i2f_src`
-
-- **Length:** 8 bytes  ·  **Match:** byte+0==0xa7, byte+1==0x17
-
 ### `copysign`
 
 - **Length:** 4 bytes  ·  **Match:** byte+0==0x07, byte+1==0xc2, byte+2==0x88
@@ -1738,8 +1755,8 @@ Parcels are 2 bytes (all lengths even). Length is a function of byte 0 plus a pe
 | `0x02` | 6  [integer min/max \| compare-for-select] |
 | `0x12` | 6 float min/max, or 14 if (byte+2 & 0x0f)==0x0d [int compare] |
 | `0x9f/0x1f` | 10 if (byte+1 & 1) else 12  [integer add/sub \| mul-add] |
-| `0xa7` | 10 if (byte+1 & 1) else 12  [integer shift-r \| bitfield] |
-| `0x27` | 8  [integer unary / popcount] |
+| `0xa7` | byte+1 low nibble 7 -> 8-byte i2f; low nibble 4/5 -> 8-byte bit-count; otherwise 10 if low bit set, 12 if clear. byte+1 high nibble is pending-mask bits0..3 (EXP-M4-42) |
+| `0x27` | byte+1 low nibble 7 -> 10-byte f2i; low nibble 0/1/2 -> 12-byte bitfield/rotate/prep; otherwise 8-byte unary. byte+1 high nibble is pending-mask bits0..3 (EXP-M4-42) |
 | `0x0a` | 6  [integer compare -> execution predicate (branch/return)] |
 | `0x05/0x16` | 4  [conditional select (branchless if/ternary)] |
 | `0x0f` | EXECUTION-MASK family, byte+1 sub-op (RT-ISA-FIX): 0x00 jump 10 / 0x01 jump_cond(else,loop-guard) 10 / 0x05 if_push 4 (or 14 if byte+4==0x8f = direct CALL) / 0x06 pop_reconverge 6 / 0x80 call_indirect(computed branch) 6 / 0x04 mask_op 4 |
@@ -1756,9 +1773,9 @@ Parcels are 2 bytes (all lengths even). Length is a function of byte 0 plus a pe
 | `lownibble_0x4 + byte+1==0xea` | 8  [RAY TRACING: dedicated ray-INTERSECT op. byte0 hi nibble=result reg; byte+2 mode (0x90 const-origin / 0x10 dyn-origin / 0xd0 +fn-table); byte+6 bit7=intersection-function-table present. Emitted 2x/kernel (traverse + result-read). ABSENT from a software Moller-Trumbore loop. EXP-0023 HW] |
 | `0xdf` | 14  [RAY TRACING: dedicated acceleration-structure / ray-data load (memory-family sibling of 0x67/0xe7, byte+2==0x54). BVH-node/ray/stack fetch during the (software) traversal loop. EXP-0023] |
 | `byte0 low-3-bits 0b100` | 4 get_sr (SR#=byte1, dst=byte0-hi; byte+3 lo-nibble==6 suffix, covers 0xNc & 0xN4 forms) \| 2 mov_imm (byte0==0x0c, no suffix). EXP-0031 |
-| `0x27 (byte+1==0x05, byte+2==0x56)` | 8  [popcount / bit-scan single op (ibitcount). EXP-0033] |
-| `0x27 (byte+1==0x01)` | 12  [ROTATE-by-immediate funnel shift (irotate). EXP-0033] |
-| `0xa7 (byte+1 in {0x04,0x05})` | 8  [reverse_bits / find-MSB bit-scan (ibitcount). EXP-0033] |
+| `0x27 (byte+1 low nibble==0x05, byte+2 high six bits==0x15)` | 8  [popcount / bit-scan single op (ibitcount). High b1 nibble and low b2 bits are the pending mask. EXP-0033/M4-42] |
+| `0x27 (byte+1 low nibble==0x01)` | 12  [ROTATE-by-immediate funnel shift (irotate). EXP-0033/M4-42] |
+| `0xa7 (byte+1 low nibble in {0x04,0x05})` | 8  [reverse_bits / find-MSB bit-scan (ibitcount). EXP-0033/M4-42] |
 | `0x97 (byte+2==0x56)` | 10  [pack_convert (pack_float_to_unorm/snorm2x16); byte+2==0x54 is the fragment frag_color_pack. EXP-0033] |
 | `0x17 (byte+2==0x56)` | 10  [unpack_convert (unpack_unorm2x16); simd_ballot (byte+1==0x07) is the ballot/vote source. EXP-0033/0018] |
 | `0x22` | 6 if (byte+2 lo-nibble==0x0e) [iminmax_chain: min3/max3/clamp] else 10 [shift/sign-extend helper]. EXP-0033 |

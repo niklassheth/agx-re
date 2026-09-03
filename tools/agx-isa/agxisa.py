@@ -48,6 +48,9 @@ def cmd_disasm(hexstr):
     if rec.get("operands"):
         print("operands  : " + " ".join(
             f"{name}=r{reg}" for name, reg in rec["operands"].items()))
+    if rec.get("immediates"):
+        print("immediates: " + " ".join(
+            f"{name}={value:#x}" for name, value in rec["immediates"].items()))
     print(f"semantics : {rec['semantics']}")
     print(f"provenance: {rec['provenance']}")
     return 0
