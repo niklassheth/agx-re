@@ -1,0 +1,169 @@
+{
+  "consumer_offset": 18,
+  "load_offset": 4,
+  "native_main_hex": "1ca01006671044000101200051010040460009b9140180c0e7005400000121001100009011000e000000",
+  "native_producer_bytes": "4600",
+  "records": [
+    {
+      "exact": false,
+      "oracle": [
+        1075838976,
+        -1090519040,
+        1083703296,
+        1120600064
+      ],
+      "returncode": 0,
+      "selector": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 42\nSPLICE _agc.main@0x17: c0 -> 00 (abs file offset 7415)\nDEVICE Apple M4\nFUNCTION falu2i_slot_cross\nPIPELINE_SOURCE archive\nGPUTIME_NS 3416\nOUT 0 0000c03f0000c03f0000c03f0000c03f\nSTATUS OK\nRESULT 0 1069547520 1069547520 1069547520 1069547520\n",
+      "values": [
+        1069547520,
+        1069547520,
+        1069547520,
+        1069547520
+      ]
+    },
+    {
+      "exact": false,
+      "oracle": [
+        1075838976,
+        -1090519040,
+        1083703296,
+        1120600064
+      ],
+      "returncode": 0,
+      "selector": 1,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 42\nSPLICE _agc.main@0x17: c0 -> 20 (abs file offset 7415)\nDEVICE Apple M4\nFUNCTION falu2i_slot_cross\nPIPELINE_SOURCE archive\nGPUTIME_NS 3250\nOUT 0 0000c03f0000c03f0000c03f0000c03f\nSTATUS OK\nRESULT 0 1069547520 1069547520 1069547520 1069547520\n",
+      "values": [
+        1069547520,
+        1069547520,
+        1069547520,
+        1069547520
+      ]
+    },
+    {
+      "exact": false,
+      "oracle": [
+        1075838976,
+        -1090519040,
+        1083703296,
+        1120600064
+      ],
+      "returncode": 0,
+      "selector": 2,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 42\nSPLICE _agc.main@0x17: c0 -> 40 (abs file offset 7415)\nDEVICE Apple M4\nFUNCTION falu2i_slot_cross\nPIPELINE_SOURCE archive\nGPUTIME_NS 2875\nOUT 0 0000c03f0000c03f0000c03f0000c03f\nSTATUS OK\nRESULT 0 1069547520 1069547520 1069547520 1069547520\n",
+      "values": [
+        1069547520,
+        1069547520,
+        1069547520,
+        1069547520
+      ]
+    },
+    {
+      "exact": false,
+      "oracle": [
+        1075838976,
+        -1090519040,
+        1083703296,
+        1120600064
+      ],
+      "returncode": 0,
+      "selector": 3,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 42\nSPLICE _agc.main@0x17: c0 -> 60 (abs file offset 7415)\nDEVICE Apple M4\nFUNCTION falu2i_slot_cross\nPIPELINE_SOURCE archive\nGPUTIME_NS 3249\nOUT 0 0000c03f0000c03f0000c03f0000c03f\nSTATUS OK\nRESULT 0 1069547520 1069547520 1069547520 1069547520\n",
+      "values": [
+        1069547520,
+        1069547520,
+        1069547520,
+        1069547520
+      ]
+    },
+    {
+      "exact": false,
+      "oracle": [
+        1075838976,
+        -1090519040,
+        1083703296,
+        1120600064
+      ],
+      "returncode": 0,
+      "selector": 4,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 42\nSPLICE _agc.main@0x17: c0 -> 80 (abs file offset 7415)\nDEVICE Apple M4\nFUNCTION falu2i_slot_cross\nPIPELINE_SOURCE archive\nGPUTIME_NS 3166\nOUT 0 0000c03f0000c03f0000c03f0000c03f\nSTATUS OK\nRESULT 0 1069547520 1069547520 1069547520 1069547520\n",
+      "values": [
+        1069547520,
+        1069547520,
+        1069547520,
+        1069547520
+      ]
+    },
+    {
+      "exact": false,
+      "oracle": [
+        1075838976,
+        -1090519040,
+        1083703296,
+        1120600064
+      ],
+      "returncode": 0,
+      "selector": 5,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 42\nSPLICE _agc.main@0x17: c0 -> a0 (abs file offset 7415)\nDEVICE Apple M4\nFUNCTION falu2i_slot_cross\nPIPELINE_SOURCE archive\nGPUTIME_NS 2791\nOUT 0 0000c03f0000c03f0000c03f0000c03f\nSTATUS OK\nRESULT 0 1069547520 1069547520 1069547520 1069547520\n",
+      "values": [
+        1069547520,
+        1069547520,
+        1069547520,
+        1069547520
+      ]
+    },
+    {
+      "exact": true,
+      "oracle": [
+        1075838976,
+        -1090519040,
+        1083703296,
+        1120600064
+      ],
+      "returncode": 0,
+      "selector": 6,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 42\nSPLICE _agc.main@0x17: c0 -> c0 (abs file offset 7415)\nDEVICE Apple M4\nFUNCTION falu2i_slot_cross\nPIPELINE_SOURCE archive\nGPUTIME_NS 2916\nOUT 0 00002040000000bf000098400000cb42\nSTATUS OK\nRESULT 0 1075838976 -1090519040 1083703296 1120600064\n",
+      "values": [
+        1075838976,
+        -1090519040,
+        1083703296,
+        1120600064
+      ]
+    },
+    {
+      "exact": false,
+      "oracle": [
+        1075838976,
+        -1090519040,
+        1083703296,
+        1120600064
+      ],
+      "returncode": 0,
+      "selector": 7,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 42\nSPLICE _agc.main@0x17: c0 -> e0 (abs file offset 7415)\nDEVICE Apple M4\nFUNCTION falu2i_slot_cross\nPIPELINE_SOURCE archive\nGPUTIME_NS 3250\nOUT 0 0000c03f0000c03f0000c03f0000c03f\nSTATUS OK\nRESULT 0 1069547520 1069547520 1069547520 1069547520\n",
+      "values": [
+        1069547520,
+        1069547520,
+        1069547520,
+        1069547520
+      ]
+    }
+  ],
+  "schema_version": 1
+}

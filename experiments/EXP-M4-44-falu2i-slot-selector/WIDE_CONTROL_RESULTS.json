@@ -1,0 +1,272 @@
+{
+  "consumer_offset": 18,
+  "load_offset": 4,
+  "native_main_hex": "1ca010066710440001012000510100404600a70756000200ac20e7005400000121001100009011000e000000",
+  "records": [
+    {
+      "consumer_slot": 1,
+      "exact": true,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 1,
+      "relation": "matching",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> 1100 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 1754 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 3500\nOUT 0 000000000000803f0000e040ffff7f4b\nSTATUS OK\nRESULT 0 0 1065353216 1088421888 1266679807\n",
+      "values": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ]
+    },
+    {
+      "consumer_slot": 2,
+      "exact": false,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 1,
+      "relation": "neighbor",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> 1100 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 2754 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 3166\nOUT 0 00000000000000000000000000000000\nSTATUS OK\nRESULT 0 0 0 0 0\n",
+      "values": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "consumer_slot": 2,
+      "exact": true,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 2,
+      "relation": "matching",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> 5100 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 2754 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 3333\nOUT 0 000000000000803f0000e040ffff7f4b\nSTATUS OK\nRESULT 0 0 1065353216 1088421888 1266679807\n",
+      "values": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ]
+    },
+    {
+      "consumer_slot": 3,
+      "exact": false,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 2,
+      "relation": "neighbor",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> 5100 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 4754 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 3208\nOUT 0 00000000000000000000000000000000\nSTATUS OK\nRESULT 0 0 0 0 0\n",
+      "values": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "consumer_slot": 3,
+      "exact": true,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 3,
+      "relation": "matching",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> 9100 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 4754 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 3291\nOUT 0 000000000000803f0000e040ffff7f4b\nSTATUS OK\nRESULT 0 0 1065353216 1088421888 1266679807\n",
+      "values": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ]
+    },
+    {
+      "consumer_slot": 4,
+      "exact": false,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 3,
+      "relation": "neighbor",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> 9100 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 8754 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 2791\nOUT 0 00000000000000000000000000000000\nSTATUS OK\nRESULT 0 0 0 0 0\n",
+      "values": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "consumer_slot": 4,
+      "exact": true,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 4,
+      "relation": "matching",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> d100 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 8754 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 3291\nOUT 0 000000000000803f0000e040ffff7f4b\nSTATUS OK\nRESULT 0 0 1065353216 1088421888 1266679807\n",
+      "values": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ]
+    },
+    {
+      "consumer_slot": 5,
+      "exact": false,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 4,
+      "relation": "neighbor",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> d100 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 0755 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 3333\nOUT 0 00000000000000000000000000000000\nSTATUS OK\nRESULT 0 0 0 0 0\n",
+      "values": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "consumer_slot": 5,
+      "exact": true,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 5,
+      "relation": "matching",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> 1101 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 0755 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 2916\nOUT 0 000000000000803f0000e040ffff7f4b\nSTATUS OK\nRESULT 0 0 1065353216 1088421888 1266679807\n",
+      "values": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ]
+    },
+    {
+      "consumer_slot": 6,
+      "exact": false,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 5,
+      "relation": "neighbor",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> 1101 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 0756 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 3250\nOUT 0 00000000000000000000000000000000\nSTATUS OK\nRESULT 0 0 0 0 0\n",
+      "values": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "consumer_slot": 6,
+      "exact": true,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 6,
+      "relation": "matching",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> 5101 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 0756 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 3250\nOUT 0 000000000000803f0000e040ffff7f4b\nSTATUS OK\nRESULT 0 0 1065353216 1088421888 1266679807\n",
+      "values": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ]
+    },
+    {
+      "consumer_slot": 1,
+      "exact": false,
+      "oracle": [
+        0,
+        1065353216,
+        1088421888,
+        1266679807
+      ],
+      "producer_slot": 6,
+      "relation": "neighbor",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 44\nSPLICE _agc.main@0x0c: 5101 -> 5101 (abs file offset 7516)\nSPLICE _agc.main@0x13: 0756 -> 1754 (abs file offset 7523)\nDEVICE Apple M4\nFUNCTION u2f_slot_control\nPIPELINE_SOURCE archive\nGPUTIME_NS 2833\nOUT 0 00000000000000000000000000000000\nSTATUS OK\nRESULT 0 0 0 0 0\n",
+      "values": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "schema_version": 1
+}
