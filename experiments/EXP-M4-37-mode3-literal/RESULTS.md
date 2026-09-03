@@ -113,15 +113,18 @@ lowering is implemented, rather than exposed as a generic scalar `MOV_IMM32`.
 
 ## Mesa consequence
 
-The current Apple9 compiler replacement for the old digit-by-digit
-large-constant builder has the right payload but the wrong destination shift:
-it emits `(dst >> 4) << 5`.  The hardware result requires
-`(dst >> 4) << 6`, permits destinations r0..r63, and cannot encode r64..r95.
-The machine constraint to r0..r15 currently hides the bad shift for ordinary
-generated shaders.  A compiler correction should use the proven native-zero
-bit-5 variant, widen the instruction's destination class to r0..r63, and leave
-r64..r95 to a constrained copy/spill path.  Mode 3 is not emitted by the
-current scalar compute compiler.
+Mesa now encodes scalar mode-2 `MOV_IMM32` with `(dst >> 4) << 6`, uses the
+proven native-zero bit-5 variant, and accepts the complete encodable
+destination range r0..r63.  Destinations r64 and above are rejected.  The
+machine destination class is no longer restricted to r0..r15, so ordinary
+register allocation can place literals in all four proven banks.  Mode 3 is
+not emitted by the current scalar compute compiler.
+
+Host-side packer and compiler tests exercise r0, r18, r34, and r63, reject
+r64, and verify that an ordinary compiled shader allocates literals above
+r15.  The Apple9 unit subset passes 70/70 and the complete Asahi compiler test
+binary passes 124/124.  No additional device execution was performed for this
+compiler change; it relies on the retained T8132 hardware evidence below.
 
 Validation completed on T8132:
 
