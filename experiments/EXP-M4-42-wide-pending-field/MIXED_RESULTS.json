@@ -1,0 +1,298 @@
+{
+  "environment": {
+    "build_version": "25G83",
+    "chip": "T8132 Apple M4",
+    "product_version": "26.6.2"
+  },
+  "records": [
+    {
+      "consumer_mask": 0,
+      "elapsed_seconds": 0.30150341700000005,
+      "exact": false,
+      "first_slot": 6,
+      "relation": "zero",
+      "returncode": 0,
+      "second_slot": 1,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 5101 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 1100 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 0154 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3375\nOUT 0 00000000000000000000000000000000\nSTATUS OK\nRESULT 0 0 0 0 0\n",
+      "values": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "consumer_mask": 32,
+      "elapsed_seconds": 0.2922845420000001,
+      "exact": true,
+      "first_slot": 6,
+      "relation": "first",
+      "returncode": 0,
+      "second_slot": 1,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 5101 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 1100 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 0156 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3458\nOUT 0 65000000ca0000002f01000094010000\nSTATUS OK\nRESULT 0 101 202 303 404\n",
+      "values": [
+        101,
+        202,
+        303,
+        404
+      ]
+    },
+    {
+      "consumer_mask": 1,
+      "elapsed_seconds": 0.2982625830000001,
+      "exact": false,
+      "first_slot": 6,
+      "relation": "second",
+      "returncode": 0,
+      "second_slot": 1,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 5101 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 1100 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 1154 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3458\nOUT 0 01000000020000000300000004000000\nSTATUS OK\nRESULT 0 1 2 3 4\n",
+      "values": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "consumer_mask": 33,
+      "elapsed_seconds": 0.28778587499999997,
+      "exact": true,
+      "first_slot": 6,
+      "relation": "both",
+      "returncode": 0,
+      "second_slot": 1,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 5101 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 1100 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 1156 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3375\nOUT 0 65000000ca0000002f01000094010000\nSTATUS OK\nRESULT 0 101 202 303 404\n",
+      "values": [
+        101,
+        202,
+        303,
+        404
+      ]
+    },
+    {
+      "consumer_mask": 0,
+      "elapsed_seconds": 0.2922787499999999,
+      "exact": false,
+      "first_slot": 1,
+      "relation": "zero",
+      "returncode": 0,
+      "second_slot": 6,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 1100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 5101 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 0154 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3333\nOUT 0 00000000000000000000000000000000\nSTATUS OK\nRESULT 0 0 0 0 0\n",
+      "values": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "consumer_mask": 1,
+      "elapsed_seconds": 0.287509875,
+      "exact": false,
+      "first_slot": 1,
+      "relation": "first",
+      "returncode": 0,
+      "second_slot": 6,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 1100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 5101 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 1154 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3416\nOUT 0 64000000c80000002c01000090010000\nSTATUS OK\nRESULT 0 100 200 300 400\n",
+      "values": [
+        100,
+        200,
+        300,
+        400
+      ]
+    },
+    {
+      "consumer_mask": 32,
+      "elapsed_seconds": 0.28859350000000017,
+      "exact": true,
+      "first_slot": 1,
+      "relation": "second",
+      "returncode": 0,
+      "second_slot": 6,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 1100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 5101 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 0156 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3458\nOUT 0 65000000ca0000002f01000094010000\nSTATUS OK\nRESULT 0 101 202 303 404\n",
+      "values": [
+        101,
+        202,
+        303,
+        404
+      ]
+    },
+    {
+      "consumer_mask": 33,
+      "elapsed_seconds": 0.3045985419999999,
+      "exact": true,
+      "first_slot": 1,
+      "relation": "both",
+      "returncode": 0,
+      "second_slot": 6,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 1100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 5101 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 1156 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3583\nOUT 0 65000000ca0000002f01000094010000\nSTATUS OK\nRESULT 0 101 202 303 404\n",
+      "values": [
+        101,
+        202,
+        303,
+        404
+      ]
+    },
+    {
+      "consumer_mask": 0,
+      "elapsed_seconds": 0.28913474999999966,
+      "exact": false,
+      "first_slot": 2,
+      "relation": "zero",
+      "returncode": 0,
+      "second_slot": 5,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 5100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 1101 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 0154 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3333\nOUT 0 00000000000000000000000000000000\nSTATUS OK\nRESULT 0 0 0 0 0\n",
+      "values": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "consumer_mask": 2,
+      "elapsed_seconds": 0.2899404579999998,
+      "exact": true,
+      "first_slot": 2,
+      "relation": "first",
+      "returncode": 0,
+      "second_slot": 5,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 5100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 1101 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 2154 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3500\nOUT 0 65000000ca0000002f01000094010000\nSTATUS OK\nRESULT 0 101 202 303 404\n",
+      "values": [
+        101,
+        202,
+        303,
+        404
+      ]
+    },
+    {
+      "consumer_mask": 16,
+      "elapsed_seconds": 0.30635379100000026,
+      "exact": true,
+      "first_slot": 2,
+      "relation": "second",
+      "returncode": 0,
+      "second_slot": 5,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 5100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 1101 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 0155 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 2999\nOUT 0 65000000ca0000002f01000094010000\nSTATUS OK\nRESULT 0 101 202 303 404\n",
+      "values": [
+        101,
+        202,
+        303,
+        404
+      ]
+    },
+    {
+      "consumer_mask": 18,
+      "elapsed_seconds": 0.3040737499999997,
+      "exact": true,
+      "first_slot": 2,
+      "relation": "both",
+      "returncode": 0,
+      "second_slot": 5,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 5100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> 1101 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 2155 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3375\nOUT 0 65000000ca0000002f01000094010000\nSTATUS OK\nRESULT 0 101 202 303 404\n",
+      "values": [
+        101,
+        202,
+        303,
+        404
+      ]
+    },
+    {
+      "consumer_mask": 0,
+      "elapsed_seconds": 0.26956574999999994,
+      "exact": false,
+      "first_slot": 3,
+      "relation": "zero",
+      "returncode": 0,
+      "second_slot": 4,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 9100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> d100 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 0154 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3500\nOUT 0 00000000000000000000000000000000\nSTATUS OK\nRESULT 0 0 0 0 0\n",
+      "values": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "consumer_mask": 4,
+      "elapsed_seconds": 0.2970473339999993,
+      "exact": true,
+      "first_slot": 3,
+      "relation": "first",
+      "returncode": 0,
+      "second_slot": 4,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 9100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> d100 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 4154 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3458\nOUT 0 65000000ca0000002f01000094010000\nSTATUS OK\nRESULT 0 101 202 303 404\n",
+      "values": [
+        101,
+        202,
+        303,
+        404
+      ]
+    },
+    {
+      "consumer_mask": 8,
+      "elapsed_seconds": 0.29827387500000047,
+      "exact": true,
+      "first_slot": 3,
+      "relation": "second",
+      "returncode": 0,
+      "second_slot": 4,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 9100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> d100 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> 8154 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3416\nOUT 0 65000000ca0000002f01000094010000\nSTATUS OK\nRESULT 0 101 202 303 404\n",
+      "values": [
+        101,
+        202,
+        303,
+        404
+      ]
+    },
+    {
+      "consumer_mask": 12,
+      "elapsed_seconds": 0.29718816699999984,
+      "exact": true,
+      "first_slot": 3,
+      "relation": "both",
+      "returncode": 0,
+      "second_slot": 4,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 60\nSPLICE _agc.main@0x0c: 5101 -> 9100 (abs file offset 7580)\nSPLICE _agc.main@0x1a: 5101 -> d100 (abs file offset 7594)\nSPLICE _agc.main@0x21: 0156 -> c154 (abs file offset 7601)\nDEVICE Apple M4\nFUNCTION iadd_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 2999\nOUT 0 65000000ca0000002f01000094010000\nSTATUS OK\nRESULT 0 101 202 303 404\n",
+      "values": [
+        101,
+        202,
+        303,
+        404
+      ]
+    }
+  ],
+  "schema_version": 1
+}

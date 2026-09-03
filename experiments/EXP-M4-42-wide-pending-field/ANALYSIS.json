@@ -1,0 +1,380 @@
+{
+  "artifacts": {
+    "CROSS_RESULTS.json": "5a68c9322bd95d96c816f1ecb47c72ed871d9e9f58c7a1076c8f43b60235b362",
+    "HARDWARE_RESULTS.json": "4a63cb0383edd6232631bcc656248bfebaf81c0a50cb92842c916afe4f3ceae9",
+    "MIXED_RESULTS.json": "812f728ff3c83ad6fda252d3bfc4caa0a43f5beb33e797e311f4382dfa8358df",
+    "consumers.metal": "de8d0602940b8e733ee7ffbde9a0e2432a349d899f91e98533b4ee57d786f646"
+  },
+  "corpus": {
+    "families": {
+      "cvt_f2i": {
+        "examples": {
+          "0x00": {
+            "hex": "27075400030896480300",
+            "offset": 28,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/conversions_pack__cvt_f2i__compute.hex"
+          },
+          "0x20": {
+            "hex": "270756040308b4480300",
+            "offset": 36,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/controlflow__frag_switch__fragment.hex"
+          }
+        },
+        "masks": {
+          "0x00": 104,
+          "0x20": 13
+        },
+        "total": 117
+      },
+      "cvt_i2f": {
+        "examples": {
+          "0x00": {
+            "hex": "a70754020304ac20",
+            "offset": 24,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/controlflow__frag_discard_loop__vertex.hex"
+          },
+          "0x01": {
+            "hex": "a717540803008e20",
+            "offset": 48,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/conversions_pack__cvt_i2f__compute.hex"
+          },
+          "0x02": {
+            "hex": "a72754000200ac20",
+            "offset": 54,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/frag_varying__special_reads__fragment.hex"
+          },
+          "0x04": {
+            "hex": "a747540e03208620",
+            "offset": 54,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/memory_ptr__threadgroup_rw__compute.hex"
+          },
+          "0x20": {
+            "hex": "a707560603088e60",
+            "offset": 32,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/conversions_pack__cvt_i2f__compute.hex"
+          }
+        },
+        "masks": {
+          "0x00": 166,
+          "0x01": 25,
+          "0x02": 11,
+          "0x04": 3,
+          "0x20": 36
+        },
+        "total": 241
+      },
+      "fspecial": {
+        "examples": {
+          "0x00": {
+            "hex": "af005402030410402000",
+            "offset": 40,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bf16_matrix__bf16_scalar_arith__compute.hex"
+          },
+          "0x01": {
+            "hex": "2f10540f031c8e600200",
+            "offset": 118,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/conversions_pack__round_modes__compute.hex"
+          },
+          "0x20": {
+            "hex": "af005604030810482000",
+            "offset": 32,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/c_k_div.hex"
+          }
+        },
+        "masks": {
+          "0x00": 227,
+          "0x01": 2,
+          "0x20": 35
+        },
+        "total": 264
+      },
+      "iadd2": {
+        "examples": {
+          "0x00": {
+            "hex": "9f015400020208881014",
+            "offset": 18,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/atomics__dev_u_add_strided__compute.hex"
+          },
+          "0x01": {
+            "hex": "9f1154000202288c1104",
+            "offset": 4,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/atomics_tex_r10__w_data_r1__compute.hex"
+          },
+          "0x02": {
+            "hex": "1f21540e031c58a81705",
+            "offset": 278,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/dec_iso_absmulti.hex"
+          },
+          "0x04": {
+            "hex": "1f415408031048a81705",
+            "offset": 308,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/dec_iso_absmulti.hex"
+          },
+          "0x08": {
+            "hex": "1f815406030c28a81705",
+            "offset": 354,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/dec_iso_absmulti.hex"
+          },
+          "0x10": {
+            "hex": "1f015504030830a81705",
+            "offset": 384,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/dec_iso_absmulti.hex"
+          },
+          "0x20": {
+            "hex": "9f015600020208881104",
+            "offset": 18,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/atomics__dev_u_cmpxchg_branch__compute.hex"
+          }
+        },
+        "masks": {
+          "0x00": 1025,
+          "0x01": 78,
+          "0x02": 9,
+          "0x04": 4,
+          "0x08": 2,
+          "0x10": 1,
+          "0x20": 67
+        },
+        "total": 1186
+      },
+      "ibfe": {
+        "examples": {
+          "0x00": {
+            "hex": "a700540403006200f0100100",
+            "offset": 134,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bf16_matrix__bf16_convert__compute.hex"
+          },
+          "0x01": {
+            "hex": "a7105400030c0600d0100100",
+            "offset": 4,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bf16_matrix__sgmat_bfloat_mma__compute.hex"
+          },
+          "0x02": {
+            "hex": "a720540403081800f0130500",
+            "offset": 88,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bitops__funnel_shift_u32__compute.hex"
+          },
+          "0x04": {
+            "hex": "a740540002401400d0100100",
+            "offset": 108,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/dec2_nb_ray__rt_marshal__compute.hex"
+          },
+          "0x08": {
+            "hex": "a780540a02441400d0100100",
+            "offset": 76,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/dec2_n8__g_commit__compute.hex"
+          },
+          "0x10": {
+            "hex": "a700550002401400d0100100",
+            "offset": 94,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/dec2_n6_deriv__rq_pred__compute.hex"
+          },
+          "0x20": {
+            "hex": "a700560003081200f0108100",
+            "offset": 18,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bitops__bfe_i_imm__compute.hex"
+          }
+        },
+        "masks": {
+          "0x00": 83,
+          "0x01": 18,
+          "0x02": 11,
+          "0x04": 2,
+          "0x08": 25,
+          "0x10": 15,
+          "0x20": 26
+        },
+        "total": 180
+      },
+      "ibfins": {
+        "examples": {
+          "0x00": {
+            "hex": "2700540003143204f0100500",
+            "offset": 102,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bf16_matrix__bf16_convert__compute.hex"
+          },
+          "0x01": {
+            "hex": "2710540003100000f0130500",
+            "offset": 66,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bitops__funnel_shift_u32__compute.hex"
+          },
+          "0x02": {
+            "hex": "27205406030c2000f0130500",
+            "offset": 114,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bitops__bfi_dyn_u__compute.hex"
+          },
+          "0x20": {
+            "hex": "2700560203046000f0110100",
+            "offset": 18,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/memory_ptr__dev_byte_i8__compute.hex"
+          }
+        },
+        "masks": {
+          "0x00": 86,
+          "0x01": 7,
+          "0x02": 1,
+          "0x20": 17
+        },
+        "total": 111
+      },
+      "ibitcount": {
+        "examples": {
+          "0x00": {
+            "hex": "a7045406030c5c04",
+            "offset": 94,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/atomics__tg_s_min__compute.hex"
+          },
+          "0x01": {
+            "hex": "a7155404030c4e04",
+            "offset": 176,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bf16_matrix__bf16_convert__compute.hex"
+          },
+          "0x20": {
+            "hex": "a705560203064204",
+            "offset": 18,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bitops__clz_u16__compute.hex"
+          }
+        },
+        "masks": {
+          "0x00": 34,
+          "0x01": 2,
+          "0x20": 10
+        },
+        "total": 46
+      },
+      "imad": {
+        "examples": {
+          "0x00": {
+            "hex": "9f0054000210102070280200",
+            "offset": 70,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bf16_matrix__sgmat_filled_elem__compute.hex"
+          },
+          "0x01": {
+            "hex": "9f10540002001c0010220200",
+            "offset": 22,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/dec_at_add.hex"
+          },
+          "0x02": {
+            "hex": "9f20540002002020d02f2a00",
+            "offset": 106,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/int_arith__mul24_mad24__compute.hex"
+          },
+          "0x20": {
+            "hex": "9f0056000200700050220200",
+            "offset": 18,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/controlflow__for_static__compute.hex"
+          }
+        },
+        "masks": {
+          "0x00": 222,
+          "0x01": 12,
+          "0x02": 1,
+          "0x20": 76
+        },
+        "total": 311
+      },
+      "ishift": {
+        "examples": {
+          "0x00": {
+            "hex": "a7015408030c60786200",
+            "offset": 124,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/conversions_pack__cvt_f2i__compute.hex"
+          },
+          "0x01": {
+            "hex": "a7115400020010d8e200",
+            "offset": 42,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/bitops__shr_arith_i32__compute.hex"
+          },
+          "0x02": {
+            "hex": "a7215404020808786200",
+            "offset": 110,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/dec2_k_ashr_dst.hex"
+          },
+          "0x04": {
+            "hex": "a7415406020c08786200",
+            "offset": 120,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/dec2_k_ashr_dst.hex"
+          },
+          "0x20": {
+            "hex": "a7015600020c06386200",
+            "offset": 18,
+            "path": "experiments/EXP-M4-13-full-corpus/hex/dec2_k_ashr_amt.hex"
+          }
+        },
+        "masks": {
+          "0x00": 27,
+          "0x01": 2,
+          "0x02": 1,
+          "0x04": 1,
+          "0x20": 2
+        },
+        "total": 33
+      }
+    },
+    "fully_decoded": 839,
+    "note": "Decoder-visible census only. The reconciled decoder ignores the pending-mask high nibble when selecting conversion and bitfield forms; hardware crosses, not these totals, establish the field geometry.",
+    "programs": 1080
+  },
+  "field": {
+    "encoding": {
+      "slots_1_to_4": "byte1 bits 4..7",
+      "slots_5_to_6": "byte2 bits 0..1"
+    },
+    "instruction_bits": [
+      12,
+      17
+    ],
+    "slot_to_mask": {
+      "1": 1,
+      "2": 2,
+      "3": 4,
+      "4": 8,
+      "5": 16,
+      "6": 32
+    }
+  },
+  "hardware": {
+    "device_load_cross_exact": 84,
+    "device_load_cross_records": 126,
+    "get_sr_cross_exact": 42,
+    "get_sr_cross_records": 42,
+    "mixed_both_exact": 4,
+    "mixed_single_nonexact": 2,
+    "mixed_slot_records": 16,
+    "single_slot_matrix_records": 100
+  },
+  "native_witnesses": {
+    "get_sr_three_value_walk": {
+      "conversion_masks": [
+        1,
+        2
+      ],
+      "path": "experiments/EXP-M4-42-wide-pending-field/raw/native/sys_three.archive.bin",
+      "suffixes": [
+        6,
+        38,
+        70
+      ]
+    },
+    "six_slot_iadd_walk": {
+      "masks": [
+        32,
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "offsets": [
+        222,
+        232,
+        278,
+        308,
+        354,
+        384
+      ],
+      "path": "experiments/EXP-M4-13-full-corpus/hex/dec_iso_absmulti.hex"
+    }
+  },
+  "schema_version": 1
+}
