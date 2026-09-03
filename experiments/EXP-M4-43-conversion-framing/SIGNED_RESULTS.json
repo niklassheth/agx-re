@@ -1,0 +1,246 @@
+{
+  "environment": {
+    "build_version": "25G83",
+    "chip": "T8132 Apple M4",
+    "product_version": "26.6.2"
+  },
+  "panels": {
+    "low_bits": {
+      "input_values": [
+        -1.25,
+        -2.5,
+        3.75,
+        -65535.75
+      ]
+    },
+    "rounding_ties": {
+      "input_values": [
+        2.5,
+        3.5,
+        -2.5,
+        -3.5
+      ]
+    },
+    "type_cross": {
+      "input_values": [
+        2147483904.0,
+        4294967040.0,
+        -1.0,
+        65535.75
+      ]
+    }
+  },
+  "records": [
+    {
+      "byte7": 72,
+      "byte8": 0,
+      "input_f32_bits_as_i32": [
+        -1080033280,
+        -1071644672,
+        1081081856,
+        -947912768
+      ],
+      "panel": "low_bits",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nSPLICE _agc.main@0x19: 08 -> 48 (abs file offset 7465)\nSPLICE _agc.main@0x1a: 0200 -> 0000 (abs file offset 7466)\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3291\nOUT 0 ff000000fe0000000400000080000000\nSTATUS OK\nRESULT 0 255 254 4 128\n",
+      "values": [
+        255,
+        254,
+        4,
+        128
+      ]
+    },
+    {
+      "byte7": 72,
+      "byte8": 1,
+      "input_f32_bits_as_i32": [
+        -1080033280,
+        -1071644672,
+        1081081856,
+        -947912768
+      ],
+      "panel": "low_bits",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nSPLICE _agc.main@0x19: 08 -> 48 (abs file offset 7465)\nSPLICE _agc.main@0x1a: 0200 -> 0100 (abs file offset 7466)\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3291\nOUT 0 fffffffffeffffff040000000000ffff\nSTATUS OK\nRESULT 0 -1 -2 4 -65536\n",
+      "values": [
+        -1,
+        -2,
+        4,
+        -65536
+      ]
+    },
+    {
+      "byte7": 72,
+      "byte8": 2,
+      "input_f32_bits_as_i32": [
+        -1080033280,
+        -1071644672,
+        1081081856,
+        -947912768
+      ],
+      "panel": "low_bits",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nSPLICE _agc.main@0x19: 08 -> 48 (abs file offset 7465)\nSPLICE _agc.main@0x1a: 0200 -> 0200 (abs file offset 7466)\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 2958\nOUT 0 ff000000fe0000000300000080000000\nSTATUS OK\nRESULT 0 255 254 3 128\n",
+      "values": [
+        255,
+        254,
+        3,
+        128
+      ]
+    },
+    {
+      "byte7": 72,
+      "byte8": 3,
+      "input_f32_bits_as_i32": [
+        -1080033280,
+        -1071644672,
+        1081081856,
+        -947912768
+      ],
+      "panel": "low_bits",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nSPLICE _agc.main@0x19: 08 -> 48 (abs file offset 7465)\nSPLICE _agc.main@0x1a: 0200 -> 0300 (abs file offset 7466)\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3249\nOUT 0 fffffffffeffffff030000000100ffff\nSTATUS OK\nRESULT 0 -1 -2 3 -65535\n",
+      "values": [
+        -1,
+        -2,
+        3,
+        -65535
+      ]
+    },
+    {
+      "byte7": 72,
+      "byte8": 1,
+      "input_f32_bits_as_i32": [
+        1075838976,
+        1080033280,
+        -1071644672,
+        -1067450368
+      ],
+      "panel": "rounding_ties",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nSPLICE _agc.main@0x19: 08 -> 48 (abs file offset 7465)\nSPLICE _agc.main@0x1a: 0200 -> 0100 (abs file offset 7466)\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3333\nOUT 0 0200000004000000fefffffffcffffff\nSTATUS OK\nRESULT 0 2 4 -2 -4\n",
+      "values": [
+        2,
+        4,
+        -2,
+        -4
+      ]
+    },
+    {
+      "byte7": 72,
+      "byte8": 3,
+      "input_f32_bits_as_i32": [
+        1075838976,
+        1080033280,
+        -1071644672,
+        -1067450368
+      ],
+      "panel": "rounding_ties",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nSPLICE _agc.main@0x19: 08 -> 48 (abs file offset 7465)\nSPLICE _agc.main@0x1a: 0200 -> 0300 (abs file offset 7466)\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3250\nOUT 0 0200000003000000fefffffffdffffff\nSTATUS OK\nRESULT 0 2 3 -2 -3\n",
+      "values": [
+        2,
+        3,
+        -2,
+        -3
+      ]
+    },
+    {
+      "byte7": 8,
+      "byte8": 2,
+      "input_f32_bits_as_i32": [
+        1325400065,
+        1333788671,
+        -1082130432,
+        1199570880
+      ],
+      "panel": "type_cross",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nSPLICE _agc.main@0x19: 08 -> 08 (abs file offset 7465)\nSPLICE _agc.main@0x1a: 0200 -> 0200 (abs file offset 7466)\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 2916\nOUT 0 0001008000ffffff00000000ffff0000\nSTATUS OK\nRESULT 0 -2147483392 -256 0 65535\n",
+      "values": [
+        -2147483392,
+        -256,
+        0,
+        65535
+      ]
+    },
+    {
+      "byte7": 8,
+      "byte8": 3,
+      "input_f32_bits_as_i32": [
+        1325400065,
+        1333788671,
+        -1082130432,
+        1199570880
+      ],
+      "panel": "type_cross",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nSPLICE _agc.main@0x19: 08 -> 08 (abs file offset 7465)\nSPLICE _agc.main@0x1a: 0200 -> 0300 (abs file offset 7466)\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3375\nOUT 0 ffff0000ffff000000000000ffff0000\nSTATUS OK\nRESULT 0 65535 65535 0 65535\n",
+      "values": [
+        65535,
+        65535,
+        0,
+        65535
+      ]
+    },
+    {
+      "byte7": 72,
+      "byte8": 2,
+      "input_f32_bits_as_i32": [
+        1325400065,
+        1333788671,
+        -1082130432,
+        1199570880
+      ],
+      "panel": "type_cross",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nSPLICE _agc.main@0x19: 08 -> 48 (abs file offset 7465)\nSPLICE _agc.main@0x1a: 0200 -> 0200 (abs file offset 7466)\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3500\nOUT 0 7f0000007f000000ff0000007f000000\nSTATUS OK\nRESULT 0 127 127 255 127\n",
+      "values": [
+        127,
+        127,
+        255,
+        127
+      ]
+    },
+    {
+      "byte7": 72,
+      "byte8": 3,
+      "input_f32_bits_as_i32": [
+        1325400065,
+        1333788671,
+        -1082130432,
+        1199570880
+      ],
+      "panel": "type_cross",
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nSPLICE _agc.main@0x19: 08 -> 48 (abs file offset 7465)\nSPLICE _agc.main@0x1a: 0200 -> 0300 (abs file offset 7466)\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3375\nOUT 0 ffffff7fffffff7fffffffffffff0000\nSTATUS OK\nRESULT 0 2147483647 2147483647 -1 65535\n",
+      "values": [
+        2147483647,
+        2147483647,
+        -1,
+        65535
+      ]
+    }
+  ],
+  "schema_version": 1
+}

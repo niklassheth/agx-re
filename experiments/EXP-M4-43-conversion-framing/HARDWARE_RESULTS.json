@@ -1,0 +1,209 @@
+{
+  "environment": {
+    "build_version": "25G83",
+    "chip": "T8132 Apple M4",
+    "product_version": "26.6.2"
+  },
+  "native_oracle": [
+    1,
+    2,
+    3,
+    65535
+  ],
+  "records": [
+    {
+      "elapsed_seconds": 0.632173583,
+      "independent_move_exact": true,
+      "label": "native",
+      "main_hex": "1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000",
+      "native_exact": true,
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nMAIN_ORIG 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nSPLICE _agc.main@0x1a: 0200 -> 0200 (abs file offset 7466)\nMAIN_SPLICED 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 2999\nOUT 0 010000000200000003000000ffff0000\nSTATUS OK\nRESULT 0 1 2 3 65535\n",
+      "suffix": "0200",
+      "values": [
+        1,
+        2,
+        3,
+        65535
+      ]
+    },
+    {
+      "elapsed_seconds": 0.2683445,
+      "label": "control_before_tail_03",
+      "main_hex": "1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000",
+      "native_exact": true,
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nMAIN_ORIG 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nSPLICE _agc.main@0x1a: 0200 -> 0200 (abs file offset 7466)\nMAIN_SPLICED 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3291\nOUT 0 010000000200000003000000ffff0000\nSTATUS OK\nRESULT 0 1 2 3 65535\n",
+      "suffix": "0200",
+      "values": [
+        1,
+        2,
+        3,
+        65535
+      ]
+    },
+    {
+      "elapsed_seconds": 0.26973674999999986,
+      "independent_move_exact": true,
+      "label": "tail_03",
+      "main_hex": "1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000",
+      "native_exact": true,
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nMAIN_ORIG 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nSPLICE _agc.main@0x1a: 0200 -> 0300 (abs file offset 7466)\nMAIN_SPLICED 1ca010066710440001012000510100404600270756000200b4080300e7005400000121001100009011000e000000\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3250\nOUT 0 010000000200000003000000ffff0000\nSTATUS OK\nRESULT 0 1 2 3 65535\n",
+      "suffix": "0300",
+      "values": [
+        1,
+        2,
+        3,
+        65535
+      ]
+    },
+    {
+      "elapsed_seconds": 0.26920450000000007,
+      "label": "control_before_mov_r0_7",
+      "main_hex": "1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000",
+      "native_exact": true,
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nMAIN_ORIG 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nSPLICE _agc.main@0x1a: 0200 -> 0200 (abs file offset 7466)\nMAIN_SPLICED 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3250\nOUT 0 010000000200000003000000ffff0000\nSTATUS OK\nRESULT 0 1 2 3 65535\n",
+      "suffix": "0200",
+      "values": [
+        1,
+        2,
+        3,
+        65535
+      ]
+    },
+    {
+      "elapsed_seconds": 0.24701958400000001,
+      "independent_move_exact": false,
+      "label": "mov_r0_7",
+      "main_hex": "1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000",
+      "native_exact": false,
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nMAIN_ORIG 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nSPLICE _agc.main@0x1a: 0200 -> 0c07 (abs file offset 7466)\nMAIN_SPLICED 1ca010066710440001012000510100404600270756000200b4080c07e7005400000121001100009011000e000000\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3333\nOUT 0 010000000200000004000000ffff0000\nSTATUS OK\nRESULT 0 1 2 4 65535\n",
+      "suffix": "0c07",
+      "values": [
+        1,
+        2,
+        4,
+        65535
+      ]
+    },
+    {
+      "elapsed_seconds": 0.2788698329999999,
+      "label": "control_before_mov_r0_42",
+      "main_hex": "1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000",
+      "native_exact": true,
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nMAIN_ORIG 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nSPLICE _agc.main@0x1a: 0200 -> 0200 (abs file offset 7466)\nMAIN_SPLICED 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3333\nOUT 0 010000000200000003000000ffff0000\nSTATUS OK\nRESULT 0 1 2 3 65535\n",
+      "suffix": "0200",
+      "values": [
+        1,
+        2,
+        3,
+        65535
+      ]
+    },
+    {
+      "elapsed_seconds": 0.2878734999999999,
+      "independent_move_exact": false,
+      "label": "mov_r0_42",
+      "main_hex": "1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000",
+      "native_exact": false,
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nMAIN_ORIG 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nSPLICE _agc.main@0x1a: 0200 -> 0c2a (abs file offset 7466)\nMAIN_SPLICED 1ca010066710440001012000510100404600270756000200b4080c2ae7005400000121001100009011000e000000\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3333\nOUT 0 010000000200000004000000ffff0000\nSTATUS OK\nRESULT 0 1 2 4 65535\n",
+      "suffix": "0c2a",
+      "values": [
+        1,
+        2,
+        4,
+        65535
+      ]
+    },
+    {
+      "elapsed_seconds": 0.2833397500000001,
+      "label": "control_before_mov_r0_99",
+      "main_hex": "1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000",
+      "native_exact": true,
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nMAIN_ORIG 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nSPLICE _agc.main@0x1a: 0200 -> 0200 (abs file offset 7466)\nMAIN_SPLICED 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3291\nOUT 0 010000000200000003000000ffff0000\nSTATUS OK\nRESULT 0 1 2 3 65535\n",
+      "suffix": "0200",
+      "values": [
+        1,
+        2,
+        3,
+        65535
+      ]
+    },
+    {
+      "elapsed_seconds": 0.2675982499999998,
+      "independent_move_exact": false,
+      "label": "mov_r0_99",
+      "main_hex": "1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000",
+      "native_exact": false,
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nMAIN_ORIG 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nSPLICE _agc.main@0x1a: 0200 -> 0c63 (abs file offset 7466)\nMAIN_SPLICED 1ca010066710440001012000510100404600270756000200b4080c63e7005400000121001100009011000e000000\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3166\nOUT 0 010000000200000004000000ffff0000\nSTATUS OK\nRESULT 0 1 2 4 65535\n",
+      "suffix": "0c63",
+      "values": [
+        1,
+        2,
+        4,
+        65535
+      ]
+    },
+    {
+      "elapsed_seconds": 0.31410312500000037,
+      "label": "control_before_mov_r15_0",
+      "main_hex": "1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000",
+      "native_exact": true,
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nMAIN_ORIG 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nSPLICE _agc.main@0x1a: 0200 -> 0200 (abs file offset 7466)\nMAIN_SPLICED 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3000\nOUT 0 010000000200000003000000ffff0000\nSTATUS OK\nRESULT 0 1 2 3 65535\n",
+      "suffix": "0200",
+      "values": [
+        1,
+        2,
+        3,
+        65535
+      ]
+    },
+    {
+      "elapsed_seconds": 0.30604104099999985,
+      "independent_move_exact": false,
+      "label": "mov_r15_0",
+      "main_hex": "1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000",
+      "native_exact": false,
+      "returncode": 0,
+      "status": "OK",
+      "stderr": "",
+      "stdout": "MAIN_LEN 46\nMAIN_ORIG 1ca010066710440001012000510100404600270756000200b4080200e7005400000121001100009011000e000000\nSPLICE _agc.main@0x1a: 0200 -> fc00 (abs file offset 7466)\nMAIN_SPLICED 1ca010066710440001012000510100404600270756000200b408fc00e7005400000121001100009011000e000000\nDEVICE Apple M4\nFUNCTION f2u_load\nPIPELINE_SOURCE archive\nGPUTIME_NS 3375\nOUT 0 010000000200000004000000ffff0000\nSTATUS OK\nRESULT 0 1 2 4 65535\n",
+      "suffix": "fc00",
+      "values": [
+        1,
+        2,
+        4,
+        65535
+      ]
+    }
+  ],
+  "schema_version": 1
+}
