@@ -1,0 +1,5 @@
+shdump: device = Apple M4
+shdump: functions = floor_half_store log2_half_reuse exp2_half_store log2_half_store rsqrt_half_store rcp_half_reuse rsqrt_half_reuse floor_bfloat_reuse floor_half_reuse rcp_half_store log2_bfloat_store exp2_bfloat_reuse rsqrt_bfloat_store rcp_bfloat_store rsqrt_bfloat_reuse log2_bfloat_reuse rcp_bfloat_reuse exp2_bfloat_store exp2_half_reuse floor_bfloat_store
+shdump: chosen function = floor_half_store
+shdump: threadExecutionWidth = 32, maxThreadsPerThreadgroup = 1024
+shdump: wrote /Users/nsheth/agx-re/experiments/EXP-M4-54-sfu-source-controls/mixed/floor_half_store.bin

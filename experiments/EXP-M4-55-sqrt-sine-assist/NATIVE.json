@@ -1,0 +1,100 @@
+[
+  {
+    "name": "k_rsqrt",
+    "length": 46,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0156000200b0400000"
+      }
+    ]
+  },
+  {
+    "name": "k_sqrt",
+    "length": 50,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f015604030092400000"
+      }
+    ]
+  },
+  {
+    "name": "k_sqrt_precise",
+    "length": 132,
+    "candidates": [
+      {
+        "offset": 34,
+        "hex": "2f015404031092400000"
+      }
+    ]
+  },
+  {
+    "name": "k_sin",
+    "length": 136,
+    "candidates": [
+      {
+        "offset": 76,
+        "hex": "2f035404030c92400000"
+      }
+    ]
+  },
+  {
+    "name": "k_sin_fast",
+    "length": 136,
+    "candidates": [
+      {
+        "offset": 76,
+        "hex": "2f035404030c92400000"
+      }
+    ]
+  },
+  {
+    "name": "k_sinpi",
+    "length": 114,
+    "candidates": [
+      {
+        "offset": 54,
+        "hex": "2f035404030c92400000"
+      }
+    ]
+  },
+  {
+    "name": "k_cos",
+    "length": 138,
+    "candidates": [
+      {
+        "offset": 78,
+        "hex": "2f035404030c92400000"
+      }
+    ]
+  },
+  {
+    "name": "k_cospi",
+    "length": 134,
+    "candidates": [
+      {
+        "offset": 84,
+        "hex": "2f035404030c92400000"
+      }
+    ]
+  },
+  {
+    "name": "k_tan",
+    "length": 162,
+    "candidates": [
+      {
+        "offset": 50,
+        "hex": "2f035408030892400000"
+      },
+      {
+        "offset": 70,
+        "hex": "2f03540c0314b0400000"
+      },
+      {
+        "offset": 106,
+        "hex": "af005404030810482000"
+      }
+    ]
+  }
+]

@@ -26,7 +26,7 @@ FAMILY = [
         ("falu_acc", "compact 4-byte float accumulate (reduction)"),
         ("cvt_f2h", "fp32 -> fp16 narrowing convert"),
         ("bf_alu", "native bfloat (brain-float16) general ALU (add/mul/fma)"),
-        ("fspecial", "special-function unit: rcp/rsqrt/exp2/round/sqrt/log2"),
+        ("fspecial", "special functions: rcp/rsqrt/exp2/round/log2 and sqrt/sine factors"),
         ("fspecial_est", "transcendental estimate seed (rcp/rsqrt/sqrt NR seed)"),
     ]),
     ("Integer ALU", [

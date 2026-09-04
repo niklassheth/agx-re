@@ -1,0 +1,502 @@
+[
+  {
+    "name": "rcp_float_store",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af005600020010482000"
+      }
+    ]
+  },
+  {
+    "name": "rcp_float_reuse",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af005604020000482000"
+      }
+    ]
+  },
+  {
+    "name": "rcp_float_alu",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 38,
+        "hex": "af005404020810482000"
+      }
+    ]
+  },
+  {
+    "name": "rcp_float_neg",
+    "length": 84,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af005600030010482000"
+      }
+    ]
+  },
+  {
+    "name": "rcp_float_abs",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af005600020010486000"
+      }
+    ]
+  },
+  {
+    "name": "rsqrt_float_store",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0156000200b0400000"
+      }
+    ]
+  },
+  {
+    "name": "rsqrt_float_reuse",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af015604020090400000"
+      }
+    ]
+  },
+  {
+    "name": "rsqrt_float_alu",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 38,
+        "hex": "af0154040208b0400000"
+      }
+    ]
+  },
+  {
+    "name": "rsqrt_float_neg",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0156000200b0400100"
+      }
+    ]
+  },
+  {
+    "name": "rsqrt_float_abs",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0156000200b0c00000"
+      }
+    ]
+  },
+  {
+    "name": "exp2_float_store",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0256000200b0400000"
+      }
+    ]
+  },
+  {
+    "name": "exp2_float_reuse",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af025604020090400000"
+      }
+    ]
+  },
+  {
+    "name": "exp2_float_alu",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 38,
+        "hex": "af0254040208b0400000"
+      }
+    ]
+  },
+  {
+    "name": "exp2_float_neg",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0256000200b0400100"
+      }
+    ]
+  },
+  {
+    "name": "exp2_float_abs",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0256000200b0c00000"
+      }
+    ]
+  },
+  {
+    "name": "log2_float_store",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0256000200b0400000"
+      }
+    ]
+  },
+  {
+    "name": "log2_float_reuse",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f025604020090400000"
+      }
+    ]
+  },
+  {
+    "name": "log2_float_alu",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 38,
+        "hex": "2f0254040208b0400000"
+      }
+    ]
+  },
+  {
+    "name": "log2_float_neg",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0256000200b0400100"
+      }
+    ]
+  },
+  {
+    "name": "log2_float_abs",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0256000200b0c00000"
+      }
+    ]
+  },
+  {
+    "name": "floor_float_store",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0056000200b0400200"
+      }
+    ]
+  },
+  {
+    "name": "floor_float_reuse",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f005604020090400200"
+      }
+    ]
+  },
+  {
+    "name": "floor_float_alu",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 38,
+        "hex": "2f0054040208b0400200"
+      }
+    ]
+  },
+  {
+    "name": "floor_float_neg",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0056000200b0400300"
+      }
+    ]
+  },
+  {
+    "name": "floor_float_abs",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0056000200b0c00200"
+      }
+    ]
+  },
+  {
+    "name": "rcp_half_store",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af005602020410463000"
+      }
+    ]
+  },
+  {
+    "name": "rcp_half_reuse",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af005603020400463000"
+      }
+    ]
+  },
+  {
+    "name": "rcp_half_alu",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 38,
+        "hex": "af005403020610463000"
+      }
+    ]
+  },
+  {
+    "name": "rcp_half_neg",
+    "length": 86,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af005602030410442000"
+      }
+    ]
+  },
+  {
+    "name": "rcp_half_abs",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af005602020410467000"
+      }
+    ]
+  },
+  {
+    "name": "rsqrt_half_store",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0156020204ac600000"
+      }
+    ]
+  },
+  {
+    "name": "rsqrt_half_reuse",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af01560302048c600000"
+      }
+    ]
+  },
+  {
+    "name": "rsqrt_half_alu",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 38,
+        "hex": "af0154030206ac600000"
+      }
+    ]
+  },
+  {
+    "name": "rsqrt_half_neg",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0156020204ac600100"
+      }
+    ]
+  },
+  {
+    "name": "rsqrt_half_abs",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0156020204ace00000"
+      }
+    ]
+  },
+  {
+    "name": "exp2_half_store",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0256020204ac600000"
+      }
+    ]
+  },
+  {
+    "name": "exp2_half_reuse",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af02560302048c600000"
+      }
+    ]
+  },
+  {
+    "name": "exp2_half_alu",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 38,
+        "hex": "af0254030206ac600000"
+      }
+    ]
+  },
+  {
+    "name": "exp2_half_neg",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0256020204ac600100"
+      }
+    ]
+  },
+  {
+    "name": "exp2_half_abs",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "af0256020204ace00000"
+      }
+    ]
+  },
+  {
+    "name": "log2_half_store",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0256020204ac600000"
+      }
+    ]
+  },
+  {
+    "name": "log2_half_reuse",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f02560302048c600000"
+      }
+    ]
+  },
+  {
+    "name": "log2_half_alu",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 38,
+        "hex": "2f0254030206ac600000"
+      }
+    ]
+  },
+  {
+    "name": "log2_half_neg",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0256020204ac600100"
+      }
+    ]
+  },
+  {
+    "name": "log2_half_abs",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0256020204ace00000"
+      }
+    ]
+  },
+  {
+    "name": "floor_half_store",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0056020204ac600200"
+      }
+    ]
+  },
+  {
+    "name": "floor_half_reuse",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f00560302048c600200"
+      }
+    ]
+  },
+  {
+    "name": "floor_half_alu",
+    "length": 80,
+    "candidates": [
+      {
+        "offset": 38,
+        "hex": "2f0054030206ac600200"
+      }
+    ]
+  },
+  {
+    "name": "floor_half_neg",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0056020204ac600300"
+      }
+    ]
+  },
+  {
+    "name": "floor_half_abs",
+    "length": 74,
+    "candidates": [
+      {
+        "offset": 18,
+        "hex": "2f0056020204ace00200"
+      }
+    ]
+  }
+]

@@ -1,0 +1,5 @@
+shdump: device = Apple M4
+shdump: functions = floor_half_abs floor_half_neg floor_half_alu floor_half_reuse rsqrt_half_alu floor_half_store rsqrt_half_store log2_half_abs log2_half_alu log2_half_reuse exp2_half_reuse log2_half_store exp2_half_store rsqrt_half_reuse rcp_half_reuse rcp_half_store floor_float_neg rcp_half_abs exp2_float_neg floor_float_store rsqrt_half_neg rcp_half_neg exp2_float_alu exp2_half_neg rsqrt_float_abs exp2_float_abs log2_float_neg exp2_half_abs exp2_float_reuse rsqrt_float_store exp2_half_alu log2_float_abs rsqrt_float_neg rcp_float_abs exp2_float_store rcp_float_store rcp_half_alu rsqrt_half_abs log2_half_neg log2_float_alu rsqrt_float_reuse rsqrt_float_alu rcp_float_neg floor_float_alu rcp_float_alu floor_float_abs log2_float_store rcp_float_reuse floor_float_reuse log2_float_reuse
+shdump: chosen function = floor_float_reuse
+shdump: threadExecutionWidth = 32, maxThreadsPerThreadgroup = 1024
+shdump: wrote /Users/nsheth/agx-re/experiments/EXP-M4-54-sfu-source-controls/native/floor_float_reuse.bin

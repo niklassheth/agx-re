@@ -1,0 +1,167 @@
+{
+  "dispatches": 27,
+  "numerical_checks": 29184,
+  "positive_normal_root_factor_bit_mismatches": 0,
+  "reports": [
+    {
+      "name": "k_rsqrt",
+      "tag": "native_edges",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_sqrt",
+      "tag": "native_edges",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_sqrt_precise",
+      "tag": "native_edges",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_sin",
+      "tag": "native_edges",
+      "role": "native-context-only"
+    },
+    {
+      "name": "k_sin_fast",
+      "tag": "native_edges",
+      "role": "native-context-only"
+    },
+    {
+      "name": "k_sinpi",
+      "tag": "native_edges",
+      "role": "native-context-only"
+    },
+    {
+      "name": "k_cospi",
+      "tag": "native_edges",
+      "role": "native-context-only"
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "root_af_90",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "root_af_92",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "root_af_b0",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "root_af_b2",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "root_2f_90",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "root_2f_92",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "root_2f_b0",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "root_2f_b2",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "class3_2f_edges",
+      "count": 32,
+      "max_ulp": 1
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "class3_af_edges",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "class3_dense",
+      "count": 4096,
+      "max_ulp": 1
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "class3_random",
+      "count": 4096,
+      "max_ulp": 1
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "root_af_random",
+      "count": 4096,
+      "max_ulp": 1
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "root_2f_random",
+      "count": 4096,
+      "max_ulp": 1
+    },
+    {
+      "name": "k_sqrt",
+      "tag": "native_random",
+      "count": 4096,
+      "max_ulp": 2
+    },
+    {
+      "name": "k_sqrt",
+      "tag": "ordinary_rsqrt_multiply_edges",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_sqrt",
+      "tag": "sine_factor_multiply_edges",
+      "count": 32,
+      "max_ulp": 0
+    },
+    {
+      "name": "k_sqrt",
+      "tag": "sine_factor_multiply_dense",
+      "count": 4096,
+      "max_ulp": 2
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "class3_dense_reverse",
+      "count": 4096,
+      "max_ulp": 1
+    },
+    {
+      "name": "k_rsqrt",
+      "tag": "sqrt_factor_edges_reverse",
+      "count": 32,
+      "max_ulp": 0
+    }
+  ],
+  "failures": [],
+  "verdict": "PASS"
+}

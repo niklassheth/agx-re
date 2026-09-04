@@ -1,0 +1,5 @@
+shdump: device = Apple M4
+shdump: functions = k_tan k_cospi k_sinpi k_sin k_sqrt_precise k_cos k_rsqrt k_sqrt k_sin_fast
+shdump: chosen function = k_sin_fast
+shdump: threadExecutionWidth = 32, maxThreadsPerThreadgroup = 1024
+shdump: wrote /Users/nsheth/agx-re/experiments/EXP-M4-55-sqrt-sine-assist/native/k_sin_fast.bin

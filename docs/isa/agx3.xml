@@ -116,15 +116,15 @@
   </enum>
 
   <enum kind="fspecial_fn_hi" name="fspecial fn_hi">
-    <value value="0" label="direct (0x2f: sqrt/log2/round-family/sincos)">direct</value>
-    <value value="1" label="reciprocal (0xaf: rcp/rsqrt/exp2)">reciprocal</value>
+    <value value="0" label="ordinary family: round / sqrt factor / log2 / sine factor (class-dependent)">ordinary_family_round_sqrt_factor_log2_sine_factor</value>
+    <value value="1" label="reciprocal family: rcp / rsqrt / exp2 (class and operand-form dependent)">reciprocal_family_rcp_rsqrt_exp2</value>
   </enum>
 
   <enum kind="fspecial_fnclass" name="fspecial fnclass">
     <value value="0" label="rcp|round -- reciprocal uses byte7 0x48/byte8 0x20; on the std-SFU datapath byte7 0x40 gives 0x2f -&gt; rint, 0xaf -&gt; +inf">rcp_round_reciprocal_uses_byte7_0x48_byte8_0x20_on_the_std_SFU_datapath_byte7_0x40_gives_0x2f_rint_0xaf_inf</value>
-    <value value="1" label="rsqrt|sqrt">rsqrt_sqrt</value>
+    <value value="1" label="2f: sqrt_factor; af: rsqrt. Equal on positive normals, different at zero/+infinity (EXP-M4-55 T8132)">2f_sqrt_factor_af_rsqrt_Equal_on_positive_normals_different_at_zero_infinity</value>
     <value value="2" label="exp2|log2 (fn_hi selects: 0 -&gt; log2, 1 -&gt; exp2; HW-confirmed by computed value on G17P)">exp2_log2</value>
-    <value value="3" label="sincos/tan primitive -- on 0x2f returns NaN for 11 of 12 positive finite inputs; on 0xaf indistinguishable from class 1 (rsqrt)">sincos_tan_primitive_on_0x2f_returns_NaN_for_11_of_12_positive_finite_inputs_on_0xaf_indistinguishable_from_class_1</value>
+    <value value="3" label="2f: sin_factor(x)=sin(pi*x/2)/x on [-1,1], limit pi/2 at zero; NaN outside. af: rsqrt in tested form (EXP-M4-55 T8132)">2f_sin_factor_sin_x_on_1_1_limit_pi_2_at_zero_NaN_outside_af_rsqrt_in_tested_form</value>
     <value value="4" label="NOT a separate class: 4 = class 0 with bit 2 set, which stores nothing at all on both datapaths (HW, G17P)">NOT_a_separate_class_4_class_0_with_bit_2_set_which_stores_nothing_at_all_on_both_datapaths</value>
   </enum>
 
@@ -135,29 +135,34 @@
 
   <enum kind="fspecial_fnsel" name="fspecial fnsel">
     <value value="0" label="reciprocal, source retained">reciprocal_source_retained</value>
-    <value value="2" label="rcp alt-operand form">rcp_alt_operand_form</value>
+    <value value="2" label="reciprocal retained-source variant; bit1 did not change tested result/lifetime">reciprocal_retained_source_variant_bit1_did_not_change_tested_result_lifetime</value>
     <value value="16" label="reciprocal, source released (core 0x00 | release bit 0x10)">reciprocal_source_released</value>
     <value value="32" label="compound range-reduce (inferred)">compound_range_reduce</value>
+    <value value="128" label="ordinary SFU BF16 source, retained">ordinary_SFU_BF16_source_retained</value>
+    <value value="136" label="ordinary SFU FP16 source / FP32 result form, retained">ordinary_SFU_FP16_source_FP32_result_form_retained</value>
     <value value="138" label="(inferred)">v138</value>
+    <value value="140" label="ordinary SFU FP16 source / FP16 result form, retained">ordinary_SFU_FP16_source_FP16_result_form_retained</value>
     <value value="142" label="(inferred)">v142</value>
-    <value value="144" label="(inferred)">v144</value>
-    <value value="146" label="sqrt / sincos datapath, source released (core 0x82 | release bit 0x10)">sqrt_sincos_datapath_source_released</value>
-    <value value="172" label="SFU f16 datapath, source retained (core 0xac)">SFU_f16_datapath_source_retained</value>
-    <value value="176" label="std SFU f32, source released (core 0xa0 | release bit 0x10)">std_SFU_f32_source_released</value>
+    <value value="144" label="ordinary SFU FP32 source, retained">ordinary_SFU_FP32_source_retained</value>
+    <value value="146" label="ordinary SFU FP32 retained-source form with bit1 set; bit1 not characterized">ordinary_SFU_FP32_retained_source_form_with_bit1_set_bit1_not_characterized</value>
+    <value value="160" label="ordinary SFU BF16 source, released (0x80 | 0x20)">ordinary_SFU_BF16_source_released</value>
+    <value value="168" label="ordinary SFU FP16 source / FP32 result form, released">ordinary_SFU_FP16_source_FP32_result_form_released</value>
+    <value value="172" label="ordinary SFU FP16 source / FP16 result form, released">ordinary_SFU_FP16_source_FP16_result_form_released</value>
+    <value value="176" label="ordinary SFU FP32 source, released (0x90 | 0x20)">ordinary_SFU_FP32_source_released</value>
   </enum>
 
   <enum kind="fspecial_precsel" name="fspecial precsel">
     <value value="0" label="(inferred)">v0</value>
     <value value="64" label="f32 result">f32_result</value>
-    <value value="68" label="(inferred)">v68</value>
-    <value value="72" label="rcp f32">rcp_f32</value>
+    <value value="68" label="reciprocal FP16 source / FP32 result form">reciprocal_FP16_source_FP32_result_form</value>
+    <value value="72" label="reciprocal FP32 source / FP32 result form">reciprocal_FP32_source_FP32_result_form</value>
     <value value="96" label="f16 result">f16_result</value>
-    <value value="192" label="log2 negate (inferred)">log2_negate</value>
+    <value value="192" label="ordinary SFU FP32 result with source absolute-value modifier">ordinary_SFU_FP32_result_with_source_absolute_value_modifier</value>
   </enum>
 
   <enum kind="fspecial_roundmode" name="fspecial roundmode">
     <value value="0" label="nearest / none">nearest_none</value>
-    <value value="1" label="DO NOT EMIT -- bit 0 set returns NaN in every lane for every input on the rsqrt and log2 SFU datapaths (HW, G17P)">DO_NOT_EMIT_bit_0_set_returns_NaN_in_every_lane_for_every_input_on_the_rsqrt_and_log2_SFU_datapaths</value>
+    <value value="1" label="ordinary-SFU source negation (not a universal NaN control)">ordinary_SFU_source_negation</value>
     <value value="2">floor</value>
     <value value="4">ceil</value>
     <value value="6">trunc</value>
@@ -1288,9 +1293,9 @@
     <zero bit="72:79"/>
   </ins>
 
-  <!-- fspecial: d[dst] = SFU(src) -->
+  <!-- fspecial: EXP-M4-55 T8132: with ordinary FP32 operand controls, 2f/class1 returns an rsqrt factor except ... -->
   <!-- provenance: HW-VALIDATED (EXP-0013 exp2/log2/round; EXP-0026 rcp/rsqrt/sqrt): exp2/log2 exact on powers of two, 1 ULP elsewhere; floor/ceil/trunc/rint via byte+8 ... -->
-  <ins name="fspecial" length="10" label="d[dst] = SFU(src)">
+  <ins name="fspecial" length="10" label="EXP-M4-55 T8132: with ordinary FP32 operand controls, 2f/class1 returns an rsqrt factor except ...">
     <exact bit="0:6">0101111</exact>
     <modifier name="fn_hi" bit="7" kind="fspecial_fn_hi"/>
     <modifier name="fnclass" bit="8:11" kind="fspecial_fnclass"/>
