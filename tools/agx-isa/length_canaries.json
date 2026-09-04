@@ -31,7 +31,11 @@
     {"id": "half_high_compact_dst7", "hex": "780d1811", "length": 4, "mnemonic": "half_pack", "evidence": "EXP-0203"},
 
     {"id": "icmp_pred6", "hex": "0a0122821422", "length": 6, "mnemonic": "icmp_pred_ordered6", "evidence": "EXP-0010 and EXP-M4-45"},
+    {"id": "icmp_pred6_bank5", "hex": "aa033a0505c0", "length": 6, "mnemonic": "icmp_pred_ordered6", "evidence": "EXP-M4-53"},
     {"id": "icmp_pred_ext10", "hex": "2a002bc0060006c20000", "length": 10, "mnemonic": "icmp_pred_ext10", "evidence": "EXP-0200"},
+    {"id": "if_push_predicate_bank5", "hex": "0f055415", "length": 4, "mnemonic": "if_push_cond", "evidence": "EXP-M4-53"},
+    {"id": "if_push_constant_false", "hex": "0f05541d", "length": 4, "mnemonic": "if_push_cond", "evidence": "EXP-M4-53"},
+    {"id": "loop_mask_update_bank2", "hex": "8f04542a", "length": 4, "mnemonic": "loop_mask_update", "evidence": "EXP-M4-53"},
     {"id": "isel10_cmpA_r127", "hex": "02ff0703060407c00006", "length": 10, "mnemonic": "isel10", "evidence": "EXP-0234"},
     {"id": "isel10_cmpB_r127", "hex": "020307ff060407c00006", "length": 10, "mnemonic": "isel10", "evidence": "EXP-0234"},
     {"id": "isel10_true_r127", "hex": "0203070506fe07c00006", "length": 10, "mnemonic": "isel10", "evidence": "EXP-0234"},

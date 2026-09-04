@@ -164,6 +164,17 @@
     <value value="32" label="reciprocal-precision flag (rcp/1-op SFU)">reciprocal_precision_flag</value>
   </enum>
 
+  <enum kind="icmp_pred_ordered6_predicate_bank" name="icmp_pred_ordered6 predicate_bank">
+    <value value="0">p0</value>
+    <value value="1">p1</value>
+    <value value="2">p2</value>
+    <value value="3">p3</value>
+    <value value="4">p4</value>
+    <value value="5">p5</value>
+    <value value="6" label="unallocatable/special">unallocatable_special</value>
+    <value value="7" label="unallocatable/special">unallocatable_special</value>
+  </enum>
+
   <enum kind="icmp_pred_ordered6_condition" name="icmp_pred_ordered6 condition">
     <value value="2">float_gt</value>
     <value value="3">float_lt</value>
@@ -232,6 +243,17 @@
     <value value="37" label="cond_skip+b2+b5">cond_skip_b2_b5</value>
   </enum>
 
+  <enum kind="if_push_cond_predicate_source" name="if_push_cond predicate_source">
+    <value value="0">p0</value>
+    <value value="1">p1</value>
+    <value value="2">p2</value>
+    <value value="3">p3</value>
+    <value value="4">p4</value>
+    <value value="5">p5</value>
+    <value value="6" label="constant_true/current_mask">constant_true_current_mask</value>
+    <value value="7" label="constant_false/empty_mask">constant_false_empty_mask</value>
+  </enum>
+
   <enum kind="pop_reconverge_scope" name="pop_reconverge scope">
     <value value="4">mask_bankA</value>
     <value value="36">mask_bankB</value>
@@ -240,6 +262,15 @@
   <enum kind="pop_reconverge_scope_kind" name="pop_reconverge scope_kind">
     <value value="1" label="guard/outermost">guard_outermost</value>
     <value value="2">loop_body</value>
+  </enum>
+
+  <enum kind="loop_mask_update_predicate_bank" name="loop_mask_update predicate_bank">
+    <value value="0">p0</value>
+    <value value="1">p1</value>
+    <value value="2">p2</value>
+    <value value="3">p3</value>
+    <value value="4">p4</value>
+    <value value="5">p5</value>
   </enum>
 
   <enum kind="device_load_addr_mode" name="device_load addr_mode">
@@ -1295,15 +1326,14 @@
   </group>
 
   <!-- icmp_pred_ordered6: Six-byte ordered predicate compare -->
-  <!-- provenance: OWN-SHADER + HW-VALIDATED (EXP-M4-45): 39 native programs and 35 field/liveness ablations matched complete T8132 oracles. Direct byte4 substitutions ... -->
+  <!-- provenance: OWN-SOURCE + HW-VALIDATED (EXP-M4-45/53). EXP-M4-45 validates ordered condition codes, producer inversion, and source release. EXP-M4-53 relocates ... -->
   <ins name="icmp_pred_ordered6" length="6" label="Six-byte ordered predicate compare">
     <exact bit="0:3">1010</exact>
     <exact bit="16">0</exact>
     <exact bit="17">1</exact>
     <exact bit="21">1</exact>
-    <modifier name="invert" bit="4"/>
-    <!-- b0_hi [5:7]: inferred / not yet bit-decoded -->
-    <zero bit="5:7"/>
+    <modifier name="predicate_invert" bit="4"/>
+    <modifier name="predicate_bank" bit="5:7" kind="icmp_pred_ordered6_predicate_bank"/>
     <!-- srcA_desc [8:14]: inferred / not yet bit-decoded -->
     <zero bit="8:14"/>
     <modifier name="srcA_aux" bit="15"/>
@@ -1409,9 +1439,9 @@
     <modifier name="reserved" bit="72:79"/>
   </ins>
 
-  <!-- if_push: Execution-mask push: save the current active-lane population and narrow execution using the current ... -->
-  <!-- provenance: OWN-SHADER + HW-VALIDATED (EXP-M4-45/46): exact nested if/loop outputs; the semantic effect of push bit 0x20 was isolated on hardware. EXP-M4-46 ... -->
-  <ins name="if_push" length="4" label="Execution-mask push: save the current active-lane population and narrow execution using the current ...">
+  <!-- if_push: Execution-mask push fallback covering conditional and loop-scope forms not selected by a ... -->
+  <!-- provenance: OWN-SOURCE + HW-VALIDATED (EXP-M4-45/46/52/53). EXP-M4-52 executes ordinary conditionals through 32 simultaneously live scopes with the identical ... -->
+  <ins name="if_push" length="4" label="Execution-mask push fallback covering conditional and loop-scope forms not selected by a ...">
     <exact bit="0:7">00001111</exact>
     <exact bit="8:15">00000101</exact>
     <modifier name="scope" bit="16:23" kind="if_push_scope"/>
@@ -1419,16 +1449,16 @@
   </ins>
 
   <!-- if_push_cond: Conditional execution-mask push in the observed 0x54 form -->
-  <!-- provenance: OWN-SHADER + HW-VALIDATED (EXP-M4-45): toggling only byte3 bit5 complemented every lane after both short ordered and extended equality predicate ... -->
+  <!-- provenance: OWN-SOURCE + HW-VALIDATED (EXP-M4-45/52/53). EXP-M4-45 proves consumer inversion and its independence from producer inversion. EXP-M4-53 proves ... -->
   <ins name="if_push_cond" length="4" label="Conditional execution-mask push in the observed 0x54 form">
     <exact bit="0:7">00001111</exact>
     <exact bit="8:15">00000101</exact>
     <exact bit="16:23">01010100</exact>
     <exact bit="24">1</exact>
-    <!-- predicate_level [25:28]: inferred / not yet bit-decoded -->
-    <zero bit="25:28"/>
-    <modifier name="invert" bit="29"/>
-    <!-- scope_hi [30:31]: inferred / not yet bit-decoded -->
+    <exact bit="25">0</exact>
+    <modifier name="predicate_source" bit="26:28" kind="if_push_cond_predicate_source"/>
+    <modifier name="predicate_invert" bit="29"/>
+    <!-- reserved [30:31]: inferred / not yet bit-decoded -->
     <zero bit="30:31"/>
   </ins>
 
@@ -1452,13 +1482,16 @@
     <modifier name="scope_kind" bit="24:31"/>
   </ins>
 
-  <!-- loop_mask_update: Update the active execution mask at a loop latch or structured break point -->
-  <!-- provenance: OWN-SHADER + HW-VALIDATED (EXP-M4-46): 19 exact-output programs cover top/bottom-tested and compound-condition loops, direct break, nesting through ... -->
-  <ins name="loop_mask_update" length="4" label="Update the active execution mask at a loop latch or structured break point">
+  <!-- loop_mask_update: Update the current active loop mask from a selected predicate scratch bank -->
+  <!-- provenance: OWN-SOURCE + HW-VALIDATED (EXP-M4-46/53). EXP-M4-53 moves the pc_base_probe latch from p0/0x22 to p1/0x26 and p2/0x2a with all 64 output words ... -->
+  <ins name="loop_mask_update" length="4" label="Update the current active loop mask from a selected predicate scratch bank">
     <exact bit="0:7">10001111</exact>
     <exact bit="8:15">00000100</exact>
     <exact bit="16:23">01010100</exact>
-    <modifier name="mask_selector" bit="24:31"/>
+    <modifier name="form" bit="24:25"/>
+    <modifier name="predicate_bank" bit="26:28" kind="loop_mask_update_predicate_bank"/>
+    <modifier name="predicate_invert" bit="29"/>
+    <modifier name="reserved" bit="30:31"/>
   </ins>
 
   <!-- break_mask_unwind: Nonlocal loop-break mask update through one or more enclosing execution-mask scopes -->
@@ -3062,16 +3095,16 @@
     <modifier name="srcU_desc" bit="104:111"/>
   </ins>
 
-  <!-- if_push_pred: Execution-mask PUSH / if-enter, PREDICATE variant (4B) -->
-  <!-- provenance: byte-diff EXP-M4-13 R4 (own-MSL): ~100 corpus leaders (`0f 15 54 21`, `0f 45 54 21`, `0f 25 56 02`, ...) each bracketed to 4 bytes by the ... -->
-  <ins name="if_push_pred" length="4" label="Execution-mask PUSH / if-enter, PREDICATE variant (4B)">
+  <!-- if_push_pred: Historical four-byte execution-mask-push fallback for forms whose byte+1 high nibble is nonzero -->
+  <!-- provenance: OWN-SOURCE CORPUS FRAMING (EXP-M4-13): about 100 four-byte leaders such as 0f155421, 0f455421, and 0f255602 are bounded by the immediately following ... -->
+  <ins name="if_push_pred" length="4" label="Historical four-byte execution-mask-push fallback for forms whose byte+1 high nibble is nonzero">
     <exact bit="0:7">00001111</exact>
     <exact bit="8:11">0101</exact>
-    <!-- pred [12:15]: inferred / not yet bit-decoded -->
+    <!-- b1_hi [12:15]: inferred / not yet bit-decoded -->
     <zero bit="12:15"/>
     <!-- scope [16:23]: inferred / not yet bit-decoded -->
     <zero bit="16:23"/>
-    <!-- level [24:31]: inferred / not yet bit-decoded -->
+    <!-- control [24:31]: inferred / not yet bit-decoded -->
     <zero bit="24:31"/>
   </ins>
 

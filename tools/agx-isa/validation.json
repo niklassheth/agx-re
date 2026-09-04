@@ -2,7 +2,7 @@
  "_license": "GPL-3.0-or-later",
  "spec": "docs/evidence-classification.md",
  "generated": "2026-09-04",
- "db_sha256": "915252aaaef31098d8cf56db0ccea9f5cfd98aebe066b80da9c9de0c3ea2442e",
+ "db_sha256": "91ec94a70a4ac05440b072be0c7e6460354101b7b5cf0b23d80d505dd31148b5",
  "_conventions": {
   "default": "untested. A field with no committed experiment that exercised it is untested with evidence []. Positional knowledge alone is not a label.",
   "evidence_ids": "directory-name prefixes under experiments/ - this includes the RT-* red-team splice-and-observe experiments (A18 Pro), which are committed experiments with retained raw evidence, alongside EXP-NNNN and EXP-M4-NN / EXP-O2X.",
@@ -14,26 +14,26 @@
  },
  "coverage": {
   "total_instructions": 184,
-  "total_fields": 1163,
+  "total_fields": 1166,
   "by_label": {
-   "hardware-run": 556,
+   "hardware-run": 561,
    "isolated-byte-diff": 67,
-   "corpus-correlation": 82,
+   "corpus-correlation": 81,
    "tokenization-only": 150,
    "single-template-inference": 32,
    "api-accept-reject": 0,
    "host-private": 0,
-   "untested": 276
+   "untested": 275
   },
   "by_label_pct": {
-   "hardware-run": 47.8,
-   "isolated-byte-diff": 5.8,
-   "corpus-correlation": 7.1,
+   "hardware-run": 48.1,
+   "isolated-byte-diff": 5.7,
+   "corpus-correlation": 6.9,
    "tokenization-only": 12.9,
-   "single-template-inference": 2.8,
+   "single-template-inference": 2.7,
    "api-accept-reject": 0.0,
    "host-private": 0.0,
-   "untested": 23.7
+   "untested": 23.6
   },
   "emittable_instructions": 36,
   "emittable_mnemonics": [
@@ -5932,24 +5932,25 @@
   "icmp_pred_ordered6": {
    "_instruction": {
     "label": "hardware-run",
-    "range": "six-byte ordered float/uint/sint predicate compares, register and compact-immediate witnesses",
+    "range": "six-byte ordered float/uint/sint compares; predicate producer/consumer cross through all six allocatable banks",
     "target": "G16G",
-    "evidence": ["EXP-M4-45-predicate-conditions"]
+    "evidence": ["EXP-M4-45-predicate-conditions", "EXP-M4-53-predicate-bank"]
    },
-   "invert": {
+   "predicate_invert": {
     "label": "hardware-run",
     "range": "0..1; both values dispatched on ordered and equality carriers",
     "target": "G16G",
-    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "evidence": ["EXP-M4-45-predicate-conditions", "EXP-M4-53-predicate-bank"],
     "note": "Toggling byte0 bit4 complemented every lane; a simultaneous push inversion restored the original result.",
     "start": 4,
     "width": 1
    },
-   "b0_hi": {
-    "label": "untested",
-    "range": "0..7; no semantics assigned",
+   "predicate_bank": {
+    "label": "hardware-run",
+    "range": "p0..p5 exact-output diagonal producer/consumer crosses; off-diagonal falsifiers; encodings 6/7 not allocatable",
     "target": "G16G",
-    "evidence": [],
+    "evidence": ["EXP-M4-53-predicate-bank"],
+    "note": "All six matching bank pairs pass and crossed pairs fail. Compare destinations 6/7 have no matching readable predicate source and must not be allocated.",
     "start": 5,
     "width": 3
    },
@@ -7005,28 +7006,29 @@
   "if_push_cond": {
    "_instruction": {
     "label": "hardware-run",
-    "range": "normal and inverted conditional mask pushes after short and extended predicate compares",
+    "range": "predicate sources p0..p5, constants 6/7, both polarities, and ordinary nesting through 32 live scopes",
     "target": "G16G",
-    "evidence": ["EXP-M4-45-predicate-conditions"]
+    "evidence": ["EXP-M4-45-predicate-conditions", "EXP-M4-52-deep-mask-stack", "EXP-M4-53-predicate-bank"]
    },
-   "predicate_level": {
-    "label": "corpus-correlation",
-    "range": "observed conditional level values encoded above the fixed low bit",
-    "target": "G16G",
-    "evidence": ["EXP-M4-45-predicate-conditions"],
-    "start": 25,
-    "width": 4
-   },
-   "invert": {
+   "predicate_source": {
     "label": "hardware-run",
-    "range": "0..1; 0f055401 normal and 0f055421 inverted",
+    "range": "0..7 exhaustive: 0..5 address p0..p5, 6 is constant true/current mask, 7 is constant false/empty mask",
     "target": "G16G",
-    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "evidence": ["EXP-M4-53-predicate-bank"],
+    "note": "Matching p0..p5 producer/consumer pairs pass and off-diagonal pairs fail; constants 6/7 and their inversions match exact lane oracles.",
+    "start": 26,
+    "width": 3
+   },
+   "predicate_invert": {
+    "label": "hardware-run",
+    "range": "0..1 across p0, p1, p4 and constant sources 6/7",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions", "EXP-M4-53-predicate-bank"],
     "note": "Toggling only byte3 bit5 complemented every lane; toggling predicate inversion too restored the original oracle.",
     "start": 29,
     "width": 1
    },
-   "scope_hi": {
+   "reserved": {
     "label": "untested",
     "range": "0..3; role unknown",
     "target": "G16G",
@@ -7243,18 +7245,42 @@
   "loop_mask_update": {
    "_instruction": {
     "label": "hardware-run",
-    "range": "native top/bottom-tested loops, compound latches, direct breaks, and nesting through three levels",
+    "range": "native loop shapes plus exact-output predicate-bank relocation through p0..p2 and polarity cross",
     "target": "G16G",
-    "evidence": ["EXP-M4-46-loop-semantics"]
+    "evidence": ["EXP-M4-46-loop-semantics", "EXP-M4-53-predicate-bank"]
    },
-   "mask_selector": {
-    "label": "untested",
-    "range": "tested native values 0x02,0x22,0x26,0x2a plus 0x20-bit and depth substitutions",
+   "form": {
+    "label": "hardware-run",
+    "range": "code 2 in the tested predicate-loop-update form",
     "target": "G16G",
-    "evidence": ["EXP-M4-46-loop-semantics"],
-    "note": "Depth changes and the orthogonal 0x20 bit are load-bearing. The exact identity-versus-polarity meaning of 0x20 remains unresolved.",
+    "evidence": ["EXP-M4-46-loop-semantics", "EXP-M4-53-predicate-bank"],
     "start": 24,
-    "width": 8
+    "width": 2
+   },
+   "predicate_bank": {
+    "label": "hardware-run",
+    "range": "p0..p2 exact-output diagonal crosses; mismatched p1 producer/p0 consumer hangs",
+    "target": "G16G",
+    "evidence": ["EXP-M4-53-predicate-bank"],
+    "note": "The shared namespace encodes p0..p5, but only p0..p2 were independently exercised on this loop-update form.",
+    "start": 26,
+    "width": 3
+   },
+   "predicate_invert": {
+    "label": "hardware-run",
+    "range": "0..1; producer and consumer inversion together cancel, consumer-only inversion changes output",
+    "target": "G16G",
+    "evidence": ["EXP-M4-53-predicate-bank"],
+    "start": 29,
+    "width": 1
+   },
+   "reserved": {
+    "label": "untested",
+    "range": "0..3; role unknown",
+    "target": "G16G",
+    "evidence": [],
+    "start": 30,
+    "width": 2
    }
   },
   "break_mask_unwind": {
@@ -28987,7 +29013,7 @@
      "EXP-0115"
     ]
    },
-   "pred": {
+   "b1_hi": {
     "label": "untested",
     "range": "0..15 EXHAUSTIVE, crossed against icmp_pred.dst_pred 0..15: COMPLETELY INERT - matched or mismatched, it never changes anything",
     "target": "M4",
@@ -29101,7 +29127,7 @@
      "source": "EXP-0208 desk reclassification (\u00a710.2) \u2014 derived from ALREADY-COMMITTED raw, no new device time. NOT a promotion: the legacy `label` is unchanged."
     }
    },
-   "level": {
+   "control": {
     "label": "tokenization-only",
     "range": "framing only (round-trips; no value semantics established)",
     "target": "M4+A18",

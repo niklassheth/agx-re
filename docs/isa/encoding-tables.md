@@ -869,7 +869,50 @@
 
 ## Control flow / function ABI
 
-### `icmp_pred` — integer compare -> execution predicate
+### `icmp_pred_ordered6` — ordered compare into the six-entry predicate scratch bank
+
+- **Length:** 6 bytes  ·  **Match:** bits[0:4]==0xa, bits[16:17]==0x0, bits[17:18]==0x1, bits[21:22]==0x1  ·  **Provenance:** mixed
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `predicate_invert` | [4:5] | modifier |  |
+| `predicate_bank` | [5:8] | enum | `0x0`=p0; `0x1`=p1; `0x2`=p2; `0x3`=p3; `0x4`=p4; `0x5`=p5; `0x6`=unallocatable/special; `0x7`=unallocatable/special |
+| `srcA_desc` | [8:15] (byte+1) | raw/unmapped |  |
+| `srcA_aux` | [15:16] | modifier |  |
+| `control_aux_lo` | [18:19] | raw/unmapped |  |
+| `release_srcA` | [19:20] | modifier |  |
+| `release_srcB` | [20:21] | modifier |  |
+| `control_aux_hi` | [22:24] | raw/unmapped |  |
+| `srcB_desc` | [24:31] (byte+3) | raw/unmapped |  |
+| `srcB_aux` | [31:32] | modifier |  |
+| `condition` | [32:40] (byte+4) | enum | `0x2`=float_gt; `0x3`=float_lt; `0x4`=uint_gt; `0x5`=uint_lt; `0x6`=sint_gt; `0x7`=sint_lt; `0x12`=float_gt|compact_imm; `0x13`=float_lt|compact_imm; `0x14`=uint_gt|compact_imm; `0x15`=uint_lt|compact_imm; `0x16`=sint_gt|compact_imm; `0x17`=sint_lt|compact_imm |
+| `operand_tail` | [40:48] (byte+5) | enum | `0xc0`=register_pair; `0xc2`=compact_immediate |
+
+*Six-byte ordered predicate compare. predicate_bank selects one of the six allocatable per-lane scratch predicates p0..p5; encodings 6 and 7 are not allocatable predicate destinations in the tested control consumers. predicate_invert independently complements the produced predicate. The predicate bank is separate from the implicit execution-mask/reconvergence stack: ordinary nested conditionals may compare into p0, immediately push it, and reuse p0 at the next nesting level. condition selects float/unsigned/signed greater-than or less-than; bit 0x10 marks the compact-immediate source class. byte2 bits3/4 release source A/B. byte1/3 bit7 are separate auxiliary bits. The compact-immediate payload and remaining auxiliary bits are not generalized.*
+
+### `icmp_pred_extended10` — extended equality / ordered-complement predicate compare
+
+- **Length:** 10 bytes  ·  **Match:** bits[0:4]==0xa, bits[16:17]==0x1, bits[17:18]==0x1, bits[21:22]==0x1, bits[32:48]==0x6  ·  **Provenance:** mixed
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `invert` | [4:5] | modifier |  |
+| `b0_hi` | [5:8] | raw/unmapped |  |
+| `srcA_desc` | [8:15] (byte+1) | raw/unmapped |  |
+| `srcA_aux` | [15:16] | modifier |  |
+| `control_aux_lo` | [18:19] | raw/unmapped |  |
+| `release_srcA` | [19:20] | modifier |  |
+| `release_srcB` | [20:21] | modifier |  |
+| `control_aux_hi` | [22:24] | raw/unmapped |  |
+| `srcB_desc` | [24:31] (byte+3) | raw/unmapped |  |
+| `srcB_aux` | [31:32] | modifier |  |
+| `relation` | [48:56] (byte+6) | enum | `0x0`=ieee_float_eq; `0x2`=ieee_float_gt; `0x3`=ieee_float_lt; `0x7`=integer_or_bitwise_eq; `0x10`=ieee_float_eq|compact_imm; `0x12`=ieee_float_gt|compact_imm; `0x13`=ieee_float_lt|compact_imm; `0x17`=integer_or_bitwise_eq|compact_imm |
+| `operand_tail` | [56:64] (byte+7) | enum | `0xc0`=register_pair; `0xc2`=compact_immediate |
+| `extension` | [64:80] (byte+8) | raw/unmapped |  |
+
+*Ten-byte predicate compare used for integer/bitwise equality, IEEE floating equality, and ordered floating complement relations. byte2 bit0 selects the extended form; bytes4..5 are the observed 06 00 extension leader and byte6 carries the relation/type selector. byte0 bit4 independently complements the predicate result; byte2 bits3/4 retain the same source-release roles as the short form. IEEE equality differs observably from bitwise equality for signed zero and NaNs.*
+
+### `icmp_pred` — legacy low-nibble-a framing fallback
 
 - **Length:** 6 bytes  ·  **Match:** bits[0:4]==0xa  ·  **Provenance:** mixed
 
@@ -910,7 +953,78 @@
 
 *d = pred ? A : B ; branchless conditional select (4B, grid-position ternary form). body split by located role: flag (byte+1, {0x00,0x02} size/predicate flag), mode (byte+2, {0x20,0x80} select mode), sel (byte+3, 0x80 select marker default + operand nibble {0x12,0x24,..}). Dominant corpus form 05 00 20 80. Role-typed 'mod'; the per-operand register map needs splice (own MSL ternaries fold to isel10, so psel was not single-toggle reproducible).*
 
-### `jump` — PC-relative jump (loop back-edge)
+### `if_push_cond` — conditional mask push from predicate bank or constants
+
+- **Length:** 4 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x05, byte+2==0x54, bits[24:25]==0x1, bits[25:26]==0x0  ·  **Provenance:** mixed
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `predicate_source` | [26:29] | enum | `0x0`=p0; `0x1`=p1; `0x2`=p2; `0x3`=p3; `0x4`=p4; `0x5`=p5; `0x6`=constant_true/current_mask; `0x7`=constant_false/empty_mask |
+| `predicate_invert` | [29:30] | modifier |  |
+| `reserved` | [30:32] | raw/unmapped |  |
+
+*Conditional execution-mask push in the observed 0x54 form. The tested encoding is 0x01 | (predicate_source << 2) | (predicate_invert ? 0x20 : 0): sources 0..5 read scratch predicates p0..p5, source 6 is constant true/current-mask identity, and source 7 is constant false/empty mask. predicate_invert complements the selected source. The push then saves the current active mask and narrows it with that value. The execution-mask/reconvergence stack is separate from the scratch bank, so ordinary nested conditionals reuse p0 and the canonical 0f055401 bytes at every level. byte3 bit1 is fixed zero in this descriptor; bits6..7 remain reserved/unmapped. The even 0x1a loop-scope form continues to use the generic if_push descriptor.*
+
+### `if_push` — execution-mask push fallback / loop-scope form
+
+- **Length:** 4 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x05  ·  **Provenance:** mixed
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `scope` | [16:24] (byte+2) | enum | `0x54`=form54; `0x56`=form56(exact scheduling role unresolved) |
+| `scope_kind` | [24:32] (byte+3) | enum | `0x1`=cond_skip(if/loop-guard); `0x1a`=loop_iter; `0x5`=cond_skip+b2; `0x21`=cond_skip+b5; `0x25`=cond_skip+b2+b5 |
+
+*Execution-mask push fallback covering conditional and loop-scope forms not selected by a more-specific descriptor. It saves the current active-lane population and narrows execution, paired with pop_reconverge. The ordinary 0x54 conditional form is modeled by if_push_cond: its byte3 selects predicate scratch banks or constants and does not encode nesting depth. byte3 0x1a is the distinct native loop-scope push. byte+2 0x54 versus 0x56 is an orthogonal scheduling/cache form, not a nesting-parity selector. Shares the 0f 05 leader with direct CALL (14 bytes, 0x8f link at byte+4; disambiguated by length).*
+
+### `pop_reconverge` — execution-mask pop and reconvergence
+
+- **Length:** 6 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x06  ·  **Provenance:** mixed
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `scope` | [16:24] (byte+2) | enum | `0x4`=mask_bankA; `0x24`=mask_bankB |
+| `scope_kind` | [24:32] (byte+3) | enum | `0x1`=guard/outermost; `0x2`=loop_body |
+| `reserved` | [32:40] (byte+4) | modifier |  |
+| `reserved_hi` | [40:48] (byte+5) | modifier |  |
+
+*execution-mask POP / reconverge: re-enables the lanes masked off by the matching if_push (0f 05) or loop scope, restoring the active mask at a block/loop end. scope_kind (byte+3) names the reconvergence scope popped -- 0x02 for a loop-body scope, 0x01 for the outermost / loop-entry guard scope. Every loop back-edge is immediately followed by a scope_kind 0x02 pop; the final reconverge is 0x01. scope (byte+2) is the mask-bank selector (low 0x04 form). [EXP-0212, applied 2026-08-30] db.json MODELLED BITS 32..47 AS ONE 16-BIT `reserved` FIELD OF TYPE `mod`; EXP-0206 refutes that: byte+4 is load-bearing and byte+5 is inert over the tested set. See the two field notes.*
+
+### `loop_mask_update` — loop-mask update from a predicate bank
+
+- **Length:** 4 bytes  ·  **Match:** byte+0==0x8f, byte+1==0x04, byte+2==0x54  ·  **Provenance:** mixed
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `form` | [24:26] (byte+3) | enum | `0x2`=predicate_loop_update |
+| `predicate_bank` | [26:29] | enum | `0x0`=p0; `0x1`=p1; `0x2`=p2; `0x3`=p3; `0x4`=p4; `0x5`=p5 |
+| `predicate_invert` | [29:30] | modifier |  |
+| `reserved` | [30:32] | modifier |  |
+
+*Update the current active loop mask from a selected predicate scratch bank. The tested tail is 0x02 | (predicate_bank << 2) | (predicate_invert ? 0x20 : 0). The loop-stack target is implicit/current: 0x02, 0x06, and 0x0a select p0, p1, and p2 rather than mask nesting depths. predicate_invert complements the consumed predicate. The update is followed by JMP_EXEC_ANY for a natural latch or JMP_EXEC_NONE for a break/empty-region skip. Banks p3..p5 share the encoded six-bank namespace but were not independently exercised on this loop-update form.*
+
+### `loop_mask_update_form56` — alternate scheduling form of loop-mask update
+
+- **Length:** 4 bytes  ·  **Match:** byte+0==0x8f, byte+1==0x04, byte+2==0x56  ·  **Provenance:** mixed
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `mask_selector` | [24:32] (byte+3) | modifier |  |
+
+*Alternate byte+2 0x56 form of loop_mask_update. Native instances occur in structured control, including traversal-loop latches. A same-program 0x54->0x56 splice on the uncomplicated pc_base_probe latch preserves all 64 output words, proving compatible loop semantics there; the scheduling/cache condition that makes Metal choose this form remains unresolved.*
+
+### `break_mask_unwind` — nonlocal break through nested mask scopes
+
+- **Length:** 6 bytes  ·  **Match:** byte+0==0x8f, byte+1==0x05, byte+2==0x54  ·  **Provenance:** mixed
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `scope_depth_tag` | [24:32] (byte+3) | modifier |  |
+| `reserved` | [32:40] (byte+4) | modifier |  |
+| `target_loop_depth` | [40:48] (byte+5) | immediate |  |
+
+*Nonlocal loop-break mask update through one or more enclosing execution-mask scopes. In fresh native captures, one versus two enclosing conditional scopes changes scope_depth_tag from 3 to 4 while target_loop_depth remains 1; breaking the inner loop of a two-loop nest keeps scope_depth_tag 3 and changes target_loop_depth to 2. reserved is zero in these cases. This form updates masks; matching pop_reconverge operations remain in the linear stream.*
+
+### `jump` — JMP_EXEC_ANY PC-relative branch
 
 - **Length:** 10 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x00  ·  **Provenance:** HW-validated
 
@@ -921,6 +1035,18 @@
 | `link` | [72:80] (byte+9) | modifier |  |
 
 *JMP_EXEC_ANY PC-relative branch: take the branch when the current execution mask contains any active lane. offset is a signed 48-bit little-endian byte displacement relative to the START of this instruction (target = jump_addr + sign_extend(offset48)); ordinary loop backedges are negative. byte+2 (branch_ctrl) = branch/execution-mask form selector: 0x54 for all ordinary own-source loop backedges examined. byte+9 (link) is 0x00 for a plain backedge; subroutine linkage uses the separate call form.*
+
+### `jump_cond` — JMP_EXEC_NONE PC-relative branch
+
+- **Length:** 10 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x01  ·  **Provenance:** mixed
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `cf_scope` | [16:24] (byte+2) | enum | `0x54`=scope54(guard/exit); `0x64`=scope64(else-skip) |
+| `offset` | [24:72] (byte+3) | immediate |  |
+| `reserved` | [72:80] (byte+9) | modifier |  |
+
+*JMP_EXEC_NONE PC-relative branch: skip to the target when the current execution mask contains no active lane. It follows mask narrowing at if/loop-entry guards and source-level break paths, avoiding execution of an empty region. offset is a signed 48-bit little-endian byte displacement relative to the START of this instruction (target = jump_addr + sign_extend(offset48)). cf_scope (byte+2) selects a control-flow form/bank; its exact role is not fully mapped.*
 
 ### `frame_marker` — call-site / frame-setup marker (before every CALL)
 
@@ -1402,49 +1528,13 @@
 
 - **Length:** 6 bytes  ·  **Match:** bits[0:4]==0x2
 
-### `icmp_pred_ordered6`
-
-- **Length:** 6 bytes  ·  **Match:** bits[0:4]==0xa, bits[16:17]==0x0, bits[17:18]==0x1, bits[21:22]==0x1
-
-### `icmp_pred_extended10`
-
-- **Length:** 10 bytes  ·  **Match:** bits[0:4]==0xa, bits[16:17]==0x1, bits[17:18]==0x1, bits[21:22]==0x1, bits[32:48]==0x6
-
 ### `icmp_pred_ext10`
 
 - **Length:** 10 bytes  ·  **Match:** bits[0:48]==0x6c02b002a
 
-### `jump_cond`
-
-- **Length:** 10 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x01
-
-### `if_push`
-
-- **Length:** 4 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x05
-
-### `if_push_cond`
-
-- **Length:** 4 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x05, byte+2==0x54, bits[24:25]==0x1
-
-### `pop_reconverge`
-
-- **Length:** 6 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x06
-
 ### `mask_op`
 
 - **Length:** 4 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x04
-
-### `loop_mask_update`
-
-- **Length:** 4 bytes  ·  **Match:** byte+0==0x8f, byte+1==0x04, byte+2==0x54
-
-### `break_mask_unwind`
-
-- **Length:** 6 bytes  ·  **Match:** byte+0==0x8f, byte+1==0x05, byte+2==0x54
-
-### `loop_mask_update_form56`
-
-- **Length:** 4 bytes  ·  **Match:** byte+0==0x8f, byte+1==0x04, byte+2==0x56
 
 ### `simd_shuffle_ext12`
 
@@ -1820,9 +1910,9 @@ Parcels are 2 bytes (all lengths even). Length is a function of byte 0 plus a pe
 | `0x9f/0x1f` | 10 if (byte+1 & 1) else 12  [integer add/sub \| mul-add] |
 | `0xa7` | byte+1 low nibble 7 -> 8-byte i2f; low nibble 4/5 -> 8-byte bit-count; otherwise 10 if low bit set, 12 if clear. byte+1 high nibble is pending-mask bits0..3 (EXP-M4-42) |
 | `0x27` | byte+1 low nibble 7 -> 10-byte f2i; low nibble 0/1/2 -> 12-byte bitfield/rotate/prep; otherwise 8-byte unary. byte+1 high nibble is pending-mask bits0..3 (EXP-M4-42) |
-| `0x0a` | 6 for the ordered predicate form; 10 when byte+2 bit0 is set and bytes+4/+5 are 06 00 (extended equality/ordered-complement form). EXP-M4-45 HW |
+| `0x0a` | 6 for the ordered predicate form; 10 when byte+2 bit0 is set and bytes+4/+5 are 06 00 (extended equality/ordered-complement form). Ordered byte0 bits5..7 select predicate scratch banks p0..p5; bit4 is producer polarity. EXP-M4-45/M4-53 HW |
 | `0x05/0x16` | 4  [conditional select (branchless if/ternary)] |
-| `0x0f` | EXECUTION-MASK family, byte+1 sub-op (RT-ISA-FIX): 0x00 jump 10 / 0x01 jump_cond(else,loop-guard) 10 / 0x05 if_push 4 (or 14 if byte+4==0x8f = direct CALL) / 0x06 pop_reconverge 6 / 0x80 call_indirect(computed branch) 6 / 0x04 mask_op 4 |
+| `0x0f` | EXECUTION-MASK family, byte+1 sub-op (RT-ISA-FIX): 0x00 jump 10 / 0x01 jump_cond(else,loop-guard) 10 / 0x05 if_push 4 (ordinary conditional byte3 selects predicate banks p0..p5 or constants 6/7; or 14 if byte+4==0x8f = direct CALL) / 0x06 pop_reconverge 6 / 0x80 call_indirect(computed branch) 6 / 0x04 mask_op 4 |
 | `0x07 (byte+2 in {0x00,0x02})` | 4  [compute memory/scoreboard fence around calls & divergent CF (07 22 02 00 pre-call; 07 02/00 00 CF). RT-ISA-FIX HW] |
 | `lownibble_0x5 + byte+1==0x80 + byte+2==0x0c` | 14  [TEXTURE sample / read: 4B coord/result companion + 10B sampler op (0xb0/0x90). EXP-0016 HW-validated] |
 | `0xd7` | 16  [TEXTURE write (memory-family store). EXP-0016 HW-validated] |
@@ -1843,8 +1933,8 @@ Parcels are 2 bytes (all lengths even). Length is a function of byte 0 plus a pe
 | `0x22` | 6 if (byte+2 lo-nibble==0x0e) [iminmax_chain: min3/max3/clamp] else 10 [shift/sign-extend helper]. EXP-0033 |
 | `0xNb (byte+2 low-nibble e/f, 0x2b/3b/5b/8b)` | 10 shift-amount PREP stage; (byte+2 hi-nibble 2) = 4 compact call-argument MOVE; (byte+2 in {0e,1e,1f}) = 10 funary/ilogic; (byte+2==0x01,byte+3==0x08) = 4 uniform_mov. EXP-0033/0036 |
 | `0x43` | 4  [CALL-SITE / FRAME-SETUP marker (`43 00 00 01`), precedes every out-of-line CALL in compute & mesh. NOT mesh-unique. EXP-0035 (re-scoped EXP-0030)] |
-| `0x0f (byte+1==0x05)` | 14 direct CALL if byte+4==0x8f (target = call_addr+4+off40) else 4 exec-mask push; (byte+1==0x80) = 6 INDIRECT CALL leader; (byte+1==0x06) = 6 reconverge. EXP-0035/M4-45/M4-46 |
-| `0x8f` | 6 for `8f 05 54` nonlocal break-mask unwind; otherwise 4 for `8f 04 54/56` loop-mask update and genuine `8f 02/12 54/56` function return. EXP-M4-46 |
+| `0x0f (byte+1==0x05)` | 14 direct CALL if byte+4==0x8f (target = call_addr+4+off40) else 4 exec-mask push; ordinary 0x54 conditional byte3 is `1 \| bank<<2 \| invert<<5`. EXP-0035/M4-45/M4-52/M4-53 |
+| `0x8f` | 6 for `8f 05 54` nonlocal break-mask unwind; otherwise 4 for `8f 04 54/56` loop-mask update and genuine `8f 02/12 54/56` function return. The tested 0x54 update tail is `2 \| predicate_bank<<2 \| invert<<5`. EXP-M4-46/M4-53 |
 | `0x57` | 8  [VERTEX varying / [[position]] store to the UVS/parameter buffer the FS iter op interpolates. Memory-family (low-nibble 7). byte+3=source GPR, byte+4=output slot (index<<5; position=slots 0-3). EXP-0037 HW-splice-proven] |
 | `lownibble_0x5 + (byte+1 & 0xf0)==0x80 + byte+2==0x0c` | 14  [tex_sample companion-gate WIDENED (EXP-0037) from byte+1==0x80 to high-nibble 8 so the CHAINED-companion forms (0x82/0x84/0x88 before the 2nd..Nth sample op) also absorb their 10-byte 0xb0/0x90 sampler op] |
 | `0x09 op-select 0x26/0x2e` | 8 if (byte+4 & 0x02) else 6  [fused mul / mul-add COORDINATE / matrix-multiply op -- byte+2 bit1 is SET yet the 2-source form is 6B, so length reads byte+4 bit1 not byte+2 bit1 (EXP-0037). 0x09 op-select 0x18/0x38 = 4 compact accumulate] |

@@ -16,9 +16,9 @@
    "0x9f/0x1f": "10 if (byte+1 & 1) else 12  [integer add/sub | mul-add]",
    "0xa7": "byte+1 low nibble 7 -> 8-byte i2f; low nibble 4/5 -> 8-byte bit-count; otherwise 10 if low bit set, 12 if clear. byte+1 high nibble is pending-mask bits0..3 (EXP-M4-42)",
    "0x27": "byte+1 low nibble 7 -> 10-byte f2i; low nibble 0/1/2 -> 12-byte bitfield/rotate/prep; otherwise 8-byte unary. byte+1 high nibble is pending-mask bits0..3 (EXP-M4-42)",
-   "0x0a": "6 for the ordered predicate form; 10 when byte+2 bit0 is set and bytes+4/+5 are 06 00 (extended equality/ordered-complement form). EXP-M4-45 HW",
+   "0x0a": "6 for the ordered predicate form; 10 when byte+2 bit0 is set and bytes+4/+5 are 06 00 (extended equality/ordered-complement form). Ordered byte0 bits5..7 select predicate scratch banks p0..p5; bit4 is producer polarity. EXP-M4-45/M4-53 HW",
    "0x05/0x16": "4  [conditional select (branchless if/ternary)]",
-   "0x0f": "EXECUTION-MASK family, byte+1 sub-op (RT-ISA-FIX): 0x00 jump 10 / 0x01 jump_cond(else,loop-guard) 10 / 0x05 if_push 4 (or 14 if byte+4==0x8f = direct CALL) / 0x06 pop_reconverge 6 / 0x80 call_indirect(computed branch) 6 / 0x04 mask_op 4",
+   "0x0f": "EXECUTION-MASK family, byte+1 sub-op (RT-ISA-FIX): 0x00 jump 10 / 0x01 jump_cond(else,loop-guard) 10 / 0x05 if_push 4 (ordinary conditional byte3 selects predicate banks p0..p5 or constants 6/7; or 14 if byte+4==0x8f = direct CALL) / 0x06 pop_reconverge 6 / 0x80 call_indirect(computed branch) 6 / 0x04 mask_op 4",
    "0x07 (byte+2 in {0x00,0x02})": "4  [compute memory/scoreboard fence around calls & divergent CF (07 22 02 00 pre-call; 07 02/00 00 CF). RT-ISA-FIX HW]",
    "lownibble_0x5 + byte+1==0x80 + byte+2==0x0c": "14  [TEXTURE sample / read: 4B coord/result companion + 10B sampler op (0xb0/0x90). EXP-0016 HW-validated]",
    "0xd7": "16  [TEXTURE write (memory-family store). EXP-0016 HW-validated]",
@@ -39,8 +39,8 @@
    "0x22": "6 if (byte+2 lo-nibble==0x0e) [iminmax_chain: min3/max3/clamp] else 10 [shift/sign-extend helper]. EXP-0033",
    "0xNb (byte+2 low-nibble e/f, 0x2b/3b/5b/8b)": "10 shift-amount PREP stage; (byte+2 hi-nibble 2) = 4 compact call-argument MOVE; (byte+2 in {0e,1e,1f}) = 10 funary/ilogic; (byte+2==0x01,byte+3==0x08) = 4 uniform_mov. EXP-0033/0036",
    "0x43": "4  [CALL-SITE / FRAME-SETUP marker (`43 00 00 01`), precedes every out-of-line CALL in compute & mesh. NOT mesh-unique. EXP-0035 (re-scoped EXP-0030)]",
-   "0x0f (byte+1==0x05)": "14 direct CALL if byte+4==0x8f (target = call_addr+4+off40) else 4 exec-mask push; (byte+1==0x80) = 6 INDIRECT CALL leader; (byte+1==0x06) = 6 reconverge. EXP-0035/M4-45/M4-46",
-   "0x8f": "6 for `8f 05 54` nonlocal break-mask unwind; otherwise 4 for `8f 04 54/56` loop-mask update and genuine `8f 02/12 54/56` function return. EXP-M4-46",
+   "0x0f (byte+1==0x05)": "14 direct CALL if byte+4==0x8f (target = call_addr+4+off40) else 4 exec-mask push; ordinary 0x54 conditional byte3 is `1 | bank<<2 | invert<<5`. EXP-0035/M4-45/M4-52/M4-53",
+   "0x8f": "6 for `8f 05 54` nonlocal break-mask unwind; otherwise 4 for `8f 04 54/56` loop-mask update and genuine `8f 02/12 54/56` function return. The tested 0x54 update tail is `2 | predicate_bank<<2 | invert<<5`. EXP-M4-46/M4-53",
    "0x57": "8  [VERTEX varying / [[position]] store to the UVS/parameter buffer the FS iter op interpolates. Memory-family (low-nibble 7). byte+3=source GPR, byte+4=output slot (index<<5; position=slots 0-3). EXP-0037 HW-splice-proven]",
    "lownibble_0x5 + (byte+1 & 0xf0)==0x80 + byte+2==0x0c": "14  [tex_sample companion-gate WIDENED (EXP-0037) from byte+1==0x80 to high-nibble 8 so the CHAINED-companion forms (0x82/0x84/0x88 before the 2nd..Nth sample op) also absorb their 10-byte 0xb0/0x90 sampler op]",
    "0x09 op-select 0x26/0x2e": "8 if (byte+4 & 0x02) else 6  [fused mul / mul-add COORDINATE / matrix-multiply op -- byte+2 bit1 is SET yet the 2-source form is 6B, so length reads byte+4 bit1 not byte+2 bit1 (EXP-0037). 0x09 op-select 0x18/0x38 = 4 compact accumulate]",
@@ -2539,16 +2539,26 @@
    ],
    "fields": [
     {
-     "name": "invert",
+     "name": "predicate_invert",
      "start": 4,
      "width": 1,
      "type": "mod"
     },
     {
-     "name": "b0_hi",
+     "name": "predicate_bank",
      "start": 5,
      "width": 3,
-     "type": "raw"
+     "type": "enum",
+     "enum": {
+      "0": "p0",
+      "1": "p1",
+      "2": "p2",
+      "3": "p3",
+      "4": "p4",
+      "5": "p5",
+      "6": "unallocatable/special",
+      "7": "unallocatable/special"
+     }
     },
     {
      "name": "srcA_desc",
@@ -2629,8 +2639,8 @@
      }
     }
    ],
-   "semantics": "Six-byte ordered predicate compare. condition selects float/unsigned/signed greater-than or less-than; bit 0x10 marks the compact-immediate source class. byte0 bit4 complements the predicate result independently of the later execution-mask push. byte2 bits3/4 release source A/B; byte1/3 bit7 are separate auxiliary bits and were lifetime- and result-inert in the tested envelope. The compact-immediate payload and the remaining auxiliary bits are not generalized.",
-   "provenance": "OWN-SHADER + HW-VALIDATED (EXP-M4-45): 39 native programs and 35 field/liveness ablations matched complete T8132 oracles. Direct byte4 substitutions proved float, unsigned, and signed gt/lt including NaNs and signed extremes; byte0 bit4 complemented every lane; byte2 bits3/4 independently cleared later A/B uses. Only byte0 bit4 was assigned: bits5..7 remain unknown."
+   "semantics": "Six-byte ordered predicate compare. predicate_bank selects one of the six allocatable per-lane scratch predicates p0..p5; encodings 6 and 7 are not allocatable predicate destinations in the tested control consumers. predicate_invert independently complements the produced predicate. The predicate bank is separate from the implicit execution-mask/reconvergence stack: ordinary nested conditionals may compare into p0, immediately push it, and reuse p0 at the next nesting level. condition selects float/unsigned/signed greater-than or less-than; bit 0x10 marks the compact-immediate source class. byte2 bits3/4 release source A/B. byte1/3 bit7 are separate auxiliary bits. The compact-immediate payload and remaining auxiliary bits are not generalized.",
+   "provenance": "OWN-SOURCE + HW-VALIDATED (EXP-M4-45/53). EXP-M4-45 validates ordered condition codes, producer inversion, and source release. EXP-M4-53 relocates the same exact-output comparison and its conditional consumer together through p0..p5; every diagonal passes and crossed banks fail. Comparison encodings 6/7 have no observable matching predicate consumer and must not be allocated. The former b0_hi unknown is therefore a three-bit predicate-bank destination, while bit4 remains independent producer polarity."
   },
   {
    "mnemonic": "icmp_pred_extended10",
@@ -3047,8 +3057,8 @@
      }
     }
    ],
-   "semantics": "Execution-mask push: save the current active-lane population and narrow execution using the current predicate, paired with a later pop_reconverge. scope_kind 0x1a is the native loop-scope form. For conditional pushes, bit 0x20 independently changes predicate/mask selection (HW-validated in EXP-M4-45), while low values 0x01/0x05/0x09 correlate with Metal's current predicate/depth allocation. byte+2 0x54 versus 0x56 is an orthogonal scheduling/cache form, not a nesting-parity selector: native three-level loops can use 0x54 at every depth, and an EXP-M4-46 same-program latch splice 0x54->0x56 preserves exact output. Shares the 0f 05 leader with direct CALL (14 bytes, 0x8f link at byte+4; disambiguated by length).",
-   "provenance": "OWN-SHADER + HW-VALIDATED (EXP-M4-45/46): exact nested if/loop outputs; the semantic effect of push bit 0x20 was isolated on hardware. EXP-M4-46 refutes the earlier parity claim: nested_loops happens to use 0x56 at one outer loop push, while exact-output triple_nested_loops uses 0x54 for all three loop pushes. The precise scheduling/cache meaning of 0x56 remains open."
+   "semantics": "Execution-mask push fallback covering conditional and loop-scope forms not selected by a more-specific descriptor. It saves the current active-lane population and narrows execution, paired with pop_reconverge. The ordinary 0x54 conditional form is modeled by if_push_cond: its byte3 selects predicate scratch banks or constants and does not encode nesting depth. byte3 0x1a is the distinct native loop-scope push. byte+2 0x54 versus 0x56 is an orthogonal scheduling/cache form, not a nesting-parity selector. Shares the 0f 05 leader with direct CALL (14 bytes, 0x8f link at byte+4; disambiguated by length).",
+   "provenance": "OWN-SOURCE + HW-VALIDATED (EXP-M4-45/46/52/53). EXP-M4-52 executes ordinary conditionals through 32 simultaneously live scopes with the identical 0f055401 push at every level, refuting depth-derived predicate and push selectors. EXP-M4-53 maps the conditional source bank separately. EXP-M4-46 refutes the older byte+2 nesting-parity claim; the precise scheduling/cache meaning of 0x56 remains open."
   },
   {
    "mnemonic": "if_push_cond",
@@ -3073,30 +3083,45 @@
      24,
      1,
      1
+    ],
+    [
+     25,
+     1,
+     0
     ]
    ],
    "fields": [
     {
-     "name": "predicate_level",
-     "start": 25,
-     "width": 4,
-     "type": "raw"
+     "name": "predicate_source",
+     "start": 26,
+     "width": 3,
+     "type": "enum",
+     "enum": {
+      "0": "p0",
+      "1": "p1",
+      "2": "p2",
+      "3": "p3",
+      "4": "p4",
+      "5": "p5",
+      "6": "constant_true/current_mask",
+      "7": "constant_false/empty_mask"
+     }
     },
     {
-     "name": "invert",
+     "name": "predicate_invert",
      "start": 29,
      "width": 1,
      "type": "mod"
     },
     {
-     "name": "scope_hi",
+     "name": "reserved",
      "start": 30,
      "width": 2,
      "type": "raw"
     }
    ],
-   "semantics": "Conditional execution-mask push in the observed 0x54 form. byte3 bit5 independently complements the predicate while constructing the active mask: 0f055401 is normal and 0f055421 inverted. predicate_level records the remaining low conditional-level selector; scope_hi is not assigned semantics. The even 0x1a loop-scope form continues to use the generic if_push descriptor.",
-   "provenance": "OWN-SHADER + HW-VALIDATED (EXP-M4-45): toggling only byte3 bit5 complemented every lane after both short ordered and extended equality predicate compares; toggling predicate inversion and push inversion together restored the original oracle. Other byte3 subfields were not generalized."
+   "semantics": "Conditional execution-mask push in the observed 0x54 form. The tested encoding is 0x01 | (predicate_source << 2) | (predicate_invert ? 0x20 : 0): sources 0..5 read scratch predicates p0..p5, source 6 is constant true/current-mask identity, and source 7 is constant false/empty mask. predicate_invert complements the selected source. The push then saves the current active mask and narrows it with that value. The execution-mask/reconvergence stack is separate from the scratch bank, so ordinary nested conditionals reuse p0 and the canonical 0f055401 bytes at every level. byte3 bit1 is fixed zero in this descriptor; bits6..7 remain reserved/unmapped. The even 0x1a loop-scope form continues to use the generic if_push descriptor.",
+   "provenance": "OWN-SOURCE + HW-VALIDATED (EXP-M4-45/52/53). EXP-M4-45 proves consumer inversion and its independence from producer inversion. EXP-M4-53 proves p0..p5 with matching producer/consumer relocation and off-diagonal falsifiers; with an ordinary p0 compare, sources 6/7 produce constant true/false and inversion reverses both. Its exact-leader census of 35,332 own/public-source compute pipelines observes conditional sources 0..5 and no compiler-selected 6/7. EXP-M4-52 validates 32 live ordinary conditional scopes with source p0 throughout."
   },
   {
    "mnemonic": "pop_reconverge",
@@ -3198,14 +3223,43 @@
    ],
    "fields": [
     {
-     "name": "mask_selector",
+     "name": "form",
      "start": 24,
-     "width": 8,
+     "width": 2,
+     "type": "enum",
+     "enum": {
+      "2": "predicate_loop_update"
+     }
+    },
+    {
+     "name": "predicate_bank",
+     "start": 26,
+     "width": 3,
+     "type": "enum",
+     "enum": {
+      "0": "p0",
+      "1": "p1",
+      "2": "p2",
+      "3": "p3",
+      "4": "p4",
+      "5": "p5"
+     }
+    },
+    {
+     "name": "predicate_invert",
+     "start": 29,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "reserved",
+     "start": 30,
+     "width": 2,
      "type": "mod"
     }
    ],
-   "semantics": "Update the active execution mask at a loop latch or structured break point. The low depth subfield is 0x02 at the outer loop, 0x06 one mask scope deeper, and 0x0a two scopes deeper. Bit 0x20 is an orthogonal, semantic predicate/mask-source selector: native outer latches use both 0x02 and 0x22 depending on the condition construction. It is followed by JMP_EXEC_ANY for a natural latch or JMP_EXEC_NONE for a break/empty-region skip. The exact mapping of bit 0x20 to predicate identity versus polarity is not yet separated.",
-   "provenance": "OWN-SHADER + HW-VALIDATED (EXP-M4-46): 19 exact-output programs cover top/bottom-tested and compound-condition loops, direct break, nesting through three levels, and loop/if combinations. Fresh triple nesting emits 0x2a/0x26/0x22 at inner/middle/outer latches; compound_latch emits native 0x02 and passes exactly. On pc_base_probe, 0x22->0x02 collapses most lanes to one iteration; on compound_latch, 0x02->0x22 hangs the command buffer. Mutating a direct-break 0x26 to 0x22 changes output without fault. These prove both the depth subfield and bit 0x20 are load-bearing without overclaiming the latter's exact predicate-resource interpretation."
+   "semantics": "Update the current active loop mask from a selected predicate scratch bank. The tested tail is 0x02 | (predicate_bank << 2) | (predicate_invert ? 0x20 : 0). The loop-stack target is implicit/current: 0x02, 0x06, and 0x0a select p0, p1, and p2 rather than mask nesting depths. predicate_invert complements the consumed predicate. The update is followed by JMP_EXEC_ANY for a natural latch or JMP_EXEC_NONE for a break/empty-region skip. Banks p3..p5 share the encoded six-bank namespace but were not independently exercised on this loop-update form.",
+   "provenance": "OWN-SOURCE + HW-VALIDATED (EXP-M4-46/53). EXP-M4-53 moves the pc_base_probe latch from p0/0x22 to p1/0x26 and p2/0x2a with all 64 output words preserved; selecting a mismatched bank hangs. Flipping both producer polarity and the consumer 0x20 bit also preserves all words, while flipping only the consumer changes output. This proves bank selection and polarity and refutes the former mask-depth/use-predicate interpretation. EXP-M4-46 supplies the broader native loop-shape corpus."
   },
   {
    "mnemonic": "break_mask_unwind",
@@ -10202,7 +10256,7 @@
    ],
    "fields": [
     {
-     "name": "pred",
+     "name": "b1_hi",
      "start": 12,
      "width": 4,
      "type": "raw"
@@ -10214,14 +10268,14 @@
      "type": "raw"
     },
     {
-     "name": "level",
+     "name": "control",
      "start": 24,
      "width": 8,
      "type": "raw"
     }
    ],
-   "semantics": "Execution-mask PUSH / if-enter, PREDICATE variant (4B). byte0 0x0f, byte+1 low nibble == 5 with a non-zero HIGH nibble selecting a predicate/condition register (the plain 0x05 base is if_push). byte+2 = CF marker (0x54 outer / 0x56 last-use), byte+3 = nesting level. Pairs with the following 0f 01 jump_cond as the if/loop test-and-branch in the RT-query and integer simd-prefix kernels; paired with a later 0f 06 pop_reconverge.",
-   "provenance": "byte-diff EXP-M4-13 R4 (own-MSL): ~100 corpus leaders (`0f 15 54 21`, `0f 45 54 21`, `0f 25 56 02`, ...) each bracketed to 4 bytes by the immediately-following `0f 01 54 <off>` jump_cond. Generalizes the RT-ISA-FIX HW-validated b1==0x05 -> 4 push. Not splice-validated."
+   "semantics": "Historical four-byte execution-mask-push fallback for forms whose byte+1 high nibble is nonzero. Despite the legacy mnemonic, b1_hi is not the predicate-bank source established by EXP-M4-53; the ordinary conditional source is byte+3 bits2..4 in if_push_cond. scope retains the 0x54/0x56 form byte, while control is an unsplit byte whose nesting-depth interpretation is refuted for ordinary conditionals. These high-nibble forms remain bracketed by a following JMP_EXEC_NONE and later pop, but their exact byte+1 and byte+3 semantics require a dedicated cross.",
+   "provenance": "OWN-SOURCE CORPUS FRAMING (EXP-M4-13): about 100 four-byte leaders such as 0f155421, 0f455421, and 0f255602 are bounded by the immediately following 0f 01 branch. EXP-M4-52/53 supersede the earlier predicate-register/nesting-level names for the ordinary byte+1==0x05 form; they do not independently assign the nonzero byte+1 high nibble here."
   },
   {
    "mnemonic": "b_alu14_prep2",

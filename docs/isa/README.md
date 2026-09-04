@@ -611,13 +611,20 @@ now fixed: the descriptor field is `addsub` with enum `1`=iadd/`0`=isub.)
   registers into a GPR. **(Corrected by EXP-0031: the SR number is in `byte1`; the byte0 high nibble is
   the destination GPR — not the SR-select.)** See the SR-enum + ABI section below. There is also a 2-byte
   **`mov_imm`** (byte0 low-nibble `0xC`, byte1 = imm8) sharing the nibble.
-- **Divergence uses predicate compares plus a structured execution-mask stack.** The six-byte
+- **Divergence uses a six-entry predicate scratch bank plus a separate implicit execution-mask
+  stack.** The six-byte
   `icmp_pred_ordered6` form maps float/unsigned/signed `>` and `<` in byte+4; the ten-byte
   `icmp_pred_extended10` form covers integer/bitwise equality, IEEE floating equality, and ordered
-  floating complement sequences. Predicate-result inversion is byte0 bit4. The following conditional
-  push has its own independent inversion at byte3 bit5; setting both inversions cancels. Source release
-  is separate again at compare byte2 bits3/4. Arbitrary Boolean values may be materialized as ordinary
-  0/1 GPR values and compared with zero, while short-circuit trees preserve structured mask control.
+  floating complement sequences. On the ordered form, byte0 bits5..7 select scratch predicates
+  p0..p5 and bit4 independently inverts the produced predicate; encodings 6/7 must not be allocated.
+  The following 0x54 conditional push uses byte3
+  `0x01 | (source << 2) | (invert << 5)`: sources 0..5 read p0..p5, source 6 is constant true/current
+  mask, and source 7 is constant false/empty. Setting producer and consumer inversion together
+  cancels. Source release is separate again at compare byte2 bits3/4. EXP-M4-52 executes 32 live
+  ordinary conditional scopes with the identical p0 compare and `0f 05 54 01` push at every level:
+  nesting resides in the implicit push/else/pop stack, not in successive predicate destinations.
+  Arbitrary Boolean values may be materialized as ordinary 0/1 GPR values and compared with zero,
+  while short-circuit trees preserve structured mask control.
 - **Loops use a real backward `JMP_EXEC_ANY`:** `0f 00 54 <off6> 00` (10B), where `off6` is a signed
   little-endian byte displacement relative to the **start of the branch instruction**. The paired
   `0f 01` instruction is `JMP_EXEC_NONE`, used after mask narrowing to skip an empty region. A safe
@@ -631,14 +638,16 @@ now fixed: the descriptor field is `addsub` with enum `1`=iadd/`0`=isub.)
   |---|---|---|---|
   | `0x00` | `jump` | 10 | `JMP_EXEC_ANY`: branch while any lane remains active in the current mask |
   | `0x01` | `jump_cond` | 10 | `JMP_EXEC_NONE`: skip when mask narrowing leaves no active lanes |
-  | `0x05` | `if_push` / `if_push_cond` | 4 | execution-mask push; conditional byte3 bit5 independently inverts consumption |
+  | `0x05` | `if_push` / `if_push_cond` | 4 | execution-mask push; conditional byte3 selects p0..p5/constants 6..7 plus independent polarity |
   | `0x06` | `pop_reconverge` | 6 | mask **pop** / **reconverge** (block/loop end); byte+3 = level |
   | `0x80` | `call_indirect` | 6 | computed-target branch (indirect call / break-to-exit) |
   | `0x04` | `mask_op` | 4 | inner mask op in deep nesting (continue-edge re-mask; ⏳ inferred, 1 occurrence) |
 
-  The `0x8f` family contains distinct operations rather than one return/merge opcode. `8f 04 54 <selector>`
-  is a four-byte loop-mask update; selector depth witnesses are `0x22`, `0x26`, and `0x2a`, while the
-  orthogonal `0x20` bit is semantic but its exact identity-versus-polarity role remains open.
+  The `0x8f` family contains distinct operations rather than one return/merge opcode. `8f 04 54 <control>`
+  is a four-byte loop-mask update with tail
+  `0x02 | (predicate_bank << 2) | (predicate_invert << 5)`. Thus `0x22`, `0x26`, and `0x2a` consume
+  p0, p1, and p2 with inverted polarity; they are not mask-depth selectors. Matching compare/update
+  relocation through p0..p2 preserves exact output, while a mismatched bank hangs.
   `8f 05 54 <scope> 00 <loop-depth>` is a six-byte nonlocal break unwind. Genuine function returns
   retain byte+1 `0x02`/`0x12`. HW splice evidence: corrupting the `0f 00` back-edge offset → `CMDBUF_ERROR`; corrupting a
   `0f 06` reconverge (byte+1 `0x06→0x00`) → `CMDBUF_ERROR`; turning the `0f 01` guard unconditional

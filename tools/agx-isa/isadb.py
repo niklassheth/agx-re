@@ -2250,8 +2250,9 @@ def instr_length(buf, off=0):
     # equality / ordered-complement form (EXP-M4-45). byte+2 bit0 selects the
     # extended layout in every focused native instance; bytes+4/+5 == 06 00 are
     # also required here so unrelated low-nibble-a corpus forms are not greedily
-    # reframed. byte0 bit4 is predicate-result inversion, not a destination
-    # predicate register. Higher byte0 bits remain unassigned.
+    # reframed. For the ordered compare, byte0 bit4 is producer polarity and
+    # bits5..7 select the six-entry predicate scratch bank (EXP-M4-53); banks
+    # 6/7 must not be allocated. The scratch bank is separate from mask nesting.
     if (b0 & 0x0f) == 0x0a:
         # gated on byte+2 being a real compare op-select (<= 0x3f); a byte+2 > 0x3f means
         # this `Xa` is not an icmp (compact op / resync landing) -- do not greedily length 6.
@@ -2294,7 +2295,9 @@ def instr_length(buf, off=0):
             # else the execution-mask PUSH (4B). EXP-0035 / RT-ISA-FIX. (byte+6 is 0x54 or
             # 0x56 depending on the cache/last-use bit, so gate on byte+4==0x8f only.)
             # EXP-M4-13 R4 (rt_traversal): GENERALIZED from b1==0x05 to any byte+1 low-nibble
-            # 5 -- a non-zero HIGH nibble selects a predicate/condition register (if_push_pred),
+            # 5. The non-zero HIGH nibble remains a separate, under-characterized
+            # if_push_pred form; EXP-M4-53 locates the ordinary conditional's
+            # predicate-source bank in byte+3 rather than this byte.
             # the 4-byte PUSH the RT-query / integer simd-prefix kernels emit before a 0f 01
             # jump_cond. High-nibble forms are gated on byte+2 in {0x54,0x56} (CF marker) so a
             # stray 0f X5 operand byte can never mis-length. The plain 0x05 keeps EXACT prior
@@ -2308,7 +2311,7 @@ def instr_length(buf, off=0):
             return 4                   # execution-mask PUSH (if-enter). RT-ISA-FIX FIX: the
                                        # non-call push is 4 bytes, not 8 -- clean tokenization of
                                        # our own (HW-correct) for/while/nested CF kernels requires 4
-                                       # (`0f 05 54 <lvl>` then the next op); the old 8 desynced the
+                                       # (`0f 05 54 <control>` then the next op); the old 8 desynced the
                                        # loop head. The 14-byte CALL keeps its 0x8f gate.
         if b1 == 0x80:
             return 6                   # computed-target branch (0f 80): indirect CALL leader
@@ -2762,6 +2765,16 @@ def assemble(mnemonic, fields):
         raise ValueError("atomic_result publication codes 1..6 name the six proven "
                          "scoreboard slots; code 0 does not publish and code 7 is unresolved "
                          "(EXP-M4-49)")
+    if mnemonic == "icmp_pred_ordered6" and fields.get("predicate_bank", 0) not in range(6):
+        raise ValueError("icmp_pred_ordered6 predicate banks p0..p5 are hardware-validated; "
+                         "encodings 6/7 are not allocatable (EXP-M4-53)")
+    if mnemonic == "loop_mask_update":
+        if fields.get("form", 0) != 2:
+            raise ValueError("loop_mask_update form 2 is the only established predicate-update "
+                             "form (EXP-M4-53)")
+        if fields.get("predicate_bank", 0) not in range(6):
+            raise ValueError("loop_mask_update uses the six-entry predicate-bank namespace; "
+                             "encodings 6/7 are not allocatable (EXP-M4-53)")
     desc = _BY_MNEM[mnemonic]
     length = desc["length"]
     v = 0

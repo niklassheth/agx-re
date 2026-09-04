@@ -225,13 +225,13 @@ REAL_INSTRS = {
     "simd_shuffle xor3  0x54 (c7 04 54 ..)":  "c70454000200062c0400", # simd_shuffle_xor(v,3) HW; byte+2=0x54
     "jmp_exec_any back-edge (0f 00 54 ..)": "0f0054c6ffffffffff00",  # loop back-edge, off=-58, EXP-M4-46 HW
     "jmp_exec_none guard (0f 01 54 5c ..)": "0f01545c000000000000",  # loop-exit guard, off=+0x5c, EXP-M4-46 HW
-    "if_push (0f 05 54 01)":               "0f055401",               # exec-mask push (4B), from cf_for HW
-    "if_push inverted (0f 05 54 21)":       "0f055421",               # mask-consumer inversion, EXP-M4-45 HW
+    "if_push p0 normal (0f 05 54 01)":     "0f055401",               # EXP-M4-45/52/53 HW
+    "if_push p0 inverted (0f 05 54 21)":   "0f055421",               # consumer inversion, EXP-M4-45/53 HW
     "pop_reconverge (0f 06 04 02 00 00)":  "0f0604020000",           # reconverge/pop, from cf_for HW
-    "loop mask update selector 0x22":       "8f045422",               # outer loop latch, EXP-M4-46 HW
-    "loop mask update selector 0x26":       "8f045426",               # nested loop latch, EXP-M4-46 HW
-    "loop mask update selector 0x2a":       "8f04542a",               # triple-nested latch, EXP-M4-46 HW
-    "loop mask update selector 0x02":       "8f045402",               # compound-condition latch, EXP-M4-46 HW
+    "loop update p0 inverted":              "8f045422",               # EXP-M4-46/53 HW
+    "loop update p1 inverted":              "8f045426",               # EXP-M4-46/53 HW
+    "loop update p2 inverted":              "8f04542a",               # EXP-M4-46/53 HW
+    "loop update p0 normal":                "8f045402",               # EXP-M4-46/53 HW
     "break unwind one if / loop 1":        "8f0554030001",           # EXP-M4-46 HW
     "break unwind two ifs / loop 1":       "8f0554040001",           # EXP-M4-46 HW
     "break unwind one if / loop 2":        "8f0554030002",           # EXP-M4-46 HW
@@ -743,6 +743,67 @@ def test_pending_dependency_fields():
     return fails
 
 
+def test_predicate_bank_fields():
+    print("\n== (H) predicate scratch bank is separate from mask nesting ==")
+    fails = 0
+
+    compare = bytearray.fromhex("0a033a0505c0")
+    ok = True
+    for bank in range(6):
+        for invert in range(2):
+            raw = bytearray(compare)
+            raw[0] = 0x0a | (bank << 5) | (invert << 4)
+            rec, length = isadb.decode_one(bytes(raw), 0)
+            ok &= (rec["mnemonic"] == "icmp_pred_ordered6" and length == 6 and
+                   rec["fields"]["predicate_bank"] == bank and
+                   rec["fields"]["predicate_invert"] == invert)
+    fails += not ok
+    print(f"  [{'OK' if ok else 'FAIL'}] ordered compare p0..p5 x producer polarity")
+
+    push = bytearray.fromhex("0f055401")
+    ok = True
+    for source in range(8):
+        for invert in range(2):
+            raw = bytearray(push)
+            raw[3] = 0x01 | (source << 2) | (invert << 5)
+            rec, length = isadb.decode_one(bytes(raw), 0)
+            ok &= (rec["mnemonic"] == "if_push_cond" and length == 4 and
+                   rec["fields"]["predicate_source"] == source and
+                   rec["fields"]["predicate_invert"] == invert)
+    fails += not ok
+    print(f"  [{'OK' if ok else 'FAIL'}] conditional push p0..p5/constants6..7 x polarity")
+
+    update = bytearray.fromhex("8f045402")
+    ok = True
+    for bank in range(3):
+        for invert in range(2):
+            raw = bytearray(update)
+            raw[3] = 0x02 | (bank << 2) | (invert << 5)
+            rec, length = isadb.decode_one(bytes(raw), 0)
+            ok &= (rec["mnemonic"] == "loop_mask_update" and length == 4 and
+                   rec["fields"]["form"] == 2 and
+                   rec["fields"]["predicate_bank"] == bank and
+                   rec["fields"]["predicate_invert"] == invert)
+    fails += not ok
+    print(f"  [{'OK' if ok else 'FAIL'}] loop update HW-tested p0..p2 x polarity")
+
+    ok = True
+    for mnemonic in ("icmp_pred_ordered6", "loop_mask_update"):
+        for bank in (6, 7):
+            try:
+                fields = {"predicate_bank": bank}
+                if mnemonic == "loop_mask_update":
+                    fields["form"] = 2
+                isadb.assemble(mnemonic, fields)
+            except ValueError:
+                pass
+            else:
+                ok = False
+    fails += not ok
+    print(f"  [{'OK' if ok else 'FAIL'}] assembler rejects unallocatable banks 6 and 7")
+    return fails
+
+
 def main():
     f = 0
     f += test_real_roundtrip()
@@ -752,6 +813,7 @@ def main():
     f += test_compact_register_composites()
     f += test_mov_imm32_composites()
     f += test_pending_dependency_fields()
+    f += test_predicate_bank_fields()
     print(f"\n{'ALL PASS' if f == 0 else str(f) + ' FAILURES'}")
     return 1 if f else 0
 
