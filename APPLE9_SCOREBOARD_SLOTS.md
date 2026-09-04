@@ -31,10 +31,8 @@ currently no controlled evidence that slot 7 is a real scoreboard slot, so it
 must not be part of the initial compiler model.
 
 This model is established most strongly for scalar device loads, texture
-operations, and basic floating-point consumers.  Device atomic returns now
-show strong native-encoding evidence for the same mechanism, but their producer
-field has not yet received a coordinated hardware mutation test.  Several
-other load and stage-specific producer forms remain open.
+operations, device atomic returns, and basic floating-point consumers.
+Several other load and stage-specific producer forms remain open.
 
 ## Evidence boundary
 
@@ -52,6 +50,9 @@ The main evidence sets are:
 - [`EXP-M4-33-apple9-route-handoff`](experiments/EXP-M4-33-apple9-route-handoff/RESULTS.md): first handoff, retention, reuse, and the original slot-6 census.
 - [`EXP-M4-34-route-allocator-closure`](experiments/EXP-M4-34-route-allocator-closure/RESULTS.md): the shared six-slot allocator, gaps, reuse, and multi-source consumers.
 - [`EXP-M4-35-native-load-xor`](experiments/EXP-M4-35-native-load-xor/RESULTS.md): integer logic's direct pending-load handoff and six-bit one-hot slot mask.
+- [`EXP-M4-49-atomic-publication`](experiments/EXP-M4-49-atomic-publication/RESULTS.md): six-bit atomic-result destinations and all six atomic publication slots on hardware.
+- [`EXP-M4-50-atomic-input-dependency`](experiments/EXP-M4-50-atomic-input-dependency/RESULTS.md): the atomic packet's six-bit input dependency mask, all six producer slots, and removal of the bogus Mesa atomic-prep pseudo.
+- [`EXP-M4-51-compact-0b`](experiments/EXP-M4-51-compact-0b/RESULTS.md): prep-free pending-load-to-returning-atomic execution for every coherent input/result slot pair.
 - [`EXP-M4-30-apple9-route-semantics`](experiments/EXP-M4-30-apple9-route-semantics/NATIVE_CENSUS.json): controlled ISELECT schedules, including atomic-return allocation changes.
 - [`EXP-M4-32-public-metal-corpus`](experiments/EXP-M4-32-public-metal-corpus/CORPUS_CENSUS.json): distributional checks against a much larger native-Metal corpus.
 
@@ -168,37 +169,53 @@ bits with scheduling state and should not be extended.
 
 ### Device atomic returns
 
-Device `atomic_fetch_*` results also carry a producer-side group selector.  In
-the controlled native programs, byte `+1` changes while the atomic operation,
-addressing, and source-level operand remain the same:
+Returning device atomics are followed by an eight-byte result-publication
+record.  Its destination is a six-bit register field spanning byte 0's high
+nibble and byte 2 bits 7:6.  Every destination `r0..r63` passed exact hardware
+testing.
 
-| Atomic byte `+1` | Correlated consumer group |
-|---:|---:|
-| `0x11` | slot 6 |
-| `0x21` | slot 1 |
-| `0x41` | slot 2 |
+The record's byte 5 bits 7:5 select the scoreboard slot using a compact code:
 
-Three observations make this unlikely to be an opcode or operand-form field:
+| Slot | Publication code | Byte 5 |
+|---:|---:|---:|
+| 6 | `001` | `0x20` |
+| 1 | `010` | `0x40` |
+| 2 | `100` | `0x80` |
+| 3 | `011` | `0x60` |
+| 4 | `101` | `0xa0` |
+| 5 | `110` | `0xc0` |
 
-- Two atomic returns consumed together by one integer add both use `0x11`;
-  they form a slot-6 group.
-- A four-atomic ISELECT schedule places the selected pair under `0x21` when
-  the native consumer selects slot 1.
-- In a lifetime variant, the same pair changes to `0x41` when Metal assigns
-  the relevant handoff to slot 2, without changing the atomic operation.
+Native own-source Metal establishes the first three encodings.  EXP-M4-49
+establishes all six on hardware with six simultaneously pending returned
+atomics and distinguishable exact output oracles.  Code `111` remains
+unassigned and is not evidence for a seventh slot.
 
-The current decoder hardcodes byte `+1 == 0x11` as `atomic_rmw` and
-`byte +1 == 0x01` as `atomic_mem`.  It consequently misdecodes native `0x21`
-and `0x41` atomics as `device_load`.  At minimum, the high nibble is not a
-fixed instruction-form discriminator.  The observed values look like a
-one-hot publication/group field, while the low nibble remains invariant for
-these device atomics.
+An earlier interpretation placed the returned-result slot in the atomic
+packet's bits 12--17 because native packet byte 1 values correlated with later
+consumer schedules.  Coordinated hardware tests refute that interpretation:
+changing those six bits as an output-slot selector broke result publication,
+whereas changing the adjacent result record was exact.
 
-This atomic interpretation is strong native-Metal correlation, not yet a full
-hardware encoding closure.  Producer-field mutations and controlled captures
-for later slots are still required.  `0x81` is a plausible next group value,
-but it must not be emitted based on extrapolation alone.  Slots 3--5 and the
-relationship to non-returning atomics remain open.
+EXP-M4-50 closes the packet field as a six-bit input dependency mask:
+
+```text
+mask = ((byte1 >> 4) & 0x0f) | ((byte2 & 0x03) << 4)
+```
+
+All six one-hot producer dependencies were required and sufficient in
+controlled direct-load-to-atomic tests. Ordinary materialized inputs use mask
+zero. Thus `67 01 56` is not a separate direct form: it is the common `0x54`
+packet with the slot-6 dependency bit embedded in byte 2.
+
+Native Metal may place compact `0b 00 00 02` or a ten-byte low-`b` record
+before a returned atomic.  Neither is a required ownership-transfer operation.
+EXP-M4-51 removed all six such records from a carrier with six simultaneously
+pending loads and six returned atomics, then passed all 36 input-slot/result-slot
+permutations in both forward and reverse execution order.  This includes every
+same-slot handoff.  The compact record is correlated with Metal's slot-1 input
+schedule, while the ten-byte encoding is part of a much broader instruction
+family.  Their exact scheduling or cache effect remains unresolved, and the
+compiler should not model either as a mandatory atomic-prep pseudo.
 
 ### Texture and image reads
 
@@ -431,11 +448,12 @@ A conservative initial Apple9 compiler can use this procedure:
 9. When a tuple or producer form is not yet representable, materialize or
    reschedule rather than inventing a selector.
 
-Atomic allocation should remain behind an experimental capability until its
-producer encoding receives hardware mutation coverage.  The old Mesa logic
-that maps `DEVICE_LOAD_00`/`DEVICE_LOAD_11` classes directly to fixed selectors
-should be replaced by scheduled scoreboard allocation, not expanded with more
-producer-class cases.
+Atomic results may use slots 1--6, but their allocation must follow issue order
+and pending lifetimes.  An isolated first return uses preferred slot 6; merely
+forcing that return to a different free-looking slot is not a valid schedule.
+The old Mesa logic that maps `DEVICE_LOAD_00`/`DEVICE_LOAD_11` classes directly
+to fixed selectors should be replaced by scheduled scoreboard allocation, not
+expanded with more producer-class cases.
 
 ## Open questions
 
@@ -452,9 +470,10 @@ The following are intentionally unresolved:
    formatted device loads do not all expose the scalar token in the same
    place.  The capture-derived `00/01/10/11` distinctions need semantic
    decoding rather than producer classes.
-3. **Full atomic mapping.** Slots beyond the observed 6/1/2 atomic groups,
-   non-returning operations, `atomic_mem` versus `atomic_rmw`, and returning
-   threadgroup atomics need controlled captures and producer-field mutations.
+3. **Other atomic forms.** Returning threadgroup atomics and the threadgroup
+   input dependency encoding still need controlled captures and mutations.
+   Per-lane device atomic input dependencies, return destinations, and
+   publication slots 1--6 are closed.
 4. **Texture field split.** The exact division among scoreboard group,
    member position, component selection, and return-register description is
    not yet closed, particularly at slot 6.
@@ -485,5 +504,8 @@ The following are intentionally unresolved:
 - Support the proven scalar-load, texture, and contiguous multi-source cases
   first.
 - Keep uncertain producer forms conservative and materialize when necessary.
-- Correct the atomic decoder before using corpus statistics: `0x21` and
-  `0x41` device atomics are currently mislabeled as loads.
+- Keep the atomic packet's input-dependency bits distinct from the adjacent
+  result record's destination and publication-slot fields.
+- Encode ordinary/materialized device-atomic inputs with dependency mask zero.
+  A directly pending input must name its actual producer slot; do not add an
+  idle-slot wait as a scheduling delay.

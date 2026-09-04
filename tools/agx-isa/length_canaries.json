@@ -30,7 +30,7 @@
     {"id": "half_hfma_m3", "hex": "10031e0503c0000000000000", "length": 12, "mnemonic": "half_alu_fma12", "evidence": "EXP-0180"},
     {"id": "half_high_compact_dst7", "hex": "780d1811", "length": 4, "mnemonic": "half_pack", "evidence": "EXP-0203"},
 
-    {"id": "icmp_pred6", "hex": "0a0122821422", "length": 6, "mnemonic": "icmp_pred", "evidence": "EXP-0010"},
+    {"id": "icmp_pred6", "hex": "0a0122821422", "length": 6, "mnemonic": "icmp_pred_ordered6", "evidence": "EXP-0010 and EXP-M4-45"},
     {"id": "icmp_pred_ext10", "hex": "2a002bc0060006c20000", "length": 10, "mnemonic": "icmp_pred_ext10", "evidence": "EXP-0200"},
     {"id": "isel10_cmpA_r127", "hex": "02ff0703060407c00006", "length": 10, "mnemonic": "isel10", "evidence": "EXP-0234"},
     {"id": "isel10_cmpB_r127", "hex": "020307ff060407c00006", "length": 10, "mnemonic": "isel10", "evidence": "EXP-0234"},
@@ -51,6 +51,8 @@
     {"id": "simd_shuffle_mode6_12", "hex": "c70656000200020014a20200", "length": 12, "mnemonic": "simd_shuffle_ext12", "evidence": "EXP-0229"},
 
     {"id": "device_load14", "hex": "6710540000012000510100404600", "length": 14, "mnemonic": "device_load", "evidence": "EXP-0012"},
+    {"id": "atomic_device14", "hex": "6701540000010180004000006002", "length": 14, "mnemonic": "atomic_device", "evidence": "EXP-M4-47 and EXP-M4-50"},
+    {"id": "atomic_result8", "hex": "5c8009a700200000", "length": 8, "mnemonic": "atomic_result", "evidence": "EXP-M4-49"},
     {"id": "fragment_tile_load12", "hex": "670e5404000001ce02000000", "length": 12, "mnemonic": "tile_read", "evidence": "EXP-0029"},
     {"id": "matrix_mac12", "hex": "cf02560200040809d4432401", "length": 12, "mnemonic": "matrix_mac", "evidence": "EXP-0022"},
     {"id": "jump10", "hex": "0f0054d4ffffffffff00", "length": 10, "mnemonic": "jump", "evidence": "EXP-0010"},

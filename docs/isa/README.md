@@ -915,9 +915,13 @@ DB now has **24 HW-validated descriptors**. Summary (all HW-validated unless not
 
 ### ✅ Atomics (EXP-0018)
 Atomics are **native single-RMW ops in the memory family** (byte0 `0x67`), *not* CAS loops.
-`atomic_rmw` = `67 11 54 00 00 <addr> 42 00 00 <OP> 00` (14 B). **base_slot at byte+4** (same slot model
-as loads); **device vs threadgroup = byte+1 bit1** (as in `../isa` memory). **Operation at byte+12**
-(HW splice-proven):
+The general per-lane device packet is 14 bytes. Its byte+1 high nibble and byte+2 low two bits are
+one **six-bit input dependency mask**: bit 0 names scoreboard slot 1 through bit 5 naming slot 6.
+Materialized inputs use mask zero (`67 01 54`); a directly pending input names its producer slot
+(`67 11 54` for slot 1, `67 01 56` for slot 6). The former `atomic_rmw` versus `atomic_mem` split on
+byte+1 is therefore superseded: those values are dependency-mask examples, not distinct operand
+forms. **base_slot is at byte+4**, the address index is byte+5 bits0..6, and the data GPR is byte+5
+bit7 plus byte+6 bits0..5. **Operation is at byte+12** (HW splice-proven):
 
 | op | code | op | code | op | code |
 |---|---|---|---|---|---|
@@ -926,9 +930,21 @@ as loads); **device vs threadgroup = byte+1 bit1** (as in `../isa` memory). **Op
 | smax | `0x28` | smin | `0x2a` | umax | `0x38` |
 | umin | `0x3a` | exchange/store | `0x3c` | cmpxchg | `0x24` |
 
-`cmpxchg` is a single op + a following `icmp` for the bool (no loop). Device atomics to a *uniform*
-address get a compiler optimization: SIMD-reduce → one-lane RMW → prefix-broadcast (32 transactions → 1
-per simdgroup). Aggregate HW-validated (1024 threads → counter 1024; op-splice add→max → 32).
+`cmpxchg` consumes an adjacent `(desired, compare)` data-register tuple and is a single op plus a
+following `icmp` for the bool (no loop). byte+9 is `0x02` for a returned value and `0x40` for a
+discarded result. A returning device atomic is immediately followed by an eight-byte `atomic_result`
+record. That record independently encodes destination `r0..r63` and publishes on slots 1..6 using
+byte+5 bits7:5 codes `{1:6, 2:1, 3:3, 4:2, 5:4, 6:5}`; code 7 remains unresolved. The atomic packet's
+input dependency and result record's publication slot must not be tied together.
+
+EXP-M4-47 executes all 12 supported operation selectors plus returned/discarded, control-flow,
+contention, and threadgroup cases with exact T8132 oracles. EXP-M4-49 validates all 64 result
+destinations and every publication slot. EXP-M4-50 validates all 64 input masks and all six one-hot
+producer dependencies. EXP-M4-51 shows that neither `0b 00 00 02` nor the historical
+`tg_atomic_prep10` record is required for correctness: a prep-free six-load/six-atomic schedule passes
+every input-slot/result-slot pair, including same-slot reuse. Device atomics to a *uniform* address can
+still use the compiler optimization SIMD-reduce → one-lane RMW → prefix-broadcast (32 transactions →
+1 per simdgroup).
 
 ### ✅ Subgroup / SIMD-group & quad ops (EXP-0018) — SIMD width = 32
 - **`simd_reduce`** (byte0 `0xbf`/`0x3f`, 8 B, byte+2=`0x54`/`0x56`): reduce & prefix-scan. Op = (byte0 bit7,

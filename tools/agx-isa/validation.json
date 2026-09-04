@@ -2,7 +2,7 @@
  "_license": "GPL-3.0-or-later",
  "spec": "docs/evidence-classification.md",
  "generated": "2026-09-04",
- "db_sha256": "325d9009d3744728b3361f563b60eea9e7b3def71932a82878250305e139661a",
+ "db_sha256": "915252aaaef31098d8cf56db0ccea9f5cfd98aebe066b80da9c9de0c3ea2442e",
  "_conventions": {
   "default": "untested. A field with no committed experiment that exercised it is untested with evidence []. Positional knowledge alone is not a label.",
   "evidence_ids": "directory-name prefixes under experiments/ - this includes the RT-* red-team splice-and-observe experiments (A18 Pro), which are committed experiments with retained raw evidence, alongside EXP-NNNN and EXP-M4-NN / EXP-O2X.",
@@ -13,30 +13,31 @@
   "emittable": "an instruction qualifies only if EVERY field in its db.json descriptor is hardware-run or isolated-byte-diff (docs/evidence-classification.md section 2, the emittable rule). Field-less descriptors qualify only if the instruction itself is hardware-run / isolated-byte-diff."
  },
  "coverage": {
-  "total_instructions": 182,
-  "total_fields": 1142,
+  "total_instructions": 184,
+  "total_fields": 1163,
   "by_label": {
-   "hardware-run": 539,
+   "hardware-run": 556,
    "isolated-byte-diff": 67,
    "corpus-correlation": 82,
    "tokenization-only": 150,
    "single-template-inference": 32,
    "api-accept-reject": 0,
    "host-private": 0,
-   "untested": 272
+   "untested": 276
   },
   "by_label_pct": {
-   "hardware-run": 47.2,
-   "isolated-byte-diff": 5.9,
-   "corpus-correlation": 7.2,
-   "tokenization-only": 13.1,
+   "hardware-run": 47.8,
+   "isolated-byte-diff": 5.8,
+   "corpus-correlation": 7.1,
+   "tokenization-only": 12.9,
    "single-template-inference": 2.8,
    "api-accept-reject": 0.0,
    "host-private": 0.0,
-   "untested": 23.8
+   "untested": 23.7
   },
-  "emittable_instructions": 35,
+  "emittable_instructions": 36,
   "emittable_mnemonics": [
+   "atomic_result",
    "bf_add_dst",
    "bf_alu",
    "bf_fma_dst",
@@ -73,7 +74,7 @@
    "sr_read_wide",
    "uniform_mov"
   ],
-  "decodable_not_yet_emittable": 147,
+  "decodable_not_yet_emittable": 148,
   "data_word_descriptors": 6,
   "data_word_mnemonics": [
    "operand_word",
@@ -83,8 +84,8 @@
    "operand_word_x2_h7",
    "pad_operand"
   ],
-  "emitter_relevant_instructions": 176,
-  "emittable_of_emitter_relevant": 35
+  "emitter_relevant_instructions": 178,
+  "emittable_of_emitter_relevant": 36
  },
  "instructions": {
   "falu2": {
@@ -9728,6 +9729,198 @@
      "EXP-0141"
     ],
     "note": "Was `tokenization-only`. The two carriers accept DIFFERENT value sets, so the byte's meaning is form-dependent; not root-caused."
+   }
+  },
+  "atomic_device": {
+   "_instruction": {
+    "label": "hardware-run",
+    "range": "21 exact own-source atomic cases plus all 64 input dependency masks and all six one-hot producer slots",
+    "target": "G16G",
+    "evidence": [
+     "EXP-M4-47-atomic-semantics",
+     "EXP-M4-50-atomic-input-dependency"
+    ],
+    "note": "General descriptor supersedes the old byte+1==0x11 versus 0x01 form split."
+   },
+   "pending_mask_lo": {
+    "label": "hardware-run",
+    "range": "all 16 low-nibble values as part of the complete 0x00..0x3f mask sweep",
+    "target": "G16G",
+    "evidence": [
+     "EXP-M4-50-atomic-input-dependency"
+    ],
+    "note": "Bits12..15 name input dependencies on slots1..4."
+   },
+   "pending_mask_hi": {
+    "label": "hardware-run",
+    "range": "all 4 high-pair values as part of the complete 0x00..0x3f mask sweep",
+    "target": "G16G",
+    "evidence": [
+     "EXP-M4-50-atomic-input-dependency"
+    ],
+    "note": "Bits16..17 name input dependencies on slots5..6."
+   },
+   "rsv3": {
+    "label": "untested",
+    "range": "not independently mapped in the generalized device-atomic form",
+    "target": "G16G",
+    "evidence": []
+   },
+   "base_slot": {
+    "label": "untested",
+    "range": "native values observed; independent selectable range unresolved",
+    "target": "G16G",
+    "evidence": []
+   },
+   "index_reg": {
+    "label": "hardware-run",
+    "range": "byte+5 bits0..6 exercised by the existing dense byte sweep and dynamic-address atomic cases",
+    "target": "G16G",
+    "evidence": [
+     "EXP-0141",
+     "EXP-M4-47-atomic-semantics"
+    ]
+   },
+   "oper_reg_lo": {
+    "label": "hardware-run",
+    "range": "both values; operand-register indices 0..3 redirected and consumed",
+    "target": "G16G",
+    "evidence": [
+     "EXP-0141",
+     "EXP-M4-47-atomic-semantics"
+    ]
+   },
+   "oper_reg_hi": {
+    "label": "hardware-run",
+    "range": "operand-register indices 0..3 constructed; compare-exchange adjacent tuple executed",
+    "target": "G16G",
+    "evidence": [
+     "EXP-0141",
+     "EXP-M4-47-atomic-semantics"
+    ]
+   },
+   "addr_desc_hi": {
+    "label": "hardware-run",
+    "range": "all 4 values dispatched on the best existing atomic carrier",
+    "target": "G17P",
+    "evidence": [
+     "EXP-0168"
+    ]
+   },
+   "input_desc0": {
+    "label": "untested",
+    "range": "live descriptor byte; exact bit semantics unresolved",
+    "target": "G16G",
+    "evidence": []
+   },
+   "input_desc1": {
+    "label": "untested",
+    "range": "live descriptor byte; exact bit semantics unresolved",
+    "target": "G16G",
+    "evidence": []
+   },
+   "result_mode": {
+    "label": "hardware-run",
+    "range": "0x02 returned and 0x40 discarded across exact atomic cases",
+    "target": "G16G",
+    "evidence": [
+     "EXP-M4-47-atomic-semantics"
+    ]
+   },
+   "rsv10": {
+    "label": "hardware-run",
+    "range": "0..255 dense on the prior device-atomic carrier; only a constrained subset preserved correct execution",
+    "target": "G16G",
+    "evidence": [
+     "EXP-0141"
+    ],
+    "note": "Historical reserved name; byte is live and must not be chosen arbitrarily."
+   },
+   "rsv11": {
+    "label": "hardware-run",
+    "range": "0..255 dense on the prior device-atomic carrier; only a constrained subset preserved correct execution",
+    "target": "G16G",
+    "evidence": [
+     "EXP-0141"
+    ],
+    "note": "Historical reserved name; byte is live and must not be chosen arbitrarily."
+   },
+   "op_lsb": {
+    "label": "hardware-run",
+    "range": "both values within the dense byte+12 sweep",
+    "target": "G17P",
+    "evidence": [
+     "EXP-0156"
+    ]
+   },
+   "op": {
+    "label": "hardware-run",
+    "range": "all 12 exposed selectors executed with exact operation-specific oracles",
+    "target": "G16G",
+    "evidence": [
+     "EXP-0018",
+     "EXP-M4-47-atomic-semantics"
+    ]
+   },
+   "per_lane": {
+    "label": "hardware-run",
+    "range": "both values within the dense byte+12 sweep",
+    "target": "G17P",
+    "evidence": [
+     "EXP-0156"
+    ]
+   },
+   "op_msb": {
+    "label": "hardware-run",
+    "range": "both values within the dense byte+12 sweep",
+    "target": "G17P",
+    "evidence": [
+     "EXP-0156"
+    ]
+   },
+   "amode_hi": {
+    "label": "hardware-run",
+    "range": "0..255 dense on the prior device-atomic carrier; accepted values are form-dependent",
+    "target": "G16G",
+    "evidence": [
+     "EXP-0141"
+    ]
+   }
+  },
+  "atomic_result": {
+   "_instruction": {
+    "label": "hardware-run",
+    "range": "all 64 destinations and all six scheduled publication slots with exact atomic return and side-effect oracles",
+    "target": "G16G",
+    "evidence": [
+     "EXP-M4-49-atomic-publication",
+     "EXP-M4-51-compact-0b"
+    ]
+   },
+   "dst": {
+    "label": "hardware-run",
+    "range": "all 16 low-nibble values within the complete r0..r63 destination sweep",
+    "target": "G16G",
+    "evidence": [
+     "EXP-M4-49-atomic-publication"
+    ]
+   },
+   "dst_hi": {
+    "label": "hardware-run",
+    "range": "all 4 high-pair values within the complete r0..r63 destination sweep",
+    "target": "G16G",
+    "evidence": [
+     "EXP-M4-49-atomic-publication"
+    ]
+   },
+   "publication_code": {
+    "label": "hardware-run",
+    "range": "codes 1..6 in a coherent six-return schedule; code 7 remains unresolved and is forbidden",
+    "target": "G16G",
+    "evidence": [
+     "EXP-M4-49-atomic-publication",
+     "EXP-M4-51-compact-0b"
+    ]
    }
   },
   "matrix_mac": {

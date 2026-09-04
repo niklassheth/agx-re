@@ -1,6 +1,6 @@
 # Apple9 (G16G/G17P) AGX — Instruction Encoding Tables
 
-> **Generated** from `tools/agx-isa/db.json` by `tools/agx-isa/gen_encoding_tables.py` (2026-09-04). Regenerate after any DB change; do not hand-edit. This is the **authoritative, self-contained encoding table** a driver author reads to emit Apple9 AGX instructions — 182 instruction descriptors.
+> **Generated** from `tools/agx-isa/db.json` by `tools/agx-isa/gen_encoding_tables.py` (2026-09-04). Regenerate after any DB change; do not hand-edit. This is the **authoritative, self-contained encoding table** a driver author reads to emit Apple9 AGX instructions — 184 instruction descriptors.
 
 **Clean-room:** every encoding here was learned from the compiled form of MSL **we wrote** (OWN-SHADER) — by byte-diffing our own shaders and by splicing bytes and running them on the real Apple9 GPUs (hardware validation). No Apple binary was disassembled. See `../../CLAUDE.md`.
 
@@ -684,7 +684,46 @@
 
 ## Atomics
 
-### `atomic_rmw` — device atomic RMW (elected-lane, op at byte+12)
+### `atomic_device` — general device atomic packet with six-slot input dependency mask
+
+- **Length:** 14 bytes  ·  **Match:** byte+0==0x67, bits[8:12]==0x1, bits[18:24]==0x15  ·  **Provenance:** mixed
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `pending_mask_lo` | [12:16] | modifier |  |
+| `pending_mask_hi` | [16:18] (byte+2) | modifier |  |
+| `rsv3` | [24:32] (byte+3) | modifier |  |
+| `base_slot` | [32:40] (byte+4) | immediate |  |
+| `index_reg` | [40:47] (byte+5) | register |  |
+| `oper_reg_lo` | [47:48] | register |  |
+| `oper_reg_hi` | [48:54] (byte+6) | register |  |
+| `addr_desc_hi` | [54:56] | modifier |  |
+| `input_desc0` | [56:64] (byte+7) | modifier |  |
+| `input_desc1` | [64:72] (byte+8) | modifier |  |
+| `result_mode` | [72:80] (byte+9) | enum | `0x2`=return_and_publish; `0x40`=discard |
+| `rsv10` | [80:88] (byte+10) | modifier |  |
+| `rsv11` | [88:96] (byte+11) | modifier |  |
+| `op_lsb` | [96:97] (byte+12) | modifier |  |
+| `op` | [97:102] | opcode-select | `0x10`=add; `0x11`=and; `0x12`=cmpxchg; `0x13`=fadd; `0x14`=smax; `0x15`=smin; `0x16`=or; `0x1b`=sub; `0x1c`=umax; `0x1d`=umin; `0x1e`=xchg; `0x1f`=xor |
+| `per_lane` | [102:103] | modifier |  |
+| `op_msb` | [103:104] | modifier |  |
+| `amode_hi` | [104:112] (byte+13) | modifier |  |
+
+*General 14-byte device atomic packet. The former byte+1==0x11 `atomic_rmw` and byte+1==0x01 `atomic_mem` split is superseded: byte+1's high nibble and byte+2's low two bits are one six-bit input dependency mask, `mask = pending_mask_lo | (pending_mask_hi << 4)`, with bit 0 naming slot 1 through bit 5 naming slot 6. Materialized GPR inputs use zero; a directly pending input names its producer slot. byte+2's high six bits retain the common 0x54 packet mode. byte+5 bits0..6 select the address index, while byte+5 bit7 and byte+6 bits0..5 form the data GPR index. Compare-exchange consumes the adjacent data-register tuple in desired,compare order. In the tested per-lane form, byte+9 is 0x02 for a returned result and 0x40 when discarded. A returning atomic is followed by `atomic_result`, which independently names the destination GPR and publication slot. The operation is byte+12 bits1..5: add, sub, and, or, xor, signed/unsigned min/max, exchange, compare-exchange, and float add. The tested last-use form releases its address/data inputs. The historical `atomic_rmw` and `atomic_mem` descriptors remain as narrower compatibility aliases, but their byte+1 values are dependency-mask examples rather than distinct operand classes.*
+
+### `atomic_result` — returned-device-atomic destination and scoreboard publication
+
+- **Length:** 8 bytes  ·  **Match:** bits[0:4]==0xc, byte+1==0x80, bits[16:22]==0x9, byte+3==0xa7, byte+4==0x00, bits[40:45]==0x0, bits[48:64]==0x0  ·  **Provenance:** HW-validated
+
+| Field | Bits | Type | Enum / values |
+|---|---|---|---|
+| `dst` | [4:8] | register |  |
+| `dst_hi` | [22:24] | register |  |
+| `publication_code` | [45:48] | enum | `0x1`=slot6; `0x2`=slot1; `0x3`=slot3; `0x4`=slot2; `0x5`=slot4; `0x6`=slot5 |
+
+*Eight-byte result-publication record immediately following a returning device atomic. `dst | (dst_hi << 4)` selects any GPR r0..r63. publication_code selects the scheduled scoreboard slot using the compact non-linear code table 1->slot6, 2->slot1, 3->slot3, 4->slot2, 5->slot4, 6->slot5. Code 7 is unresolved and must not be emitted. This record owns the returned-result destination and publication slot; the preceding `atomic_device` packet's bits12..17 instead describe input dependencies.*
+
+### `atomic_rmw` — historical exact-mask 0x01 compatibility alias
 
 - **Length:** 14 bytes  ·  **Match:** byte+0==0x67, byte+1==0x11  ·  **Provenance:** HW-validated
 
@@ -710,7 +749,7 @@
 
 *atomic read-modify-write to a device buffer. The OP is a 5-bit selector at byte+12 bits[1:6] (start 97): 16 add, 17 and, 18 cmpxchg, 19 fadd, 20 smax, 21 smin, 22 or, 27 sub, 28 umax, 29 umin, 30 xchg (also atomic_store, discards result), 31 xor -- the SAME 5-bit op enum used by atomic_tg (bits[86:91]) and by atomic_mem (byte+12 bits[1:6]). byte+12 bit6 (per_lane) = 1 for a divergent per-lane address (&o[i]), 0 for a uniform address (&o[0]); byte+13 bit1 tracks the same choice. byte+1==0x11 selects the ALU/reduced/immediate-operand form (bit4) in the device space (bit1=0); the register-operand form is atomic_mem (byte+1==0x01). byte+5 = per-lane index GPR (zeroed for a uniform address). byte+7 bit0 = discard/no-writeback; byte+8 = return-register descriptor. The actual RMW operand register is implicit (supplied by the preceding op / amode), as in the 0x67/0xe7 load/store family. Emitted AFTER a SIMD-group simd_reduce pre-combine; NOT a CAS/retry loop. OPERAND REGISTER IS ENCODED, NOT IMPLICIT (EXP-0141, HW-VALIDATED): the RMW operand register is carried in byte+5 bit 7 and byte+6 bits 0..5 -- `index = (byte+5 >> 7) | ((byte+6 & 0x3F) << 1)` -- indexing the operand register window. Proven at all four constructible indices with the redirected register consumed each time (0->a[0]=7, 1->a[1]=1007, 2->a[2]=2007, 3->a[3]=3007), byte-identical in both gated runs, on a UNIFORM-address carrier that the old per-lane `index_reg` reading does not explain. The redirected register is RELEASED -- its later reader gets 0 -- the same contract EXP-0086/0089/0099 document for the ALU families. db.json previously said the operand 'is implicit (supplied by the preceding op / amode)'; DOC-02 ranked it a MISSING field. The ADDRESS role of byte+5/+6 is not excluded for the per-lane form; the DATA role is proven for the uniform form. RMW OPERAND REGISTER IS NOT IMPLICIT (EXP-0141, HW): the previous claim that the operand register 'is implicit (supplied by the preceding op / amode)' is REFUTED -- DOC-02 section 3 ranked it a MISSING field, 'the worst kind of gap for an emitter'. It is encoded, as `oper_reg_lo` (byte+5 bit7) | (`oper_reg_hi` << 1) (byte+6 bits 0..5). The carrier keeps a[0..3] = 7/1007/2007/3007 live across atomic_fetch_add(o, a[0]); baseline byte+5/+6 = 0x00/0x00 counts 7, byte+5 = 0x80 counts 1007, byte+6 = 0x01 counts 2007, and the addendum built index 3 -> 3007. The redirected register is CONSUMED: its later reader gets 0. NOTE: our atdevimm carrier uses a UNIFORM address yet the compiler emits byte+5/+6 = 0x80/0x02, which the old per-lane-index reading does not explain; the address role is not excluded for the per-lane form, but the DATA role is proven for the uniform form.*
 
-### `atomic_mem` — standalone atomic (exchange/cmpxchg/indexed)
+### `atomic_mem` — historical exact-mask 0x00 compatibility alias
 
 - **Length:** 14 bytes  ·  **Match:** byte+0==0x67, byte+1==0x01  ·  **Provenance:** HW-validated
 
@@ -1770,7 +1809,7 @@ Parcels are 2 bytes (all lengths even). Length is a function of byte 0 plus a pe
 | byte 0 (group / signature) | length (bytes) |
 |---|---|
 | `0x0e` | 4 |
-| `lownibble_0xC` | 4 |
+| `lownibble_0xC` | 8 for the atomic-result publication signature `?c 80 (09\|dst_hi<<6) a7 00 (slot_code<<5) 00 00` (EXP-M4-49 HW); 8 for scalar mov_imm32; 4 for get_sr; 2 for the small mov_imm form |
 | `0x67/0xe7` | 14  [load/store: device, threadgroup (byte+1 bit1=0x02) and constant all share this opcode pair -- EXP-0012] |
 | `0x07 (+ byte+2==0x54)` | 6  [THREADGROUP/EXECUTION BARRIER (threadgroup_barrier): 07 04 54 <mem_scope> <flags> 00. byte+3 = fenced memory scope 0x61 threadgroup / 0x85 device. The ONLY explicit ordering op in compute -- device load/store/atomic/texture are NOT scoreboard-waited (HW register interlock). EXP-0025 HW/splice-proven] |
 | `lownibble_0x9` | 4 when (byte+2 & 7) is 0 or 1; otherwise normally 6+2*(byte+4 & 3), with exact coordinate-transform subforms called out by the tokenizer. The compact-class rule is direct G17P EXP-0228; the 6/8/10/12 extension rule is EXP-M4-10 plus current own-shader forms. |
@@ -1791,8 +1830,7 @@ Parcels are 2 bytes (all lengths even). Length is a function of byte 0 plus a pe
 | `0xbf/0x3f/0xb7 (+ byte+2==0x56)` | 8  [SUBGROUP/QUAD reduce & prefix-scan: bit3=scope(1 simd/0 quad), bit7+byte+1=op, byte+7=datatype/shape. SIMD width 32. EXP-0018 HW] |
 | `0x47/0xc7` | 12 when byte+1==0x06; otherwise 10  [SUBGROUP/QUAD shuffle & broadcast. Direct G17P framing: EXP-0229; base semantics: EXP-0018] |
 | `0x17` | 10  [simd_ballot (byte+1 low-nib 7: 0x07 active-mask/any/all, 0x17 ballot(pred), RT-ISA-FIX) \| unpack_convert (byte+1 low-nib 4). EXP-0018/0033 HW] |
-| `0x67 (byte+1==0x11)` | 14  [device ATOMIC RMW (elected-lane), op at byte+12. EXP-0018 HW] |
-| `0x67 (byte+1==0x01)` | 14  [standalone ATOMIC exchange/cmpxchg/indexed, op at byte+12. EXP-0018 HW]. Atomics are native single ops, NOT CAS loops. |
+| `0x67 (byte+1 low nibble==0x1, byte+2 high six bits==0x15)` | 14  [device ATOMIC packet. bits12..17 are the six-slot input dependency mask; byte+12 bits1..5 select the operation. EXP-0018/M4-47/M4-50 HW]. The historical byte+1==0x11 atomic_rmw and byte+1==0x01 atomic_mem rows are dependency-mask anchors, not distinct operand forms. Atomics are native single ops, NOT CAS loops. |
 | `0xcf` | 12  [SIMD-group MATRIX multiply-accumulate: one full 8x8x8 cooperative-matrix tile MAC d=a*b(+c). DEDICATED matrix HW. byte+2 0x56 single / 0x54 tiled; byte+7=C src reg; byte+11 bit0=accumulate-enable. simdgroup_load/store are ordinary 0x67/0xe7 memory ops, NOT matrix ops. EXP-0022 HW] |
 | `lownibble_0x4 + byte+1==0xea` | 8  [RAY TRACING: dedicated ray-INTERSECT op. byte0 hi nibble=result reg; byte+2 mode (0x90 const-origin / 0x10 dyn-origin / 0xd0 +fn-table); byte+6 bit7=intersection-function-table present. Emitted 2x/kernel (traverse + result-read). ABSENT from a software Moller-Trumbore loop. EXP-0023 HW] |
 | `0xdf` | 14  [RAY TRACING: dedicated acceleration-structure / ray-data load (memory-family sibling of 0x67/0xe7, byte+2==0x54). BVH-node/ray/stack fetch during the (software) traversal loop. EXP-0023] |
@@ -1837,4 +1875,4 @@ Parcels are 2 bytes (all lengths even). Length is a function of byte 0 plus a pe
 
 ---
 
-*Rendered from `tools/agx-isa/db.json` — 182 descriptors. The machine-readable source of truth is `db.json` / `isadb.py`; this document is its human-readable projection.*
+*Rendered from `tools/agx-isa/db.json` — 184 descriptors. The machine-readable source of truth is `db.json` / `isadb.py`; this document is its human-readable projection.*

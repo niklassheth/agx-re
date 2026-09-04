@@ -1464,13 +1464,22 @@ def instr_length(buf, off=0):
     if b0 == 0xa0 and _b1 == 0x00 and _b2 == 0x00:          return 4   # a0 00 00 00: loop-header compact
                                        # init op (EXP-M4-12 S4: k_cf_loop@0x44, get_sr -> [4] -> iadd2;
                                        # reproduced in cf_for/cf_break). Distinct from the 2-byte `a0 0c`.
-    # EXP-M4-37: eight-byte scalar raw-literal write.  This must precede the
-    # get_sr/small-mov rules because both share the low-nibble-c leader.  The
-    # fixed-zero payload holes make the signature substantially tighter than
-    # merely checking byte+1 bit7 and the mode-2 selector.
+    # EXP-M4-49: eight-byte publication record following a returning device
+    # atomic.  Its low-nibble-c leader otherwise looks like a 2-byte mov_imm,
+    # exposing the remaining six bytes as unrelated instructions.  Keep the
+    # gate on the complete native fixed signature while leaving the split
+    # destination bits and publication code free.
     if lo == 0x0c and off + 7 < len(buf):
         b1, b2, b3 = buf[off + 1], buf[off + 2], buf[off + 3]
-        b4, b5, b7 = buf[off + 4], buf[off + 5], buf[off + 7]
+        b4, b5, b6, b7 = buf[off + 4], buf[off + 5], buf[off + 6], buf[off + 7]
+        if b1 == 0x80 and (b2 & 0x3f) == 0x09 and b3 == 0xa7 \
+                and b4 == 0x00 and not (b5 & 0x1f) \
+                and b6 == 0x00 and b7 == 0x00:
+            return 8                   # atomic_result (EXP-M4-49 HW)
+        # EXP-M4-37: eight-byte scalar raw-literal write.  This must precede
+        # the get_sr/small-mov rules because both share the low-nibble-c
+        # leader.  The fixed-zero payload holes make the signature tighter
+        # than merely checking byte+1 bit7 and the mode-2 selector.
         if (b1 & 0x80) and (b2 & 0x1f) == 0x02 and not (b3 & 0x01) \
                 and not (b4 & 0xe1) and not (b5 & 0xf3) \
                 and not (b7 & 0xf0):
@@ -1860,8 +1869,6 @@ def instr_length(buf, off=0):
             return 4                   # reg_move_c9 / preload-slot move. EXP-0113 executed
                                        # the `2b 00 09 c0` form in two runs; the prior
                                        # b3 gate left that proven form without a length.
-        if b1 == 0x00 and b2 == 0x06:
-            return 8                   # tg_atomic_prep: threadgroup-atomic RMW descriptor prep (8B).
         if (b2 & 0x0f) in (0x00, 0x01, 0x09) and b3 in (0x00, 0x08):
             return 4                   # GENERAL 4-byte compact move (reg_move_c0/c1/c9 + source-class
                                        # variants; nb_ray). byte+3 in {none,32-bit-reg}. Covers the
@@ -2751,6 +2758,10 @@ def assemble(mnemonic, fields):
     if mnemonic == "simd_shuffle" and fields.get("mode", 0) == 0x06:
         raise ValueError("simd_shuffle mode 0x06 is the 12-byte "
                          "simd_shuffle_ext12 form (EXP-0229)")
+    if mnemonic == "atomic_result" and fields.get("publication_code", 0) not in range(1, 7):
+        raise ValueError("atomic_result publication codes 1..6 name the six proven "
+                         "scoreboard slots; code 0 does not publish and code 7 is unresolved "
+                         "(EXP-M4-49)")
     desc = _BY_MNEM[mnemonic]
     length = desc["length"]
     v = 0

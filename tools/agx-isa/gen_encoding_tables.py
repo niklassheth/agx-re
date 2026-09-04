@@ -66,8 +66,10 @@ FAMILY = [
         ("vary_store", "vertex varying / [[position]] store to the UVS/parameter buffer"),
     ]),
     ("Atomics", [
-        ("atomic_rmw", "device atomic RMW (elected-lane, op at byte+12)"),
-        ("atomic_mem", "standalone atomic (exchange/cmpxchg/indexed)"),
+        ("atomic_device", "general device atomic packet with six-slot input dependency mask"),
+        ("atomic_result", "returned-device-atomic destination and scoreboard publication"),
+        ("atomic_rmw", "historical exact-mask 0x01 compatibility alias"),
+        ("atomic_mem", "historical exact-mask 0x00 compatibility alias"),
     ]),
     ("Texture / sampler", [
         ("tex_sample", "sample/gather/read/compare/LOD-query bundle"),

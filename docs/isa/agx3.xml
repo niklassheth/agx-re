@@ -406,6 +406,20 @@
     <value value="1" label="ballot(predicate)">ballot</value>
   </enum>
 
+  <enum kind="atomic_device_result_mode" name="atomic_device result_mode">
+    <value value="2">return_and_publish</value>
+    <value value="64">discard</value>
+  </enum>
+
+  <enum kind="atomic_result_publication_code" name="atomic_result publication_code">
+    <value value="1">slot6</value>
+    <value value="2">slot1</value>
+    <value value="3">slot3</value>
+    <value value="4">slot2</value>
+    <value value="5">slot4</value>
+    <value value="6">slot5</value>
+  </enum>
+
   <enum kind="matrix_mac_dtype" name="matrix_mac dtype">
     <value value="0" label="f16(16-bit)">f16</value>
     <value value="2" label="f32/bf16(32-bit)">f32_bf16</value>
@@ -1804,6 +1818,60 @@
     <ins name="xchg" op="11110"/>
     <ins name="xor" op="11111"/>
   </group>
+
+  <!-- atomic_device: General 14-byte device atomic packet -->
+  <!-- provenance: OWN-SHADER + HW-VALIDATED on T8132. EXP-M4-47 executes 21 exact device/threadgroup atomic cases and establishes the device operation map, split ... -->
+  <group name="atomic_device" length="14" label="General 14-byte device atomic packet">
+    <exact bit="0:7">01100111</exact>
+    <exact bit="8:11">0001</exact>
+    <exact bit="18:23">010101</exact>
+    <exact bit="97:101">op</exact>
+    <modifier name="pending_mask_lo" bit="12:15"/>
+    <modifier name="pending_mask_hi" bit="16:17"/>
+    <modifier name="rsv3" bit="24:31"/>
+    <immediate name="base_slot" bit="32:39"/>
+    <src name="index_reg" bit="40:46"/>
+    <src name="oper_reg_lo" bit="47"/>
+    <src name="oper_reg_hi" bit="48:53"/>
+    <modifier name="addr_desc_hi" bit="54:55"/>
+    <modifier name="input_desc0" bit="56:63"/>
+    <modifier name="input_desc1" bit="64:71"/>
+    <modifier name="result_mode" bit="72:79" kind="atomic_device_result_mode"/>
+    <modifier name="rsv10" bit="80:87"/>
+    <modifier name="rsv11" bit="88:95"/>
+    <modifier name="op_lsb" bit="96"/>
+    <modifier name="per_lane" bit="102"/>
+    <modifier name="op_msb" bit="103"/>
+    <modifier name="amode_hi" bit="104:111"/>
+
+    <ins name="add" op="10000"/>
+    <ins name="and" op="10001"/>
+    <ins name="cmpxchg" op="10010"/>
+    <ins name="fadd" op="10011"/>
+    <ins name="smax" op="10100"/>
+    <ins name="smin" op="10101"/>
+    <ins name="or" op="10110"/>
+    <ins name="sub" op="11011"/>
+    <ins name="umax" op="11100"/>
+    <ins name="umin" op="11101"/>
+    <ins name="xchg" op="11110"/>
+    <ins name="xor" op="11111"/>
+  </group>
+
+  <!-- atomic_result: Eight-byte result-publication record immediately following a returning device atomic -->
+  <!-- provenance: HW-VALIDATED (EXP-M4-49, T8132): all 64 destinations passed exact output/side-effect checks; one coherent six-return schedule established publication ... -->
+  <ins name="atomic_result" length="8" label="Eight-byte result-publication record immediately following a returning device atomic">
+    <exact bit="0:3">1100</exact>
+    <exact bit="8:15">10000000</exact>
+    <exact bit="16:21">001001</exact>
+    <exact bit="24:31">10100111</exact>
+    <exact bit="32:39">00000000</exact>
+    <exact bit="40:44">00000</exact>
+    <exact bit="48:63">0000000000000000</exact>
+    <dest name="dst" bit="4:7"/>
+    <dest name="dst_hi" bit="22:23"/>
+    <modifier name="publication_code" bit="45:47" kind="atomic_result_publication_code"/>
+  </ins>
 
   <!-- matrix_mac: d = a*b (+ c) -->
   <!-- provenance: HW-VALIDATED (EXP-0022 core + EXP-O2C operand decode): known 8x8 A,B,C -> correct A*B+C for float AND half (numpy-exact, EXP-0022). EXP-O2C ... -->
@@ -3555,9 +3623,9 @@
     <immediate name="ext9" bit="72:79"/>
   </ins>
 
-  <!-- tg_atomic_prep10: EXP-0148 PROPOSED, SUPERSEDES the 8-byte tg_atomic_prep -->
-  <!-- provenance: EXP-0148 corpus continuation test (own-MSL, n=34, 34/34 trailing word; two independent derivations agree). STRUCTURAL - not splice-validated. -->
-  <ins name="tg_atomic_prep10" length="10" label="EXP-0148 PROPOSED, SUPERSEDES the 8-byte tg_atomic_prep">
+  <!-- tg_atomic_prep10: HISTORICAL NAME ONLY: this is a ten-byte byte2=0x06 member of the broad low-nibble-b instruction ... -->
+  <!-- provenance: EXP-0148 establishes the 10-byte structural boundary. EXP-M4-51 HW-VALIDATED NEGATIVE SEMANTICS: six individual removals plus remove-all passed ... -->
+  <ins name="tg_atomic_prep10" length="10" label="HISTORICAL NAME ONLY: this is a ten-byte byte2=0x06 member of the broad low-nibble-b instruction ...">
     <exact bit="0:3">1011</exact>
     <exact bit="8:15">00000000</exact>
     <exact bit="16:23">00000110</exact>

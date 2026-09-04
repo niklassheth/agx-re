@@ -5,7 +5,7 @@
   "note": "Apple9 instructions are aligned to two-byte parcels, but the first parcel alone does not always encode the total length. Length is a family-local prefix decision: later prefix bytes select compact, normal, and extended forms. Direct hardware consumed-length measurements take precedence over older corpus-resynchronisation heuristics. APPLE9_INSTRUCTION_LENGTHS.md is the Step-1 framing specification.",
   "byte0_table": {
    "0x0e": 4,
-   "lownibble_0xC": 4,
+   "lownibble_0xC": "8 for the atomic-result publication signature `?c 80 (09|dst_hi<<6) a7 00 (slot_code<<5) 00 00` (EXP-M4-49 HW); 8 for scalar mov_imm32; 4 for get_sr; 2 for the small mov_imm form",
    "0x67/0xe7": "14  [load/store: device, threadgroup (byte+1 bit1=0x02) and constant all share this opcode pair -- EXP-0012]",
    "0x07 (+ byte+2==0x54)": "6  [THREADGROUP/EXECUTION BARRIER (threadgroup_barrier): 07 04 54 <mem_scope> <flags> 00. byte+3 = fenced memory scope 0x61 threadgroup / 0x85 device. The ONLY explicit ordering op in compute -- device load/store/atomic/texture are NOT scoreboard-waited (HW register interlock). EXP-0025 HW/splice-proven]",
    "lownibble_0x9": "4 when (byte+2 & 7) is 0 or 1; otherwise normally 6+2*(byte+4 & 3), with exact coordinate-transform subforms called out by the tokenizer. The compact-class rule is direct G17P EXP-0228; the 6/8/10/12 extension rule is EXP-M4-10 plus current own-shader forms.",
@@ -26,8 +26,7 @@
    "0xbf/0x3f/0xb7 (+ byte+2==0x56)": "8  [SUBGROUP/QUAD reduce & prefix-scan: bit3=scope(1 simd/0 quad), bit7+byte+1=op, byte+7=datatype/shape. SIMD width 32. EXP-0018 HW]",
    "0x47/0xc7": "12 when byte+1==0x06; otherwise 10  [SUBGROUP/QUAD shuffle & broadcast. Direct G17P framing: EXP-0229; base semantics: EXP-0018]",
    "0x17": "10  [simd_ballot (byte+1 low-nib 7: 0x07 active-mask/any/all, 0x17 ballot(pred), RT-ISA-FIX) | unpack_convert (byte+1 low-nib 4). EXP-0018/0033 HW]",
-   "0x67 (byte+1==0x11)": "14  [device ATOMIC RMW (elected-lane), op at byte+12. EXP-0018 HW]",
-   "0x67 (byte+1==0x01)": "14  [standalone ATOMIC exchange/cmpxchg/indexed, op at byte+12. EXP-0018 HW]. Atomics are native single ops, NOT CAS loops.",
+   "0x67 (byte+1 low nibble==0x1, byte+2 high six bits==0x15)": "14  [device ATOMIC packet. bits12..17 are the six-slot input dependency mask; byte+12 bits1..5 select the operation. EXP-0018/M4-47/M4-50 HW]. The historical byte+1==0x11 atomic_rmw and byte+1==0x01 atomic_mem rows are dependency-mask anchors, not distinct operand forms. Atomics are native single ops, NOT CAS loops.",
    "0xcf": "12  [SIMD-group MATRIX multiply-accumulate: one full 8x8x8 cooperative-matrix tile MAC d=a*b(+c). DEDICATED matrix HW. byte+2 0x56 single / 0x54 tiled; byte+7=C src reg; byte+11 bit0=accumulate-enable. simdgroup_load/store are ordinary 0x67/0xe7 memory ops, NOT matrix ops. EXP-0022 HW]",
    "lownibble_0x4 + byte+1==0xea": "8  [RAY TRACING: dedicated ray-INTERSECT op. byte0 hi nibble=result reg; byte+2 mode (0x90 const-origin / 0x10 dyn-origin / 0xd0 +fn-table); byte+6 bit7=intersection-function-table present. Emitted 2x/kernel (traverse + result-read). ABSENT from a software Moller-Trumbore loop. EXP-0023 HW]",
    "0xdf": "14  [RAY TRACING: dedicated acceleration-structure / ray-data load (memory-family sibling of 0x67/0xe7, byte+2==0x54). BVH-node/ray/stack fetch during the (software) traversal loop. EXP-0023]",
@@ -73,7 +72,7 @@
  },
  "scoreboard_model": {
   "note": "Apple9 has six compiler-visible pending-result scoreboard slots, numbered 1..6. There is no separate wait opcode: asynchronous producers allocate a slot in their producer token and compatible consumers name dependencies in their own encoding. The earlier register-only interlock and boolean 0x54/0x56 handoff models are superseded by the explicit slot model.",
-  "mechanism": "Metal normally allocates fresh async results in the repeating order 6,1,2,3,4,5, choosing the first free slot when gaps exist. Scalar and vector loads, texture operations, and atomic-return forms carry the allocation in producer-specific token bits. Wide consumers encode a six-bit dependency mask at instruction bits12..17: bit12 names slot1 through bit17 naming slot6, and multiple bits express a union of dependencies. Compact FALU/FALU2I consumers instead use a numeric three-bit selector at bits45..47: 0 is the ordinary/materialized path and values 1..6 name one pending producer slot. Compact selector 7 is unresolved and must not be emitted. Source retain/release fields independently control whether a consumed value remains available.",
+  "mechanism": "Metal normally allocates fresh async results in the repeating order 6,1,2,3,4,5, choosing the first free slot when gaps exist. Scalar and vector loads and texture operations carry the allocation in producer-specific token bits. Returning device atomics publish through an adjacent eight-byte atomic_result record whose bits45..47 use the compact code table {1:slot6, 2:slot1, 3:slot3, 4:slot2, 5:slot4, 6:slot5}; code 7 is unresolved. Wide consumers, including the device-atomic packet itself, encode a six-bit input dependency mask at instruction bits12..17: bit12 names slot1 through bit17 naming slot6, and multiple bits express a union of dependencies. Compact FALU/FALU2I consumers instead use a numeric three-bit selector at bits45..47: 0 is the ordinary/materialized path and values 1..6 name one pending producer slot. Compact selector 7 is unresolved and must not be emitted. Source retain/release fields independently control whether a consumed value remains available.",
   "capacity": "At most six independent pending groups are representable. Several producer results may intentionally share one slot when one instruction consumes them together. Before a seventh independent group, or before a consumer form that cannot name the required pending relationship, the compiler must materialize an older result through a supported consumer and then reuse the freed slot.",
   "ordering": "The scoreboard handles producer-to-consumer readiness, not cross-lane memory ordering. Threadgroup and device ordering still require the explicit barrier/fence forms. A completed/materialized ordinary GPR value is consumed with slot 0.",
   "device_store": "The observed direct load-forward store form (0x56) follows the native slot-6 pairing; the general materialized store form is 0x54. Until the store-side selector is independently decoded, the compiler only uses direct forwarding for an unmaterialized slot-6 device-load result and materializes other values before the ordinary store path."
@@ -121,6 +120,16 @@
     }
    },
    "note": "EXP-M4-37 hardware-validates the complete split r0..r63 destination map on T8132."
+  },
+  {
+   "name": "atomic_result_gpr",
+   "instructions": ["atomic_result"],
+   "operands": {
+    "dst": {
+     "parts": [["dst", 0], ["dst_hi", 4]]
+    }
+   },
+   "note": "EXP-M4-49 hardware-validates the complete split r0..r63 destination map of the returned-device-atomic publication record on T8132."
   }
  ],
  "immediate_composites": [
@@ -4387,6 +4396,8 @@
   },
   {
    "mnemonic": "atomic_rmw",
+   "alias_of": "atomic_device",
+   "alias_note": "Historical exact-mask anchor for dependency mask 0x01; its operand-form interpretation is superseded by EXP-M4-50.",
    "length": 14,
    "match": [
     [
@@ -4523,6 +4534,8 @@
   },
   {
    "mnemonic": "atomic_mem",
+   "alias_of": "atomic_device",
+   "alias_note": "Historical exact-mask anchor for dependency mask 0x00; its operand-form interpretation is superseded by EXP-M4-50.",
    "length": 14,
    "match": [
     [
@@ -4656,6 +4669,228 @@
    ],
    "semantics": "atomic memory op with a DIRECT register-value operand (byte+1==0x01, bit4 clear; device space, bit1 clear). Identical field layout to atomic_rmw (byte+1==0x11); the only match difference is byte+1 (0x01 register-operand vs 0x11 ALU/reduced/immediate-operand). The OP is the SAME 5-bit selector at byte+12 bits[1:6] (start 97): 16 add ... 30 xchg (also atomic_store, discards result) ... 31 xor. Emitted for atomic_store, atomic_exchange, per-lane fetch_* with a divergent address, and compare_exchange (op 18; the returned old value feeds a following icmp, NO hardware retry loop). byte+5 = per-lane index GPR; byte+7 bit0 = discard; byte+8 = return-register descriptor; the RMW operand register is implicit (supplied by the preceding op), as in the 0x67/0xe7 load/store family. OPERAND REGISTER IS ENCODED, NOT IMPLICIT (EXP-0141, HW-VALIDATED): the RMW operand register is carried in byte+5 bit 7 and byte+6 bits 0..5 -- `index = (byte+5 >> 7) | ((byte+6 & 0x3F) << 1)` -- indexing the operand register window. Proven at all four constructible indices with the redirected register consumed each time (0->a[0]=7, 1->a[1]=1007, 2->a[2]=2007, 3->a[3]=3007), byte-identical in both gated runs, on a UNIFORM-address carrier that the old per-lane `index_reg` reading does not explain. The redirected register is RELEASED -- its later reader gets 0 -- the same contract EXP-0086/0089/0099 document for the ALU families. db.json previously said the operand 'is implicit (supplied by the preceding op / amode)'; DOC-02 ranked it a MISSING field. The ADDRESS role of byte+5/+6 is not excluded for the per-lane form; the DATA role is proven for the uniform form. RESERVED FIELDS THAT ARE NOT RESERVED (EXP-0141): rsv10, rsv11 are LIVE, heavily constrained bytes rather than padding -- only a handful of the 256 values work in each. An emitter must not write arbitrary values there. RMW OPERAND REGISTER IS NOT IMPLICIT (EXP-0141, HW): the previous claim that the operand register 'is implicit (supplied by the preceding op / amode)' is REFUTED -- DOC-02 section 3 ranked it a MISSING field, 'the worst kind of gap for an emitter'. It is encoded, as `oper_reg_lo` (byte+5 bit7) | (`oper_reg_hi` << 1) (byte+6 bits 0..5). The carrier keeps a[0..3] = 7/1007/2007/3007 live across atomic_fetch_add(o, a[0]); baseline byte+5/+6 = 0x00/0x00 counts 7, byte+5 = 0x80 counts 1007, byte+6 = 0x01 counts 2007, and the addendum built index 3 -> 3007. The redirected register is CONSUMED: its later reader gets 0. NOTE: our atdevimm carrier uses a UNIFORM address yet the compiler emits byte+5/+6 = 0x80/0x02, which the old per-lane-index reading does not explain; the address role is not excluded for the per-lane form, but the DATA role is proven for the uniform form.",
    "provenance": "HW-VALIDATED behaviour (EXP-0018): atomic_exchange/atomic_store -> op=xchg; compare_exchange_weak -> op=cmpxchg with a following compare and NO backward jump. EXP-M4-13 R10 (own-MSL byte-diff, compile-only): op = byte+12 bits[1:6], 5-bit enum shared with atomic_tg/atomic_rmw, established over dev_{u,s,f}_{add,and,or,xor,sub,max,min,xchg,store} (op sweep). ret_flag/ret_desc (byte+7/+8) proved by dev_u_add_ret (byte7=0x00,byte8=0x02) vs dev_u_add_noret (byte7=0x01,byte8=0x40). index_reg/addr_desc (byte+5/+6) carry the per-lane divergent-address index (0x80 when per-lane, per the atomic_rmw uniform/per-lane single-toggle). per_lane bit6 and amode_hi bit1 typed from the same atomic_rmw pair (shared encoding). No Apple binary inspected."
+  },
+  {
+   "mnemonic": "atomic_device",
+   "length": 14,
+   "match": [
+    [
+     0,
+     8,
+     103
+    ],
+    [
+     8,
+     4,
+     1
+    ],
+    [
+     18,
+     6,
+     21
+    ]
+   ],
+   "fields": [
+    {
+     "name": "pending_mask_lo",
+     "start": 12,
+     "width": 4,
+     "type": "mod"
+    },
+    {
+     "name": "pending_mask_hi",
+     "start": 16,
+     "width": 2,
+     "type": "mod"
+    },
+    {
+     "name": "rsv3",
+     "start": 24,
+     "width": 8,
+     "type": "mod"
+    },
+    {
+     "name": "base_slot",
+     "start": 32,
+     "width": 8,
+     "type": "imm"
+    },
+    {
+     "name": "index_reg",
+     "start": 40,
+     "width": 7,
+     "type": "reg"
+    },
+    {
+     "name": "oper_reg_lo",
+     "start": 47,
+     "width": 1,
+     "type": "reg"
+    },
+    {
+     "name": "oper_reg_hi",
+     "start": 48,
+     "width": 6,
+     "type": "reg"
+    },
+    {
+     "name": "addr_desc_hi",
+     "start": 54,
+     "width": 2,
+     "type": "mod"
+    },
+    {
+     "name": "input_desc0",
+     "start": 56,
+     "width": 8,
+     "type": "mod"
+    },
+    {
+     "name": "input_desc1",
+     "start": 64,
+     "width": 8,
+     "type": "mod"
+    },
+    {
+     "name": "result_mode",
+     "start": 72,
+     "width": 8,
+     "type": "enum",
+     "enum": {
+      "2": "return_and_publish",
+      "64": "discard"
+     }
+    },
+    {
+     "name": "rsv10",
+     "start": 80,
+     "width": 8,
+     "type": "mod"
+    },
+    {
+     "name": "rsv11",
+     "start": 88,
+     "width": 8,
+     "type": "mod"
+    },
+    {
+     "name": "op_lsb",
+     "start": 96,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "op",
+     "start": 97,
+     "width": 5,
+     "type": "opcode",
+     "enum": {
+      "16": "add",
+      "17": "and",
+      "18": "cmpxchg",
+      "19": "fadd",
+      "20": "smax",
+      "21": "smin",
+      "22": "or",
+      "27": "sub",
+      "28": "umax",
+      "29": "umin",
+      "30": "xchg",
+      "31": "xor"
+     }
+    },
+    {
+     "name": "per_lane",
+     "start": 102,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "op_msb",
+     "start": 103,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "amode_hi",
+     "start": 104,
+     "width": 8,
+     "type": "mod"
+    }
+   ],
+   "semantics": "General 14-byte device atomic packet. The former byte+1==0x11 `atomic_rmw` and byte+1==0x01 `atomic_mem` split is superseded: byte+1's high nibble and byte+2's low two bits are one six-bit input dependency mask, `mask = pending_mask_lo | (pending_mask_hi << 4)`, with bit 0 naming slot 1 through bit 5 naming slot 6. Materialized GPR inputs use zero; a directly pending input names its producer slot. byte+2's high six bits retain the common 0x54 packet mode. byte+5 bits0..6 select the address index, while byte+5 bit7 and byte+6 bits0..5 form the data GPR index. Compare-exchange consumes the adjacent data-register tuple in desired,compare order. In the tested per-lane form, byte+9 is 0x02 for a returned result and 0x40 when discarded. A returning atomic is followed by `atomic_result`, which independently names the destination GPR and publication slot. The operation is byte+12 bits1..5: add, sub, and, or, xor, signed/unsigned min/max, exchange, compare-exchange, and float add. The tested last-use form releases its address/data inputs. The historical `atomic_rmw` and `atomic_mem` descriptors remain as narrower compatibility aliases, but their byte+1 values are dependency-mask examples rather than distinct operand classes.",
+   "provenance": "OWN-SHADER + HW-VALIDATED on T8132. EXP-M4-47 executes 21 exact device/threadgroup atomic cases and establishes the device operation map, split address/data selectors, compare-exchange tuple, returned/discarded byte+9 modes, and tested input release. EXP-M4-50 executes all 64 masks for slot 6 and exact/wrong controls for every slot 1..6, establishing bits12..17 as the device-atomic input dependency mask. Earlier operation/address/data-field evidence remains in EXP-0018 and EXP-0141."
+  },
+  {
+   "mnemonic": "atomic_result",
+   "length": 8,
+   "match": [
+    [
+     0,
+     4,
+     12
+    ],
+    [
+     8,
+     8,
+     128
+    ],
+    [
+     16,
+     6,
+     9
+    ],
+    [
+     24,
+     8,
+     167
+    ],
+    [
+     32,
+     8,
+     0
+    ],
+    [
+     40,
+     5,
+     0
+    ],
+    [
+     48,
+     16,
+     0
+    ]
+   ],
+   "fields": [
+    {
+     "name": "dst",
+     "start": 4,
+     "width": 4,
+     "type": "reg"
+    },
+    {
+     "name": "dst_hi",
+     "start": 22,
+     "width": 2,
+     "type": "reg"
+    },
+    {
+     "name": "publication_code",
+     "start": 45,
+     "width": 3,
+     "type": "enum",
+     "enum": {
+      "1": "slot6",
+      "2": "slot1",
+      "3": "slot3",
+      "4": "slot2",
+      "5": "slot4",
+      "6": "slot5"
+     }
+    }
+   ],
+   "semantics": "Eight-byte result-publication record immediately following a returning device atomic. `dst | (dst_hi << 4)` selects any GPR r0..r63. publication_code selects the scheduled scoreboard slot using the compact non-linear code table 1->slot6, 2->slot1, 3->slot3, 4->slot2, 5->slot4, 6->slot5. Code 7 is unresolved and must not be emitted. This record owns the returned-result destination and publication slot; the preceding `atomic_device` packet's bits12..17 instead describe input dependencies.",
+   "provenance": "HW-VALIDATED (EXP-M4-49, T8132): all 64 destinations passed exact output/side-effect checks; one coherent six-return schedule established publication slots 6,1,2,3,4,5 and passed in three independent executions. EXP-M4-51 independently preserved all six publication codes while crossing every input/result slot pair."
   },
   {
    "mnemonic": "matrix_mac",
@@ -12233,8 +12468,8 @@
      "type": "mod"
     }
    ],
-   "semantics": "EXP-0148 PROPOSED, SUPERSEDES the 8-byte tg_atomic_prep. Threadgroup/device atomic RMW descriptor prep, 10 bytes. Two corpus forms, both 34/34 followed by a 2-byte word that the 8-byte length exposed as a separate token: `0b 00 06 00 20 00 00 14 | 00 00` (device atomics, 18x) and `0b 00 06 00 00 00 00 00 | 60 00` (threadgroup atomics, 16x). The 10-byte length also falls straight out of the 0x?b class rule (byte+2 & 0x06)==0x06. FOLDED INTO `match` (EXP-0175, from EXP-0173's audit): `form` had ZERO free bits -- every bit of the span is pinned by this descriptor's own `match`, so there is exactly one legal value and it is not a field an emitter chooses. The name, span and pinned value are preserved in `match_notes`. An emitter-grade label on such a row was a vacuous claim (DEF-0170-1).",
-   "provenance": "EXP-0148 corpus continuation test (own-MSL, n=34, 34/34 trailing word; two independent derivations agree). STRUCTURAL -- not splice-validated.",
+   "semantics": "HISTORICAL NAME ONLY: this is a ten-byte byte2=0x06 member of the broad low-nibble-b instruction family, not a mandatory threadgroup/device atomic prep protocol. Public-corpus instances of related byte2=0x06 forms are usually not adjacent to atomics. EXP-M4-51 replaced every such record in a six-load/six-returned-atomic native schedule with ordinary same-length instructions and preserved exact operand, return, fanout, and final-memory results. A prep-free coherent input-slot/result-slot matrix passed all 36 pairs, including same-slot reuse. Exact operation and any performance/cache/register-lifecycle effect remain unresolved; do not emit this record as an atomic ownership-transfer pseudo. The descriptor mnemonic is retained temporarily for database compatibility.",
+   "provenance": "EXP-0148 establishes the 10-byte structural boundary. EXP-M4-51 HW-VALIDATED NEGATIVE SEMANTICS: six individual removals plus remove-all passed 48/48; prep-free SxR matrix passed 108/108 forward and 72/72 reverse. Not required for atomic correctness.",
    "match_notes": [
     {
      "name": "form",

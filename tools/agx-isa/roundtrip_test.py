@@ -150,6 +150,9 @@ REAL_INSTRS = {
     "atomic_rmw add  (67 11 54..20)":      "6711540000800100004200002000",  # device fetch_add HW
     "atomic_rmw smax (67 11 54..28)":      "6711540000800100004200002800",  # device fetch_max HW
     "atomic_mem xchg (67 01 56..3c)":      "6701560000000000000200003c00",  # atomic_exchange HW
+    "atomic_device materialized discard":  "6701540000010180004000006002",  # mask 0, EXP-M4-50
+    "atomic_device pending slot 6":         "6701560000010180000200006002",  # mask 0x20
+    "atomic_result r5 slot6":               "5c8009a700200000",              # EXP-M4-49
     # ---- RAY TRACING (EXP-0023): dedicated intersect op + AS-data load ----
     "rt_intersect const-origin (d4 ea 90 ..)": "d4ea90a68b000000",  # isect_dist op#1 HW-dedicated
     "rt_intersect dyn-origin  (a4 ea 10 ..)":  "a4ea1046cb000000",  # isect_dynray op#1 (dynamic ray)
@@ -506,15 +509,15 @@ SYNTH = [
     ("simd_shuffle_ext12", {"dir": 0x1, "cache": 0x1, "dst": 0x0, "src": 0x2,
                             "srctype": 0x0, "lane": 0x2, "rtype": 0x0,
                             "dsthi": 0x14, "rsv9": 0xa2, "extra": 0x0002}),
-    # atomic_rmw add (op=16 'add' at byte+12 bits[1:6]) -> 6711540000800100004200002000
-    # EXP-M4-13 R10 (atomics_tex retype): the old raw b2/b3/mid/b13 fields were split
-    # into the typed amode/index_reg/oper_reg_*/idx_off/op(5b)/per_lane layout; same bytes.
-    # (EXP-0141 split byte+5/+6: index_reg=0x80 -> index_reg=0 + oper_reg_lo=1;
-    #  addr_desc=0x01 -> oper_reg_hi=1 + addr_desc_hi=0. Byte image unchanged.)
-    ("atomic_rmw", {"amode": 0x54, "rsv3": 0x00, "base_slot": 0x00, "index_reg": 0x00, "oper_reg_lo": 0x1,
-                    "oper_reg_hi": 0x01, "addr_desc_hi": 0x0, "ret_flag": 0x00, "ret_desc": 0x00, "idx_off": 0x42,
+    # General device atomic add with a materialized input (dependency mask 0).
+    # The split address/data selectors and the byte+9 discarded-result mode are
+    # from EXP-M4-47; the mask field is EXP-M4-50.
+    ("atomic_device", {"pending_mask_lo": 0x0, "pending_mask_hi": 0x0,
+                    "rsv3": 0x00, "base_slot": 0x00, "index_reg": 0x01, "oper_reg_lo": 0x0,
+                    "oper_reg_hi": 0x01, "addr_desc_hi": 0x0, "input_desc0": 0x80,
+                    "input_desc1": 0x00, "result_mode": 0x40,
                     "rsv10": 0x00, "rsv11": 0x00, "op_lsb": 0x00, "op": 0x10,
-                    "per_lane": 0x00, "op_msb": 0x00, "amode_hi": 0x00}),
+                    "per_lane": 0x01, "op_msb": 0x00, "amode_hi": 0x02}),
     # ---- ray tracing (EXP-0023) ----
     # NOTE (EXP-0175): `rt_intersect.subop`, `rt_transform_test.{marker,subop,cmpmode}`
     # and `ray_move.form` were FOLDED INTO `match` -- they had zero free bits, i.e.
@@ -709,6 +712,34 @@ def test_pending_dependency_fields():
                rec["fields"]["round_mode"] == ((byte8 >> 1) & 1))
     fails += not ok
     print(f"  [{'OK' if ok else 'FAIL'}] cvt_f2i   byte+8 format/round split, byte+9 retained")
+
+    atomic = bytearray.fromhex("6701540000010180004000006002")
+    ok = True
+    for mask in range(64):
+        raw = bytearray(atomic)
+        raw[1] = (raw[1] & 0x0f) | ((mask & 0x0f) << 4)
+        raw[2] = (raw[2] & 0xfc) | ((mask >> 4) & 0x03)
+        rec, length = isadb.decode_one(bytes(raw), 0)
+        got = (rec["fields"].get("pending_mask_lo", -1) |
+               (rec["fields"].get("pending_mask_hi", -1) << 4))
+        ok &= rec["mnemonic"] == "atomic_device" and length == 14 and got == mask
+    fails += not ok
+    print(f"  [{'OK' if ok else 'FAIL'}] atomic_device masks 00..3f decode at bits12..17")
+
+    publication_codes = {1: 2, 2: 4, 3: 3, 4: 5, 5: 6, 6: 1}
+    ok = True
+    for dst in range(64):
+        for slot, code in publication_codes.items():
+            raw = bytearray.fromhex("0c8009a700200000")
+            raw[0] = ((dst & 0x0f) << 4) | 0x0c
+            raw[2] = 0x09 | ((dst >> 4) << 6)
+            raw[5] = code << 5
+            rec, length = isadb.decode_one(bytes(raw), 0)
+            ok &= (rec["mnemonic"] == "atomic_result" and length == 8 and
+                   rec["operands"] == {"dst": dst} and
+                   rec["fields"]["publication_code"] == code)
+    fails += not ok
+    print(f"  [{'OK' if ok else 'FAIL'}] atomic_result all r0..r63 x publication slots1..6")
     return fails
 
 
