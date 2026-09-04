@@ -1,0 +1,71 @@
+{
+  "target": {
+    "soc": "T8132",
+    "gpu": "Apple M4 / G16G",
+    "macos": "26.6.2",
+    "build": "25G83"
+  },
+  "short_ordered_form": {
+    "length": 6,
+    "template": ["0x0a | invert", "srcA", "control", "srcB", "condition", "tail"],
+    "fields": {
+      "byte0_bit4": "invert predicate result",
+      "byte1_low7": "packed source A descriptor",
+      "byte1_bit7": "native-varying source-A auxiliary bit; output- and lifetime-inert in the tested splice",
+      "byte2_bit0": "0 selects this short form",
+      "byte2_bit3": "release/clear source A",
+      "byte2_bit4": "release/clear source B",
+      "byte3_low7": "packed source B descriptor or immediate payload",
+      "byte3_bit7": "native-varying source-B auxiliary bit; output- and lifetime-inert in the tested splice",
+      "byte4": "condition code; bit 4 marks compact immediate form",
+      "byte5": "operand/source-class tail; 0xc0 for the basic register pair and 0xc2 for compact immediate"
+    },
+    "condition_codes": {
+      "0x02": "float greater-than",
+      "0x03": "float less-than",
+      "0x04": "unsigned greater-than",
+      "0x05": "unsigned less-than",
+      "0x06": "signed greater-than",
+      "0x07": "signed less-than",
+      "0x12..0x17": "same base code with compact-immediate marker"
+    }
+  },
+  "extended_form": {
+    "length": 10,
+    "discriminator": "byte 2 bit 0 is set in every focused native instance",
+    "common_prefix": ["0x0a | invert", "srcA", "control | 1", "srcB", "0x06", "0x00"],
+    "fields": {
+      "byte2_bit3": "release/clear source A",
+      "byte2_bit4": "release/clear source B",
+      "byte6": "extended relation/type selector; bit 4 marks compact immediate form",
+      "bytes7_9": "operand/source-class extension"
+    },
+    "native_sequences": {
+      "integer_equal": "0a 03 3b 05 06 00 07 c0 00 00",
+      "float_equal": "0a 03 3b 05 06 00 00 c0 00 00",
+      "float_ge_sequence": "1a 03 3b 05 06 00 02 c0 00 00 followed by inverted push",
+      "float_le_sequence": "1a 03 3b 05 06 00 03 c0 00 00 followed by inverted push",
+      "integer_equal_immediate_17": "0a 03 2b 90 06 00 17 c2 00 00"
+    }
+  },
+  "mask_consumer": {
+    "normal_push": "0f 05 54 01",
+    "inverted_push": "0f 05 54 21",
+    "byte3_bit5": "invert predicate when constructing the active execution mask"
+  },
+  "evidence": {
+    "native_exact_output_cases": 39,
+    "field_ablation_exact_output_cases": 35,
+    "faults": 0,
+    "hangs": 0,
+    "raw_native_results": "raw/native_results.json",
+    "raw_ablation_results": "raw/ablation_results.json",
+    "archive_analysis": "raw/native_analysis.json"
+  },
+  "unresolved": [
+    "precise meaning of source descriptor bit 7; Metal correlates it with liveness but hardware liveness is controlled by byte-2 bits 3/4",
+    "full selector map and operand extension for the ten-byte form beyond the native sequences tested here",
+    "higher byte-0 high-nibble bits; only bit 4 was tested",
+    "the mask-union instructions used by native short-circuit OR"
+  ]
+}
