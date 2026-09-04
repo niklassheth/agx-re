@@ -1,0 +1,48 @@
+{
+  "corpus": "EXP-M4-32-public-metal-corpus",
+  "compute_pipelines": 35332,
+  "method": "Extract own/public-source _agc.main regions and count exact 0f 05 54/56 four-byte leaders. Values whose low two bits are 1 are conditional predicate pushes; 0x1a is the distinct loop-scope push.",
+  "conditional_pushes": {
+    "form_54": {
+      "bank_0": 361402,
+      "bank_1": 174029,
+      "bank_2": 16590,
+      "bank_3": 4031,
+      "bank_4": 5979,
+      "bank_5": 4396,
+      "bank_0_inverted": 84950,
+      "bank_1_inverted": 46470,
+      "bank_2_inverted": 3452,
+      "bank_3_inverted": 0,
+      "bank_4_inverted": 591,
+      "bank_5_inverted": 941,
+      "source_6": 0,
+      "source_7": 0,
+      "source_6_inverted": 0,
+      "source_7_inverted": 0
+    },
+    "form_56": {
+      "bank_0": 786,
+      "bank_1": 46,
+      "bank_2": 3,
+      "bank_3": 0,
+      "bank_4": 0,
+      "bank_5": 0,
+      "bank_0_inverted": 598,
+      "bank_1_inverted": 29,
+      "bank_2_inverted": 4,
+      "bank_3_inverted": 0,
+      "bank_4_inverted": 0,
+      "bank_5_inverted": 0,
+      "source_6": 0,
+      "source_7": 0,
+      "source_6_inverted": 0,
+      "source_7_inverted": 0
+    }
+  },
+  "loop_scope_pushes": {
+    "form_54_tail_1a": 97181,
+    "form_56_tail_1a": 1579
+  },
+  "conclusion": "Metal uses conditional predicate banks 0 through 5. No conditional push selects hardware special source 6 or 7 in this corpus."
+}

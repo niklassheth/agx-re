@@ -1,0 +1,28 @@
+{
+  "compare": {
+    "byte0_low_nibble": "0xa opcode",
+    "byte0_bit4": "invert produced predicate",
+    "byte0_bits5_7": "predicate bank destination",
+    "hardware_validated_banks": [0, 1, 2, 3, 4, 5],
+    "bank_6_7_destinations": "syntactically accepted by the mutated comparison, but no readable predicate destination exists through the tested mask consumers; do not allocate"
+  },
+  "conditional_push": {
+    "tail_formula": "0x01 | (source << 2) | (invert ? 0x20 : 0)",
+    "sources": {
+      "0_5": "predicate banks 0 through 5",
+      "6": "constant true/current-active mask identity",
+      "7": "constant false/empty mask"
+    },
+    "native_metal_sources_observed": [0, 1, 2, 3, 4, 5]
+  },
+  "loop_mask_update": {
+    "tail_formula_for_tested_form": "0x02 | (bank << 2) | (invert ? 0x20 : 0)",
+    "hardware_validated_banks": [0, 1, 2],
+    "bit_0x20": "predicate-consumer polarity; coordinated compare and consumer inversion cancels exactly"
+  },
+  "execution_mask_stack": {
+    "relationship": "separate from predicate banks",
+    "ordinary_if_behavior": "compare into bank 0, consume bank 0 immediately, push active mask; nesting lives in the implicit push/else/pop stack",
+    "validated_depth": 32
+  }
+}
