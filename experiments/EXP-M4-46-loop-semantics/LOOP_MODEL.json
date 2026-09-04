@@ -1,0 +1,93 @@
+{
+  "experiment": "EXP-M4-46-loop-semantics",
+  "target": {
+    "soc": "T8132",
+    "gpu": "G16G",
+    "model": "Mac16,10",
+    "os": "macOS 26.6.2",
+    "build": "25G83"
+  },
+  "validation": {
+    "native_programs": 19,
+    "lanes_per_program": 16,
+    "words_per_lane": 4,
+    "exact_words": 1216,
+    "all_native_oracles_match": true,
+    "safe_branch_retarget_oracle_matches": true
+  },
+  "branches": {
+    "jmp_exec_any": {
+      "encoding": "0f 00 54 <offset48-le> 00",
+      "length": 10,
+      "condition": "any lane active in current execution mask",
+      "ordinary_use": "loop backedge"
+    },
+    "jmp_exec_none": {
+      "encoding": "0f 01 54 <offset48-le> 00",
+      "length": 10,
+      "condition": "no lane active in current execution mask",
+      "ordinary_use": "skip an empty narrowed region"
+    },
+    "target": "branch_start + sign_extend(offset48)",
+    "offset_units": "bytes"
+  },
+  "loop_mask_update": {
+    "encoding": "8f 04 54 <mask-selector>",
+    "length": 4,
+    "depth_subfield": {
+      "1": "0x02",
+      "2": "0x06",
+      "3": "0x0a"
+    },
+    "predicate_mask_select_bit": "0x20 (semantic; exact identity-versus-polarity role unresolved)",
+    "native_outer_examples": ["0x02", "0x22"],
+    "uses": [
+      "natural latch before jmp_exec_any",
+      "direct structured break before jmp_exec_none"
+    ],
+    "hardware_ablations": {
+      "native_0x22_to_0x02": "completed with incorrect, mostly one-iteration carried values",
+      "native_0x02_to_0x22": "command-buffer hang; arm stopped after first hang",
+      "byte2_0x54_to_0x56": "all 64 output words unchanged on pc_base_probe"
+    },
+    "bounded_unknown": "bit 0x20 selects or polarizes a predicate/mask source; its exact submeaning is not separated"
+  },
+  "break_mask_unwind": {
+    "encoding": "8f 05 54 <scope-depth-tag> 00 <target-loop-depth>",
+    "length": 6,
+    "witnesses": [
+      {
+        "source": "break beneath one if in loop depth 1",
+        "hex": "8f0554030001"
+      },
+      {
+        "source": "break beneath two ifs in loop depth 1",
+        "hex": "8f0554040001"
+      },
+      {
+        "source": "break beneath one active conditional in loop depth 2",
+        "hex": "8f0554030002"
+      }
+    ]
+  },
+  "mask_stack": {
+    "loop_push": "0f 05 54 1a (0x56 scheduling/cache form is also observed; exact selection rule unresolved)",
+    "pop_loop_scope": "0f 06 04 02 00 00",
+    "pop_conditional_scope": "0f 06 04 01 00 00",
+    "lifo": true,
+    "fixed_practical_depth_limit": null
+  },
+  "compiler_invariants": [
+    "structured loop stack with explicit header, continue, and break targets",
+    "start-relative signed branch fixups after final instruction sizing",
+    "predecessor-edge parallel copies for loop-carried SSA values",
+    "no unresolved asynchronous scoreboard result crosses a mask boundary or backedge",
+    "continue lowers to the latch edge; no invented continue opcode"
+  ],
+  "not_yet_required_for_correctness": [
+    "precise 0x54 versus 0x56 control scheduling/cache selection",
+    "exact predicate identity-versus-polarity meaning of mask-selector bit 0x20",
+    "optimized mask algebra",
+    "irreducible control flow"
+  ]
+}
