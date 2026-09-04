@@ -1,0 +1,37 @@
+{
+  "experiment": "EXP-M4-52-deep-mask-stack",
+  "target": "T8132 / Apple M4",
+  "os": "macOS 26.6.2 build 25G83",
+  "tested_depths": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 24, 32],
+  "maximum_hardware_validated_live_conditional_depth": 32,
+  "architectural_maximum": null,
+  "ordinary_conditional": {
+    "predicate_destination": 0,
+    "push_hex": "0f055401",
+    "else_mask_hex": "0f040419",
+    "pop_hex": "0f0604010000",
+    "jump_leader_hex": "0f0154",
+    "depth_encoded_in_records": false,
+    "model": "implicit hardware mask stack"
+  },
+  "evidence": {
+    "fresh_compile_orders": 2,
+    "kernels_per_order": 15,
+    "identical_stage_mains_across_orders": 15,
+    "hardware_runs": 30,
+    "exact_output_matches": 30,
+    "words_compared_per_run": 1088,
+    "source_sha256": "e15c3109163f2b06785ce64858bf1a5ca664896d1cf507d9fd1359d726642bc0"
+  },
+  "not_generalized": [
+    "loop latch/update selectors",
+    "nonlocal break/continue unwind fields",
+    "call-frame controls",
+    "architectural maximum nesting depth"
+  ],
+  "supersedes": [
+    "ordinary-if predicate destination = 2 * nesting depth",
+    "ordinary-if push selector = 1 + 4 * nesting depth",
+    "ordinary conditional nesting limit = 8"
+  ]
+}
