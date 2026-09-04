@@ -16,7 +16,7 @@
    "0x9f/0x1f": "10 if (byte+1 & 1) else 12  [integer add/sub | mul-add]",
    "0xa7": "byte+1 low nibble 7 -> 8-byte i2f; low nibble 4/5 -> 8-byte bit-count; otherwise 10 if low bit set, 12 if clear. byte+1 high nibble is pending-mask bits0..3 (EXP-M4-42)",
    "0x27": "byte+1 low nibble 7 -> 10-byte f2i; low nibble 0/1/2 -> 12-byte bitfield/rotate/prep; otherwise 8-byte unary. byte+1 high nibble is pending-mask bits0..3 (EXP-M4-42)",
-   "0x0a": "6  [integer compare -> execution predicate (branch/return)]",
+   "0x0a": "6 for the ordered predicate form; 10 when byte+2 bit0 is set and bytes+4/+5 are 06 00 (extended equality/ordered-complement form). EXP-M4-45 HW",
    "0x05/0x16": "4  [conditional select (branchless if/ternary)]",
    "0x0f": "EXECUTION-MASK family, byte+1 sub-op (RT-ISA-FIX): 0x00 jump 10 / 0x01 jump_cond(else,loop-guard) 10 / 0x05 if_push 4 (or 14 if byte+4==0x8f = direct CALL) / 0x06 pop_reconverge 6 / 0x80 call_indirect(computed branch) 6 / 0x04 mask_op 4",
    "0x07 (byte+2 in {0x00,0x02})": "4  [compute memory/scoreboard fence around calls & divergent CF (07 22 02 00 pre-call; 07 02/00 00 CF). RT-ISA-FIX HW]",
@@ -40,8 +40,8 @@
    "0x22": "6 if (byte+2 lo-nibble==0x0e) [iminmax_chain: min3/max3/clamp] else 10 [shift/sign-extend helper]. EXP-0033",
    "0xNb (byte+2 low-nibble e/f, 0x2b/3b/5b/8b)": "10 shift-amount PREP stage; (byte+2 hi-nibble 2) = 4 compact call-argument MOVE; (byte+2 in {0e,1e,1f}) = 10 funary/ilogic; (byte+2==0x01,byte+3==0x08) = 4 uniform_mov. EXP-0033/0036",
    "0x43": "4  [CALL-SITE / FRAME-SETUP marker (`43 00 00 01`), precedes every out-of-line CALL in compute & mesh. NOT mesh-unique. EXP-0035 (re-scoped EXP-0030)]",
-   "0x0f (byte+1==0x05)": "14 direct CALL if byte+4==0x8f (target = call_addr+4+off40) else 8 exec-mask push; (byte+1==0x80) = 6 INDIRECT CALL leader; (byte+1==0x06) = 6 reconverge. EXP-0035",
-   "0x8f": "4  [function RETURN (`8f <lm> 54 00`); no encoded target (HW link register / CF stack); byte+1 0x02 leaf / 0x12 non-leaf. EXP-0035]",
+   "0x0f (byte+1==0x05)": "14 direct CALL if byte+4==0x8f (target = call_addr+4+off40) else 4 exec-mask push; (byte+1==0x80) = 6 INDIRECT CALL leader; (byte+1==0x06) = 6 reconverge. EXP-0035/M4-45/M4-46",
+   "0x8f": "6 for `8f 05 54` nonlocal break-mask unwind; otherwise 4 for `8f 04 54/56` loop-mask update and genuine `8f 02/12 54/56` function return. EXP-M4-46",
    "0x57": "8  [VERTEX varying / [[position]] store to the UVS/parameter buffer the FS iter op interpolates. Memory-family (low-nibble 7). byte+3=source GPR, byte+4=output slot (index<<5; position=slots 0-3). EXP-0037 HW-splice-proven]",
    "lownibble_0x5 + (byte+1 & 0xf0)==0x80 + byte+2==0x0c": "14  [tex_sample companion-gate WIDENED (EXP-0037) from byte+1==0x80 to high-nibble 8 so the CHAINED-companion forms (0x82/0x84/0x88 before the 2nd..Nth sample op) also absorb their 10-byte 0xb0/0x90 sampler op]",
    "0x09 op-select 0x26/0x2e": "8 if (byte+4 & 0x02) else 6  [fused mul / mul-add COORDINATE / matrix-multiply op -- byte+2 bit1 is SET yet the 2-source form is 6B, so length reads byte+4 bit1 not byte+2 bit1 (EXP-0037). 0x09 op-select 0x18/0x38 = 4 compact accumulate]",
@@ -2504,6 +2504,253 @@
    "provenance": "HW-VALIDATED (EXP-0026): byte+3 0x09/0x0b/0x0d appear in precise 1/x / rsqrt / sqrt; reading the raw estimate register (redirect the final store) over a dense x-sweep gives coarse 1/x, 1/sqrt x, sqrt x with worst-case relerr ~2^-7.5..2^-8 (rcp 8.0, rsqrt 7.9, sqrt 7.5 good bits). Operand bit-fields (dst/srcA) inferred by falu2-analogy (byte-diff); function+precision HW-proven."
   },
   {
+   "mnemonic": "icmp_pred_ordered6",
+   "length": 6,
+   "match": [
+    [
+     0,
+     4,
+     10
+    ],
+    [
+     16,
+     1,
+     0
+    ],
+    [
+     17,
+     1,
+     1
+    ],
+    [
+     21,
+     1,
+     1
+    ]
+   ],
+   "fields": [
+    {
+     "name": "invert",
+     "start": 4,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "b0_hi",
+     "start": 5,
+     "width": 3,
+     "type": "raw"
+    },
+    {
+     "name": "srcA_desc",
+     "start": 8,
+     "width": 7,
+     "type": "raw"
+    },
+    {
+     "name": "srcA_aux",
+     "start": 15,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "control_aux_lo",
+     "start": 18,
+     "width": 1,
+     "type": "raw"
+    },
+    {
+     "name": "release_srcA",
+     "start": 19,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "release_srcB",
+     "start": 20,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "control_aux_hi",
+     "start": 22,
+     "width": 2,
+     "type": "raw"
+    },
+    {
+     "name": "srcB_desc",
+     "start": 24,
+     "width": 7,
+     "type": "raw"
+    },
+    {
+     "name": "srcB_aux",
+     "start": 31,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "condition",
+     "start": 32,
+     "width": 8,
+     "type": "enum",
+     "enum": {
+      "2": "float_gt",
+      "3": "float_lt",
+      "4": "uint_gt",
+      "5": "uint_lt",
+      "6": "sint_gt",
+      "7": "sint_lt",
+      "18": "float_gt|compact_imm",
+      "19": "float_lt|compact_imm",
+      "20": "uint_gt|compact_imm",
+      "21": "uint_lt|compact_imm",
+      "22": "sint_gt|compact_imm",
+      "23": "sint_lt|compact_imm"
+     }
+    },
+    {
+     "name": "operand_tail",
+     "start": 40,
+     "width": 8,
+     "type": "enum",
+     "enum": {
+      "192": "register_pair",
+      "194": "compact_immediate"
+     }
+    }
+   ],
+   "semantics": "Six-byte ordered predicate compare. condition selects float/unsigned/signed greater-than or less-than; bit 0x10 marks the compact-immediate source class. byte0 bit4 complements the predicate result independently of the later execution-mask push. byte2 bits3/4 release source A/B; byte1/3 bit7 are separate auxiliary bits and were lifetime- and result-inert in the tested envelope. The compact-immediate payload and the remaining auxiliary bits are not generalized.",
+   "provenance": "OWN-SHADER + HW-VALIDATED (EXP-M4-45): 39 native programs and 35 field/liveness ablations matched complete T8132 oracles. Direct byte4 substitutions proved float, unsigned, and signed gt/lt including NaNs and signed extremes; byte0 bit4 complemented every lane; byte2 bits3/4 independently cleared later A/B uses. Only byte0 bit4 was assigned: bits5..7 remain unknown."
+  },
+  {
+   "mnemonic": "icmp_pred_extended10",
+   "length": 10,
+   "match": [
+    [
+     0,
+     4,
+     10
+    ],
+    [
+     16,
+     1,
+     1
+    ],
+    [
+     17,
+     1,
+     1
+    ],
+    [
+     21,
+     1,
+     1
+    ],
+    [
+     32,
+     16,
+     6
+    ]
+   ],
+   "fields": [
+    {
+     "name": "invert",
+     "start": 4,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "b0_hi",
+     "start": 5,
+     "width": 3,
+     "type": "raw"
+    },
+    {
+     "name": "srcA_desc",
+     "start": 8,
+     "width": 7,
+     "type": "raw"
+    },
+    {
+     "name": "srcA_aux",
+     "start": 15,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "control_aux_lo",
+     "start": 18,
+     "width": 1,
+     "type": "raw"
+    },
+    {
+     "name": "release_srcA",
+     "start": 19,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "release_srcB",
+     "start": 20,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "control_aux_hi",
+     "start": 22,
+     "width": 2,
+     "type": "raw"
+    },
+    {
+     "name": "srcB_desc",
+     "start": 24,
+     "width": 7,
+     "type": "raw"
+    },
+    {
+     "name": "srcB_aux",
+     "start": 31,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "relation",
+     "start": 48,
+     "width": 8,
+     "type": "enum",
+     "enum": {
+      "0": "ieee_float_eq",
+      "2": "ieee_float_gt",
+      "3": "ieee_float_lt",
+      "7": "integer_or_bitwise_eq",
+      "16": "ieee_float_eq|compact_imm",
+      "18": "ieee_float_gt|compact_imm",
+      "19": "ieee_float_lt|compact_imm",
+      "23": "integer_or_bitwise_eq|compact_imm"
+     }
+    },
+    {
+     "name": "operand_tail",
+     "start": 56,
+     "width": 8,
+     "type": "enum",
+     "enum": {
+      "192": "register_pair",
+      "194": "compact_immediate"
+     }
+    },
+    {
+     "name": "extension",
+     "start": 64,
+     "width": 16,
+     "type": "raw"
+    }
+   ],
+   "semantics": "Ten-byte predicate compare used for integer/bitwise equality, IEEE floating equality, and ordered floating complement relations. byte2 bit0 selects the extended form; bytes4..5 are the observed 06 00 extension leader and byte6 carries the relation/type selector. byte0 bit4 independently complements the predicate result; byte2 bits3/4 retain the same source-release roles as the short form. IEEE equality differs observably from bitwise equality for signed zero and NaNs.",
+   "provenance": "OWN-SHADER + HW-VALIDATED (EXP-M4-45): native integer equality, floating equality, float <=/>= sequences, and integer equality-immediate all executed with exact lane oracles. relation 0x07<->0x00 distinguished bitwise/integer from IEEE equality; 0x02->0x03 changed ordered floating >= to <= with correct unordered behavior. The 10-byte boundary and source-A release were independently exercised. Unmapped selector values and extension bits remain bounded unknowns."
+  },
+  {
    "mnemonic": "icmp_pred",
    "length": 6,
    "match": [
@@ -2580,8 +2827,8 @@
      "type": "mod"
     }
    ],
-   "semantics": "predicate[dst_pred] = (srcA <cond> srcB) ; integer/float compare that sets a per-lane predicate register feeding a divergent block (early return / break / continue / if). byte0 hi nibble = destination predicate register. cond (byte+4) low 3 bits encode [type: float(0x0x)/uint(0x4-5)/sint(0x6-7)][direction: gt even/lt odd] EXACTLY like the 14-byte icmpsel byte+6 map; cond bit4 (0x10) flags the compact-immediate operand form. cmpmode (byte+2 low nibble): 0x2 relational, 0x3 equality. neg (byte+1 bit7) negates the result for le/ge/ne. srcB (byte+3) is a register (opclass byte+5==0xc0) or an immediate bound (opclass==0xc2, bit1 set). NOTE: the match is family-level (byte0 low nibble == 0xa, length 6) and also catches sibling 6-byte low-nibble-a ops that reuse the byte+2/byte+4 slots as opcode/operand bytes (corpus byte+4 values outside the cond map, e.g. 0x22/0x26); the cond/cmpmode semantics above hold for the integer/float compare-predicate subset (cond in 0x00-0x07 and the 0x14-0x17 immediate forms), which is the dominant use. [EXP-0212, applied 2026-08-30] MEASURED LENGTH DISAGREEMENT, EXP-0200 (G17P stop-scan) -- RECORDED, NOT APPLIED. At rq_bbox+960 the hardware's enclosing span is TEN bytes (`2a 00 2b c0 06 00 06 c2 00 00`), where this descriptor says 6. This is ONE site. The 6-byte reading is HW-anchored elsewhere (EXP-0010 `0a 01 22 82 14 22` in running control-flow programs), so the honest status is that the low-nibble-a family has at least two lengths and no discriminator is established. Changing `length` on one site would break every 6-byte instance. NEXT EXPERIMENT: find the discriminator before touching the length.",
-   "provenance": "byte-diff EXP-M4-13 R6 (OWN-MSL): compiled the full comparator cross-product {lt,gt,le,ge,eq,ne} x {int,uint,float} feeding a data-dependent loop (defeats predication) -> cond (byte+4) low3 = {f_gt02,f_lt03,u_gt04,u_lt05,s_gt06,s_lt07}, matching the HW-VALIDATED icmpsel byte+6 map (EXP-0013); neg=byte+1 bit7 (le/ge/ne clear it); cmpmode=byte+2 lo nibble (2 rel / 3 eq); srcB-immediate flags byte+5 bit1 + cond bit4 localized by an immediate-constant sweep. dst_pred hi nibble HW-VALIDATED EXP-M4-01. srcA/opdesc_hi/opclass located, sub-field semantics INFERRED (not GPU-dispatch validated). Prior EXP-0010 byte+3 immediate-bound is the opclass==0xc2 case."
+   "semantics": "Legacy six-byte low-nibble-a fallback for corpus forms not matched by icmp_pred_ordered6. Its fields preserve the historical coarse byte slicing for round-trip compatibility only; do not infer a predicate-register destination, result negation at byte1 bit7, or equality selection from byte2's low nibble. EXP-M4-45 establishes byte0 bit4 as predicate-result inversion, byte1/3 bit7 as auxiliary bits that were inert in the tested envelope, and byte2 bit0 as part of the short/extended form distinction.",
+   "provenance": "Legacy OWN-SHADER corpus descriptor retained so unrelated six-byte low-nibble-a forms continue to tokenize. Its former broad semantic assignments are superseded by the hardware-validated icmp_pred_ordered6 and icmp_pred_extended10 descriptors from EXP-M4-45. The exact G17P prefix measured by EXP-0200 remains covered by the more-specific icmp_pred_ext10 row."
   },
   {
    "mnemonic": "icmp_pred_ext10",
@@ -2706,8 +2953,8 @@
      "type": "mod"
     }
    ],
-   "semantics": "PC-relative jump; offset is a signed 48-bit little-endian byte displacement (backward for loop back-edges). Taken while lanes remain active (execution-mask loop). byte+2 (branch_ctrl) = the branch/execution-mask FORM selector: 0x54 = the unconditional all-lane back-edge (645/646 corpus jumps + every own-MSL loop back-edge); a single corpus jump uses 0x64. byte+9 (link) = a reserved link/annul slot, const 0x00 across all 646 corpus jumps and all own-MSL loops -- never set for a plain loop back-edge (a genuine subroutine link uses the separate `call`).",
-   "provenance": "HW-VALIDATED (EXP-0010 E6): -44 back-edge in prodloop; zeroing the offset -> infinite-loop hang, off-boundary offsets -> fault. EXP-M4-13 R9 own-MSL byte-diff (compile-only): loop_big/loop_nest/loop_while each emit `0f 00 54 <off6> 00` with byte+2==0x54 and byte+9==0x00 fixed while the offset tracks the body size -- byte+2 typed as the branch-form selector (role), byte+9 as the const-0 link/annul slot; corpus census confirms byte+2 in {0x54,0x64} and byte+9==0x00 for all 646 jumps."
+   "semantics": "JMP_EXEC_ANY PC-relative branch: take the branch when the current execution mask contains any active lane. offset is a signed 48-bit little-endian byte displacement relative to the START of this instruction (target = jump_addr + sign_extend(offset48)); ordinary loop backedges are negative. byte+2 (branch_ctrl) = branch/execution-mask form selector: 0x54 for all ordinary own-source loop backedges examined. byte+9 (link) is 0x00 for a plain backedge; subroutine linkage uses the separate call form.",
+   "provenance": "HW-VALIDATED (EXP-0010 E6 + EXP-M4-46): changing a backedge changes execution and invalid targets fault/hang. EXP-M4-46: all 33 broadly decoded corpus backedges and every fully decoded fresh T8132 backedge land on an instruction boundary under the instruction-start base; none of the 33 corpus backedges land under PC+4. Safely retargeting pc_base_probe from -58 to +10 (the native loop-pop at 0x8e) produced the exact one-trip recurrence oracle; PC+4 would have landed inside that pop."
   },
   {
    "mnemonic": "jump_cond",
@@ -2748,8 +2995,8 @@
      "type": "mod"
     }
    ],
-   "semantics": "CONDITIONAL PC-relative jump (masked branch). offset = signed 48-bit little-endian byte displacement; target = jump_addr + 4 + offset (same convention as the 0f 00 unconditional jump). Taken while the divergent execution mask still has active lanes; used for if/else forward skips and while/for loop-exit guards. cf_scope (byte+2) selects the reconvergence mask bank (0x54 / 0x56) the branch condition is drawn from.",
-   "provenance": "byte-diff EXP-M4-13 R6 (OWN-MSL): compiled if-bodies of increasing size -> the offset field grows monotonically (0x6e/0x80/0xba) confirming it is the forward target displacement; backward loop back-edges carry a negative 48-bit offset. cf_scope byte+2==0x54 across all own CF kernels (0x56 in the nested last-use form). Conditional->unconditional (byte+1 0x01->0x00) HW-VALIDATED earlier (RT-ISA-FIX): all lanes skip the loop body. offset base convention HW-VALIDATED EXP-0010 E6. cf_scope/reserved semantics INFERRED (not GPU-dispatch validated in R6)."
+   "semantics": "JMP_EXEC_NONE PC-relative branch: skip to the target when the current execution mask contains no active lane. It follows mask narrowing at if/loop-entry guards and source-level break paths, avoiding execution of an empty region. offset is a signed 48-bit little-endian byte displacement relative to the START of this instruction (target = jump_addr + sign_extend(offset48)). cf_scope (byte+2) selects a control-flow form/bank; its exact role is not fully mapped.",
+   "provenance": "OWN-SHADER + HW-VALIDATED structure (EXP-M4-45/46): every fresh guarded loop places 0f 01 after mask narrowing and targets its matching pop/exit; exact mixed-lane outputs pass. In fully decoded corpus programs, 61/65 instances land on a boundary start-relative; the four apparent misses are known decoder misframings in transcendental programs. EXP-M4-46 corrects the earlier unsupported PC+4 claim."
   },
   {
    "mnemonic": "if_push",
@@ -2773,8 +3020,8 @@
      "width": 8,
      "type": "enum",
      "enum": {
-      "84": "mask_bankA(outer/even)",
-      "86": "mask_bankB(nested/odd)"
+      "84": "form54",
+      "86": "form56(exact scheduling role unresolved)"
      }
     },
     {
@@ -2791,8 +3038,56 @@
      }
     }
    ],
-   "semantics": "execution-mask PUSH: enters a divergent region, saving the reconvergence point and narrowing the active-lane mask. scope (byte+2) selects the reconvergence mask bank -- it ping-pongs 0x54/0x56 with nesting parity (outer even = 0x54, nested odd = 0x56); the low 0x04 form is the inner mask-op variant. scope_kind (byte+3) names the KIND of region: 0x01 for a conditional-skip scope (a plain if / loop-entry guard) and 0x1a for a loop-iteration scope. Paired with a later 0f 06 pop_reconverge. Shares the 0f 05 leader with the direct CALL (14 bytes, 0x8f link at byte+4; disambiguated by length). The predicate-register PUSH variant sets a non-zero byte+1 high nibble (see if_push_pred).",
-   "provenance": "byte-diff EXP-M4-13 R6 (OWN-MSL): compiled a loop-nesting ladder L1/L2/L3 -> the loop-body pushes carry scope alternating 0x54 (outer), 0x56 (next), 0x54 (inner) by nesting parity, all with scope_kind 0x1a; the pre-loop / plain-if guard push is scope 0x54, scope_kind 0x01. 4-byte length HW-VALIDATED (RT-ISA-FIX): the push is required for clean tokenization of our for/while/nested kernels (cf_for/cf_nested match the CPU reference). scope/scope_kind exact bit semantics INFERRED (byte-diff located, not GPU-dispatch validated)."
+   "semantics": "Execution-mask push: save the current active-lane population and narrow execution using the current predicate, paired with a later pop_reconverge. scope_kind 0x1a is the native loop-scope form. For conditional pushes, bit 0x20 independently changes predicate/mask selection (HW-validated in EXP-M4-45), while low values 0x01/0x05/0x09 correlate with Metal's current predicate/depth allocation. byte+2 0x54 versus 0x56 is an orthogonal scheduling/cache form, not a nesting-parity selector: native three-level loops can use 0x54 at every depth, and an EXP-M4-46 same-program latch splice 0x54->0x56 preserves exact output. Shares the 0f 05 leader with direct CALL (14 bytes, 0x8f link at byte+4; disambiguated by length).",
+   "provenance": "OWN-SHADER + HW-VALIDATED (EXP-M4-45/46): exact nested if/loop outputs; the semantic effect of push bit 0x20 was isolated on hardware. EXP-M4-46 refutes the earlier parity claim: nested_loops happens to use 0x56 at one outer loop push, while exact-output triple_nested_loops uses 0x54 for all three loop pushes. The precise scheduling/cache meaning of 0x56 remains open."
+  },
+  {
+   "mnemonic": "if_push_cond",
+   "length": 4,
+   "match": [
+    [
+     0,
+     8,
+     15
+    ],
+    [
+     8,
+     8,
+     5
+    ],
+    [
+     16,
+     8,
+     84
+    ],
+    [
+     24,
+     1,
+     1
+    ]
+   ],
+   "fields": [
+    {
+     "name": "predicate_level",
+     "start": 25,
+     "width": 4,
+     "type": "raw"
+    },
+    {
+     "name": "invert",
+     "start": 29,
+     "width": 1,
+     "type": "mod"
+    },
+    {
+     "name": "scope_hi",
+     "start": 30,
+     "width": 2,
+     "type": "raw"
+    }
+   ],
+   "semantics": "Conditional execution-mask push in the observed 0x54 form. byte3 bit5 independently complements the predicate while constructing the active mask: 0f055401 is normal and 0f055421 inverted. predicate_level records the remaining low conditional-level selector; scope_hi is not assigned semantics. The even 0x1a loop-scope form continues to use the generic if_push descriptor.",
+   "provenance": "OWN-SHADER + HW-VALIDATED (EXP-M4-45): toggling only byte3 bit5 complemented every lane after both short ordered and extended equality predicate compares; toggling predicate inversion and push inversion together restored the original oracle. Other byte3 subfields were not generalized."
   },
   {
    "mnemonic": "pop_reconverge",
@@ -2883,6 +3178,75 @@
    ],
    "semantics": "inner execution-mask op (0f 04 <mask_bank> <scope_kind>, 4 bytes). Appears inside nested divergence just before a 0f 01 jump_cond -- the continue-edge mask narrow / inner-scope re-mask (distinct from if_push 0f 05, byte+2==0x54, by byte+2 low form). mask_bank (byte+2) selects the execution-mask bank: 0x04 = bankA, 0x24 = bankB (0x20 bit = alternate bank), the same low-form mask-bank selector as pop_reconverge's scope field. scope_kind (byte+3) is a fixed scope-kind / level tag == 0x19 in the whole corpus (no observed variation to map a range).",
    "provenance": "byte-diff EXP-M4-13 R8 (own-MSL corpus census, n=771): mask_bank (byte+2) is 0x04 (715x) or 0x24 (56x) -- a 2-value bank selector matching pop_reconverge's {0x04 bankA, 0x24 bankB}; the 0x24 form clusters in raytracing / ray-query geometry kernels. scope_kind (byte+3) is CONSTANT 0x19 across all 771 corpus instances (located; a fixed scope-kind/sub-form tag, value->range not further separable without a splice -- M4 host is compile-only). Length + role anchored by the following 0f 01 jump_cond leader; not GPU-dispatch validated."
+  },
+  {
+   "mnemonic": "loop_mask_update",
+   "length": 4,
+   "match": [
+    [0, 8, 143],
+    [8, 8, 4],
+    [16, 8, 84]
+   ],
+   "fields": [
+    {
+     "name": "mask_selector",
+     "start": 24,
+     "width": 8,
+     "type": "mod"
+    }
+   ],
+   "semantics": "Update the active execution mask at a loop latch or structured break point. The low depth subfield is 0x02 at the outer loop, 0x06 one mask scope deeper, and 0x0a two scopes deeper. Bit 0x20 is an orthogonal, semantic predicate/mask-source selector: native outer latches use both 0x02 and 0x22 depending on the condition construction. It is followed by JMP_EXEC_ANY for a natural latch or JMP_EXEC_NONE for a break/empty-region skip. The exact mapping of bit 0x20 to predicate identity versus polarity is not yet separated.",
+   "provenance": "OWN-SHADER + HW-VALIDATED (EXP-M4-46): 19 exact-output programs cover top/bottom-tested and compound-condition loops, direct break, nesting through three levels, and loop/if combinations. Fresh triple nesting emits 0x2a/0x26/0x22 at inner/middle/outer latches; compound_latch emits native 0x02 and passes exactly. On pc_base_probe, 0x22->0x02 collapses most lanes to one iteration; on compound_latch, 0x02->0x22 hangs the command buffer. Mutating a direct-break 0x26 to 0x22 changes output without fault. These prove both the depth subfield and bit 0x20 are load-bearing without overclaiming the latter's exact predicate-resource interpretation."
+  },
+  {
+   "mnemonic": "break_mask_unwind",
+   "length": 6,
+   "match": [
+    [0, 8, 143],
+    [8, 8, 5],
+    [16, 8, 84]
+   ],
+   "fields": [
+    {
+     "name": "scope_depth_tag",
+     "start": 24,
+     "width": 8,
+     "type": "mod"
+    },
+    {
+     "name": "reserved",
+     "start": 32,
+     "width": 8,
+     "type": "mod"
+    },
+    {
+     "name": "target_loop_depth",
+     "start": 40,
+     "width": 8,
+     "type": "imm"
+    }
+   ],
+   "semantics": "Nonlocal loop-break mask update through one or more enclosing execution-mask scopes. In fresh native captures, one versus two enclosing conditional scopes changes scope_depth_tag from 3 to 4 while target_loop_depth remains 1; breaking the inner loop of a two-loop nest keeps scope_depth_tag 3 and changes target_loop_depth to 2. reserved is zero in these cases. This form updates masks; matching pop_reconverge operations remain in the linear stream.",
+   "provenance": "OWN-SHADER + HW-VALIDATED (EXP-M4-46): break_nested_if = 8f0554030001, break_nested_two_if = 8f0554040001, nested_break_continue inner-loop break = 8f0554030002. All programs matched complete 16-lane CPU oracles. Field names are structural and bounded to these captures; individual bit ablations remain future work."
+  },
+  {
+   "mnemonic": "loop_mask_update_form56",
+   "length": 4,
+   "match": [
+    [0, 8, 143],
+    [8, 8, 4],
+    [16, 8, 86]
+   ],
+   "fields": [
+    {
+     "name": "mask_selector",
+     "start": 24,
+     "width": 8,
+     "type": "mod"
+    }
+   ],
+   "semantics": "Alternate byte+2 0x56 form of loop_mask_update. Native instances occur in structured control, including traversal-loop latches. A same-program 0x54->0x56 splice on the uncomplicated pc_base_probe latch preserves all 64 output words, proving compatible loop semantics there; the scheduling/cache condition that makes Metal choose this form remains unresolved.",
+   "provenance": "OWN-SHADER corpus + HW-VALIDATED form compatibility (EXP-M4-13/46). The old ret_luse classification conflated byte+1 0x04 mask updates with genuine byte+1 0x02/0x12 returns. EXP-M4-46 pc_base_probe 0x54->0x56 passes exactly; this does not establish that the forms are freely interchangeable under every scheduling state."
   },
   {
    "mnemonic": "device_load",
@@ -6066,9 +6430,7 @@
      "type": "enum",
      "enum": {
       "2": "leaf (v & 3 == 2)",
-      "18": "nonleaf_restore_link (0x10 = restore-link flag; v & 3 == 2)",
-      "4": "FAULTS on G17P -- the old `cf_merge` reading is REFUTED (EXP-0206)",
-      "5": "FAULTS on G17P -- the old `cf_merge_push` reading is REFUTED (EXP-0206)"
+      "18": "nonleaf_restore_link (0x10 = restore-link flag; v & 3 == 2)"
      },
      "note": "[EXP-0212, applied 2026-08-30] EXP-0206 (G17P, raw/g17p_20260830_run03 + run04): the ACCEPTED SET is `v & 3 == 2` -- 64 of 256 -- at FOUR independent occurrences (cl_atomic real ret_luse, cl_leaf leaf ret, cl_chain non-leaf ret, and the ret.linkmode control at cl_chain), identical at all four. EXP-0156 recorded it as `v & 7 == 4`; that is refuted by our own compiled bytes alone, because the compiler emits 0x02 and 0x12 and BOTH have `v & 7 == 2`. Bit 4 (0x10) is the non-leaf restore-link flag. Enum values 4 and 5 FAULT here."
     },
@@ -6079,8 +6441,8 @@
      "type": "mod"
     }
    ],
-   "semantics": "function RETURN / CF merge: `8f <lm> 54 <sb>` (4B). linkmode (byte+1): 0x02 leaf return, 0x12 non-leaf, 0x04/0x05 CF merge/reconvergence. scoreboard (byte+3, was raw 'tail'): execution/scoreboard-wait mask -- located, values {0x22,0x26,0x02,0x06,0x2a} (bit5 0x20 = wait-set present, bit2 0x04 = second-slot). No branch target (address is the HW link/CF stack). Role-typed 'mod'; exact scoreboard-slot map needs splice.",
-   "provenance": "HW-VALIDATED linkmode (EXP-0035 + RT-ISA-FIX) + EXP-M4-13 R10 corpus census (byte+3 = {0x22:411,0x26:238,0x02:49,...}); byte+3 retyped raw->mod as the scoreboard/exec-wait mask by located low-entropy role. Slot map needs splice."
+   "semantics": "Function return: `8f <linkmode> 54 <scoreboard>` (4B). linkmode 0x02 is a leaf return and 0x12 restores the non-leaf link. The native loop forms with byte+1 0x04/0x05 are separate loop_mask_update and break_mask_unwind instructions, not returns.",
+   "provenance": "HW-VALIDATED return modes (EXP-0035 + EXP-0206). EXP-M4-46 separates the previously conflated 0x04/0x05 native loop-mask forms using fresh exact-output T8132 loops; testing 0x04/0x05 at a genuine G17P return faults because they are not return link modes."
   },
   {
    "mnemonic": "call_indirect",
@@ -10364,9 +10726,7 @@
      "type": "enum",
      "enum": {
       "2": "leaf (v & 3 == 2)",
-      "18": "nonleaf_restore_link (0x10 = restore-link flag; v & 3 == 2)",
-      "4": "FAULTS on G17P -- the old `cf_merge` reading is REFUTED (EXP-0206)",
-      "5": "FAULTS on G17P -- the old `cf_merge_push` reading is REFUTED (EXP-0206)"
+      "18": "nonleaf_restore_link (0x10 = restore-link flag; v & 3 == 2)"
      },
      "note": "[EXP-0212, applied 2026-08-30] EXP-0206 (G17P, raw/g17p_20260830_run03 + run04): the ACCEPTED SET is `v & 3 == 2` -- 64 of 256 -- at FOUR independent occurrences (cl_atomic real ret_luse, cl_leaf leaf ret, cl_chain non-leaf ret, and the ret.linkmode control at cl_chain), identical at all four. EXP-0156 recorded it as `v & 7 == 4`; that is refuted by our own compiled bytes alone, because the compiler emits 0x02 and 0x12 and BOTH have `v & 7 == 2`. Bit 4 (0x10) is the non-leaf restore-link flag. Enum values 4 and 5 FAULT here."
     },
@@ -10377,8 +10737,8 @@
      "type": "raw"
     }
    ],
-   "semantics": "function RETURN / CF merge, LAST-USE variant: `8f <lm> 56 <t>` (4 B). Identical to ret except byte+2 == 0x56 (0x54 | bit17): bit17 is the source cache/last-use hint the compiler sets when the merge consumes a value for the last time -- a scheduling hint, not an op change (same bit toggles 0x54<->0x56 on simd_reduce / rt_ray_mem / if_push). byte+1 selects leaf/nonleaf/cf-merge exactly as ret. NO encoded target.",
-   "provenance": "byte-diff (EXP-M4-13 R7): `8f 04 56 02` is byte-invariant across every intersection_query kernel (rq_pred/g_*/s_*/rtq_*), always at the traversal-loop merge immediately before the `0f 00 54 ..` back-edge jump -- the last-use sibling of the HW-VALIDATED ret (EXP-0035). Field roles inherited from ret; bit17=last-use inferred."
+   "semantics": "Function-return 0x56 variant for genuine leaf/nonleaf link modes 0x02/0x12. The byte+1 0x04 mask-update instances are decoded separately as loop_mask_update_form56.",
+   "provenance": "HW-VALIDATED genuine return modes (EXP-0206); loop-form separation from native branch context in EXP-M4-13/46. The exact 0x54 versus 0x56 cache/lifetime distinction remains inferred."
   },
   {
    "mnemonic": "mem_fence8",

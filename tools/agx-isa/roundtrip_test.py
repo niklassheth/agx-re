@@ -107,6 +107,12 @@ REAL_INSTRS = {
     # ---- CONTROL FLOW (EXP-0010), carved from our own compiled CF shaders -----
     "icmp_pred (0a 01 22 82 14 22)":       "0a0122821422",            # gid>=4 predicate HW
     "icmp_pred ext10 (EXP-0200)":           "2a002bc0060006c20000",    # exact 10B enclosing span
+    "icmp_pred ordered fgt (EXP-M4-45)":    "0a033a0502c0",            # six-byte float greater-than
+    "icmp_pred ordered ult imm (M4-45)":    "0a032a9015c2",            # compact immediate predicate
+    "icmp_pred extended int eq (M4-45)":    "0a033b05060007c00000",    # ten-byte bitwise/integer equality
+    "icmp_pred extended float eq (M4-45)":  "0a033b05060000c00000",    # ten-byte IEEE equality
+    "icmp_pred extended float gt inv":      "1a033b05060002c00000",    # independent predicate inversion
+    "icmp_pred extended uint eq imm":       "0a032b90060017c20000",    # ten-byte compact immediate
     # EXP-0234 generated and executed the complete canonical source-byte namespace.
     "isel10 cmpA r127 (EXP-0234)":          "02ff0703060407c00006",
     "isel10 cmpB r127 (EXP-0234)":          "020307ff060407c00006",
@@ -214,11 +220,18 @@ REAL_INSTRS = {
     "simd_active_mask (17 07 54 ..)":      "17075400020200080218",   # simd_active_threads_mask HW; byte+1=0x07
     "simd_shuffle bcast3 0x54 (47 04 54 ..)": "470454000200062c0400", # simd_broadcast(v,3)=35 HW; byte+2=0x54 (was undecodable)
     "simd_shuffle xor3  0x54 (c7 04 54 ..)":  "c70454000200062c0400", # simd_shuffle_xor(v,3) HW; byte+2=0x54
-    "jump back-edge (0f 00 54 ..)":        "0f0054c6ffffffffff00",   # loop back-edge, off=-58, from cf_for HW
-    "jump_cond guard (0f 01 54 5c ..)":    "0f01545c000000000000",   # loop-exit guard, off=+0x5c, from cf_for HW
+    "jmp_exec_any back-edge (0f 00 54 ..)": "0f0054c6ffffffffff00",  # loop back-edge, off=-58, EXP-M4-46 HW
+    "jmp_exec_none guard (0f 01 54 5c ..)": "0f01545c000000000000",  # loop-exit guard, off=+0x5c, EXP-M4-46 HW
     "if_push (0f 05 54 01)":               "0f055401",               # exec-mask push (4B), from cf_for HW
+    "if_push inverted (0f 05 54 21)":       "0f055421",               # mask-consumer inversion, EXP-M4-45 HW
     "pop_reconverge (0f 06 04 02 00 00)":  "0f0604020000",           # reconverge/pop, from cf_for HW
-    "cf_merge (8f 04 54 22)":              "8f045422",               # loop-body CF merge marker, from cf_for HW
+    "loop mask update selector 0x22":       "8f045422",               # outer loop latch, EXP-M4-46 HW
+    "loop mask update selector 0x26":       "8f045426",               # nested loop latch, EXP-M4-46 HW
+    "loop mask update selector 0x2a":       "8f04542a",               # triple-nested latch, EXP-M4-46 HW
+    "loop mask update selector 0x02":       "8f045402",               # compound-condition latch, EXP-M4-46 HW
+    "break unwind one if / loop 1":        "8f0554030001",           # EXP-M4-46 HW
+    "break unwind two ifs / loop 1":       "8f0554040001",           # EXP-M4-46 HW
+    "break unwind one if / loop 2":        "8f0554030002",           # EXP-M4-46 HW
     "scoreboard_fence pre-call (07 22 02 00)": "07220200",           # 4B fence before a call (RT-1b census)
     "scoreboard_fence CF (07 02 00 00)":   "07020000",               # 4B fence around divergence, from cf_nested HW
     # ---- EXP-O2C: matrix operand decode + new RT ops (our own RT/tensor kernels) ----

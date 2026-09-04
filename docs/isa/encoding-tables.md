@@ -1,6 +1,6 @@
 # Apple9 (G16G/G17P) AGX — Instruction Encoding Tables
 
-> **Generated** from `tools/agx-isa/db.json` by `tools/agx-isa/gen_encoding_tables.py` (2026-09-03). Regenerate after any DB change; do not hand-edit. This is the **authoritative, self-contained encoding table** a driver author reads to emit Apple9 AGX instructions — 176 instruction descriptors.
+> **Generated** from `tools/agx-isa/db.json` by `tools/agx-isa/gen_encoding_tables.py` (2026-09-04). Regenerate after any DB change; do not hand-edit. This is the **authoritative, self-contained encoding table** a driver author reads to emit Apple9 AGX instructions — 182 instruction descriptors.
 
 **Clean-room:** every encoding here was learned from the compiled form of MSL **we wrote** (OWN-SHADER) — by byte-diffing our own shaders and by splicing bytes and running them on the real Apple9 GPUs (hardware validation). No Apple binary was disassembled. See `../../CLAUDE.md`.
 
@@ -845,7 +845,7 @@
 | `cond` | [32:40] (byte+4) | enum | `0x0`=f_eq; `0x2`=f_gt; `0x3`=f_lt; `0x4`=u_gt; `0x5`=u_lt; `0x6`=s_gt; `0x7`=s_lt; `0x14`=u_gt|imm; `0x15`=u_lt|imm; `0x16`=s_gt|imm; `0x17`=s_lt|imm |
 | `opclass` | [40:48] (byte+5) | modifier |  |
 
-*predicate[dst_pred] = (srcA <cond> srcB) ; integer/float compare that sets a per-lane predicate register feeding a divergent block (early return / break / continue / if). byte0 hi nibble = destination predicate register. cond (byte+4) low 3 bits encode [type: float(0x0x)/uint(0x4-5)/sint(0x6-7)][direction: gt even/lt odd] EXACTLY like the 14-byte icmpsel byte+6 map; cond bit4 (0x10) flags the compact-immediate operand form. cmpmode (byte+2 low nibble): 0x2 relational, 0x3 equality. neg (byte+1 bit7) negates the result for le/ge/ne. srcB (byte+3) is a register (opclass byte+5==0xc0) or an immediate bound (opclass==0xc2, bit1 set). NOTE: the match is family-level (byte0 low nibble == 0xa, length 6) and also catches sibling 6-byte low-nibble-a ops that reuse the byte+2/byte+4 slots as opcode/operand bytes (corpus byte+4 values outside the cond map, e.g. 0x22/0x26); the cond/cmpmode semantics above hold for the integer/float compare-predicate subset (cond in 0x00-0x07 and the 0x14-0x17 immediate forms), which is the dominant use. [EXP-0212, applied 2026-08-30] MEASURED LENGTH DISAGREEMENT, EXP-0200 (G17P stop-scan) -- RECORDED, NOT APPLIED. At rq_bbox+960 the hardware's enclosing span is TEN bytes (`2a 00 2b c0 06 00 06 c2 00 00`), where this descriptor says 6. This is ONE site. The 6-byte reading is HW-anchored elsewhere (EXP-0010 `0a 01 22 82 14 22` in running control-flow programs), so the honest status is that the low-nibble-a family has at least two lengths and no discriminator is established. Changing `length` on one site would break every 6-byte instance. NEXT EXPERIMENT: find the discriminator before touching the length.*
+*Legacy six-byte low-nibble-a fallback for corpus forms not matched by icmp_pred_ordered6. Its fields preserve the historical coarse byte slicing for round-trip compatibility only; do not infer a predicate-register destination, result negation at byte1 bit7, or equality selection from byte2's low nibble. EXP-M4-45 establishes byte0 bit4 as predicate-result inversion, byte1/3 bit7 as auxiliary bits that were inert in the tested envelope, and byte2 bit0 as part of the short/extended form distinction.*
 
 ### `sel` — conditional select (data operands)
 
@@ -881,7 +881,7 @@
 | `offset` | [24:72] (byte+3) | immediate |  |
 | `link` | [72:80] (byte+9) | modifier |  |
 
-*PC-relative jump; offset is a signed 48-bit little-endian byte displacement (backward for loop back-edges). Taken while lanes remain active (execution-mask loop). byte+2 (branch_ctrl) = the branch/execution-mask FORM selector: 0x54 = the unconditional all-lane back-edge (645/646 corpus jumps + every own-MSL loop back-edge); a single corpus jump uses 0x64. byte+9 (link) = a reserved link/annul slot, const 0x00 across all 646 corpus jumps and all own-MSL loops -- never set for a plain loop back-edge (a genuine subroutine link uses the separate `call`).*
+*JMP_EXEC_ANY PC-relative branch: take the branch when the current execution mask contains any active lane. offset is a signed 48-bit little-endian byte displacement relative to the START of this instruction (target = jump_addr + sign_extend(offset48)); ordinary loop backedges are negative. byte+2 (branch_ctrl) = branch/execution-mask form selector: 0x54 for all ordinary own-source loop backedges examined. byte+9 (link) is 0x00 for a plain backedge; subroutine linkage uses the separate call form.*
 
 ### `frame_marker` — call-site / frame-setup marker (before every CALL)
 
@@ -915,10 +915,10 @@
 
 | Field | Bits | Type | Enum / values |
 |---|---|---|---|
-| `linkmode` | [8:16] (byte+1) | enum | `0x2`=leaf (v & 3 == 2); `0x12`=nonleaf_restore_link (0x10 = restore-link flag; v & 3 == 2); `0x4`=FAULTS on G17P -- the old `cf_merge` reading is REFUTED (EXP-0206); `0x5`=FAULTS on G17P -- the old `cf_merge_push` reading is REFUTED (EXP-0206) |
+| `linkmode` | [8:16] (byte+1) | enum | `0x2`=leaf (v & 3 == 2); `0x12`=nonleaf_restore_link (0x10 = restore-link flag; v & 3 == 2) |
 | `scoreboard` | [24:32] (byte+3) | modifier |  |
 
-*function RETURN / CF merge: `8f <lm> 54 <sb>` (4B). linkmode (byte+1): 0x02 leaf return, 0x12 non-leaf, 0x04/0x05 CF merge/reconvergence. scoreboard (byte+3, was raw 'tail'): execution/scoreboard-wait mask -- located, values {0x22,0x26,0x02,0x06,0x2a} (bit5 0x20 = wait-set present, bit2 0x04 = second-slot). No branch target (address is the HW link/CF stack). Role-typed 'mod'; exact scoreboard-slot map needs splice.*
+*Function return: `8f <linkmode> 54 <scoreboard>` (4B). linkmode 0x02 is a leaf return and 0x12 restores the non-leaf link. The native loop forms with byte+1 0x04/0x05 are separate loop_mask_update and break_mask_unwind instructions, not returns.*
 
 ### `call_indirect` — indirect CALL (visible_function_table)
 
@@ -1363,6 +1363,14 @@
 
 - **Length:** 6 bytes  ·  **Match:** bits[0:4]==0x2
 
+### `icmp_pred_ordered6`
+
+- **Length:** 6 bytes  ·  **Match:** bits[0:4]==0xa, bits[16:17]==0x0, bits[17:18]==0x1, bits[21:22]==0x1
+
+### `icmp_pred_extended10`
+
+- **Length:** 10 bytes  ·  **Match:** bits[0:4]==0xa, bits[16:17]==0x1, bits[17:18]==0x1, bits[21:22]==0x1, bits[32:48]==0x6
+
 ### `icmp_pred_ext10`
 
 - **Length:** 10 bytes  ·  **Match:** bits[0:48]==0x6c02b002a
@@ -1375,6 +1383,10 @@
 
 - **Length:** 4 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x05
 
+### `if_push_cond`
+
+- **Length:** 4 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x05, byte+2==0x54, bits[24:25]==0x1
+
 ### `pop_reconverge`
 
 - **Length:** 6 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x06
@@ -1382,6 +1394,18 @@
 ### `mask_op`
 
 - **Length:** 4 bytes  ·  **Match:** byte+0==0x0f, byte+1==0x04
+
+### `loop_mask_update`
+
+- **Length:** 4 bytes  ·  **Match:** byte+0==0x8f, byte+1==0x04, byte+2==0x54
+
+### `break_mask_unwind`
+
+- **Length:** 6 bytes  ·  **Match:** byte+0==0x8f, byte+1==0x05, byte+2==0x54
+
+### `loop_mask_update_form56`
+
+- **Length:** 4 bytes  ·  **Match:** byte+0==0x8f, byte+1==0x04, byte+2==0x56
 
 ### `simd_shuffle_ext12`
 
@@ -1757,7 +1781,7 @@ Parcels are 2 bytes (all lengths even). Length is a function of byte 0 plus a pe
 | `0x9f/0x1f` | 10 if (byte+1 & 1) else 12  [integer add/sub \| mul-add] |
 | `0xa7` | byte+1 low nibble 7 -> 8-byte i2f; low nibble 4/5 -> 8-byte bit-count; otherwise 10 if low bit set, 12 if clear. byte+1 high nibble is pending-mask bits0..3 (EXP-M4-42) |
 | `0x27` | byte+1 low nibble 7 -> 10-byte f2i; low nibble 0/1/2 -> 12-byte bitfield/rotate/prep; otherwise 8-byte unary. byte+1 high nibble is pending-mask bits0..3 (EXP-M4-42) |
-| `0x0a` | 6  [integer compare -> execution predicate (branch/return)] |
+| `0x0a` | 6 for the ordered predicate form; 10 when byte+2 bit0 is set and bytes+4/+5 are 06 00 (extended equality/ordered-complement form). EXP-M4-45 HW |
 | `0x05/0x16` | 4  [conditional select (branchless if/ternary)] |
 | `0x0f` | EXECUTION-MASK family, byte+1 sub-op (RT-ISA-FIX): 0x00 jump 10 / 0x01 jump_cond(else,loop-guard) 10 / 0x05 if_push 4 (or 14 if byte+4==0x8f = direct CALL) / 0x06 pop_reconverge 6 / 0x80 call_indirect(computed branch) 6 / 0x04 mask_op 4 |
 | `0x07 (byte+2 in {0x00,0x02})` | 4  [compute memory/scoreboard fence around calls & divergent CF (07 22 02 00 pre-call; 07 02/00 00 CF). RT-ISA-FIX HW] |
@@ -1781,8 +1805,8 @@ Parcels are 2 bytes (all lengths even). Length is a function of byte 0 plus a pe
 | `0x22` | 6 if (byte+2 lo-nibble==0x0e) [iminmax_chain: min3/max3/clamp] else 10 [shift/sign-extend helper]. EXP-0033 |
 | `0xNb (byte+2 low-nibble e/f, 0x2b/3b/5b/8b)` | 10 shift-amount PREP stage; (byte+2 hi-nibble 2) = 4 compact call-argument MOVE; (byte+2 in {0e,1e,1f}) = 10 funary/ilogic; (byte+2==0x01,byte+3==0x08) = 4 uniform_mov. EXP-0033/0036 |
 | `0x43` | 4  [CALL-SITE / FRAME-SETUP marker (`43 00 00 01`), precedes every out-of-line CALL in compute & mesh. NOT mesh-unique. EXP-0035 (re-scoped EXP-0030)] |
-| `0x0f (byte+1==0x05)` | 14 direct CALL if byte+4==0x8f (target = call_addr+4+off40) else 8 exec-mask push; (byte+1==0x80) = 6 INDIRECT CALL leader; (byte+1==0x06) = 6 reconverge. EXP-0035 |
-| `0x8f` | 4  [function RETURN (`8f <lm> 54 00`); no encoded target (HW link register / CF stack); byte+1 0x02 leaf / 0x12 non-leaf. EXP-0035] |
+| `0x0f (byte+1==0x05)` | 14 direct CALL if byte+4==0x8f (target = call_addr+4+off40) else 4 exec-mask push; (byte+1==0x80) = 6 INDIRECT CALL leader; (byte+1==0x06) = 6 reconverge. EXP-0035/M4-45/M4-46 |
+| `0x8f` | 6 for `8f 05 54` nonlocal break-mask unwind; otherwise 4 for `8f 04 54/56` loop-mask update and genuine `8f 02/12 54/56` function return. EXP-M4-46 |
 | `0x57` | 8  [VERTEX varying / [[position]] store to the UVS/parameter buffer the FS iter op interpolates. Memory-family (low-nibble 7). byte+3=source GPR, byte+4=output slot (index<<5; position=slots 0-3). EXP-0037 HW-splice-proven] |
 | `lownibble_0x5 + (byte+1 & 0xf0)==0x80 + byte+2==0x0c` | 14  [tex_sample companion-gate WIDENED (EXP-0037) from byte+1==0x80 to high-nibble 8 so the CHAINED-companion forms (0x82/0x84/0x88 before the 2nd..Nth sample op) also absorb their 10-byte 0xb0/0x90 sampler op] |
 | `0x09 op-select 0x26/0x2e` | 8 if (byte+4 & 0x02) else 6  [fused mul / mul-add COORDINATE / matrix-multiply op -- byte+2 bit1 is SET yet the 2-source form is 6B, so length reads byte+4 bit1 not byte+2 bit1 (EXP-0037). 0x09 op-select 0x18/0x38 = 4 compact accumulate] |
@@ -1813,4 +1837,4 @@ Parcels are 2 bytes (all lengths even). Length is a function of byte 0 plus a pe
 
 ---
 
-*Rendered from `tools/agx-isa/db.json` — 176 descriptors. The machine-readable source of truth is `db.json` / `isadb.py`; this document is its human-readable projection.*
+*Rendered from `tools/agx-isa/db.json` — 182 descriptors. The machine-readable source of truth is `db.json` / `isadb.py`; this document is its human-readable projection.*

@@ -22,7 +22,7 @@ never from Apple binaries. See `../../CLAUDE.md`.
 > put an arbitrary legal value in a field and get the documented behaviour. The per-field
 > labelling standard that separates the two is [`../evidence-classification.md`](../evidence-classification.md)
 > (row `DOC-02`), and the live measured state is the `coverage` block of
-> `tools/agx-isa/validation.json` (`generated: 2026-09-03`, `db_sha256 00afaf3d…`).
+> `tools/agx-isa/validation.json` (`generated: 2026-09-04`, `db_sha256 325d9009…`).
 
 **Measured state — `target: G16G` (Apple M4).** Every field label below was established by an
 experiment that ran on the **local M4 / G16G**. It is **not** relabelled G17P and does not
@@ -30,24 +30,24 @@ transfer: see "Target status" at the end of this section.
 
 | | |
 |---|---|
-| Instructions in the database | **176** |
+| Instructions in the database | **182** |
 | Instructions **EMITTABLE** | **35** |
-| Instructions **decodable, not yet emittable** | **141** |
-| Fields total | **1109** |
-| Fields at **emitter grade** (`hardware-run` 531 + `isolated-byte-diff` 67) | **598 = 53.9 %** |
+| Instructions **decodable, not yet emittable** | **147** |
+| Fields total | **1142** |
+| Fields at **emitter grade** (`hardware-run` 539 + `isolated-byte-diff` 67) | **606 = 53.1 %** |
 
 Per-label field counts, strongest first, with what each one licenses a compiler back-end to do:
 
 | label | fields | % | what an emitter may do with it | CODEX ladder |
 |---|---|---|---|---|
-| `hardware-run` | 531 | 47.9 % | Emit **arbitrary values inside the field's recorded `range`**. The field was given values the compiler would never choose — boundaries, holes, out-of-range — spliced into a real program and executed. | `HW-VALIDATED` |
-| `isolated-byte-diff` | 67 | 6.0 % | Emit **only at the tested points**. An isolated byte change in code compiled from our own MSL ran with the predicted effect, but the range was not swept. | `HW-VALIDATED` (point) |
-| `corpus-correlation` | 75 | 6.8 % | **Do not synthesize.** Meaning inferred from co-variation across our own compiled shaders; nothing was executed. Reproduce the observed value. | `STRUCTURAL` |
-| `tokenization-only` | 148 | 13.3 % | **Do not synthesize.** The field exists so length/framing round-trips; its semantics are unknown. | `STRUCTURAL` |
-| `single-template-inference` | 32 | 2.9 % | **Do not synthesize.** Read out of exactly one example — could be a constant, a don't-care, or load-bearing. | `INFERRED` |
+| `hardware-run` | 539 | 47.2 % | Emit **arbitrary values inside the field's recorded `range`**. The field was given values the compiler would never choose — boundaries, holes, out-of-range — spliced into a real program and executed. | `HW-VALIDATED` |
+| `isolated-byte-diff` | 67 | 5.9 % | Emit **only at the tested points**. An isolated byte change in code compiled from our own MSL ran with the predicted effect, but the range was not swept. | `HW-VALIDATED` (point) |
+| `corpus-correlation` | 82 | 7.2 % | **Do not synthesize.** Meaning inferred from co-variation across our own compiled shaders; nothing was executed. Reproduce the observed value. | `STRUCTURAL` |
+| `tokenization-only` | 150 | 13.1 % | **Do not synthesize.** The field exists so length/framing round-trips; its semantics are unknown. | `STRUCTURAL` |
+| `single-template-inference` | 32 | 2.8 % | **Do not synthesize.** Read out of exactly one example — could be a constant, a don't-care, or load-bearing. | `INFERRED` |
 | `api-accept-reject` | 0 | 0 % | A statement about what Metal/the compiler service accepts, **not** about the hardware field. | `INFERRED` |
 | `host-private` | 0 | 0 % | Not a field userspace fills. | *(out of scope)* |
-| `untested` | 256 | 23.1 % | A **gap**. It is listed so you can see it, not so you can fill it by guessing. This is the default for any field with no explicit label. | `UNKNOWN` |
+| `untested` | 272 | 23.8 % | A **gap**. It is listed so you can see it, not so you can fill it by guessing. This is the default for any field with no explicit label. | `UNKNOWN` |
 
 **The 35 emittable mnemonics** (every emitter-filled field at `hardware-run` or
 `isolated-byte-diff`; `tools/agx-isa/validation.json` → `coverage.emittable_mnemonics`):
@@ -568,13 +568,13 @@ now fixed: the descriptor field is `addsub` with enum `1`=iadd/`0`=isub.)
   mask_op 4B, `05` if_push 4B / direct-CALL 14B, `06` pop_reconverge 6B, `80` computed-branch 6B),
   and the whole-corpus walk decodes all 67 `0x0f` occurrences in-sequence. The real residue was a set
   of genuinely-missing ops and length-polymorphism bugs, now closed:
-  - **`icmp_pred` is a dst-register family (byte0 LOW nibble `0xa`, HIGH nibble = predicate reg).**
-    HW-VALIDATED by splice (`k_iso_icmp2`, a loop with `break`/`continue`): splicing a loop-guard
-    compare byte0 `0x2a→0x0a` moved its predicate p2→p0 (out `4,25,110,110`→`133,25,133,133`) and
-    `0x2a→0x4a` moved it p2→p4 (`→4,389,9989`), both `STATUS OK` — i.e. the high nibble selects the
-    destination predicate register, exactly like the `0x?2` sibling. The old `b0==0x0a` rule left every
-    `0x1a/0x2a/0x3a/0x9a/0xca` UNDECODED (the dominant `k_tex_atomic`/`k_uint_arith`/`k_int64` desync).
-    6 bytes; byte+2 is the compare op-select (`0x22/23/25/2b/35/39/3a`, all `≤ 0x3f`).
+  - **`icmp_pred` is length-polymorphic, and byte0 bit4 is inversion, not a predicate-register
+    destination (corrected by EXP-M4-45).** The six-byte ordered form has byte2 bit0 clear; the
+    ten-byte equality/ordered-complement form has that bit set and the observed `06 00` extension
+    leader at bytes+4/+5. Direct T8132 splices prove byte0 bit4 complements every lane. Higher byte0
+    bits remain unassigned, so the older whole-high-nibble predicate-register interpretation is
+    retained only as superseded history. The length rule uses the extended leader as an additional
+    conservative gate so unrelated low-nibble-`a` corpus forms are not greedily reframed.
   - **madd length is keyed on byte+4 bit1, for byte+2 `0x27` AND `0x2f`** (see table above): the
     srcC descriptor's bit1 (`0x02`) selects a wide srcC carrying a trailing 16-bit operand word (10B)
     vs narrow (8B). Separates every corpus occurrence cleanly and now applies to dst `0x22` too (the
@@ -611,30 +611,36 @@ now fixed: the descriptor field is `addsub` with enum `1`=iadd/`0`=isub.)
   registers into a GPR. **(Corrected by EXP-0031: the SR number is in `byte1`; the byte0 high nibble is
   the destination GPR — not the SR-select.)** See the SR-enum + ABI section below. There is also a 2-byte
   **`mov_imm`** (byte0 low-nibble `0xC`, byte1 = imm8) sharing the nibble.
-- **Simple divergence is predication, not branches.** `if/else`/ternary/early-return compile to
-  **compare → per-lane execution mask → masked op / select** (no jump). Compare producers: `0x0a`
-  (6B, control predicate) and `0x02` (6B, feeds a select); compare immediate at **byte+3**. Selects:
-  `0x05`/`0x16` (4B). Proven: splicing the compare immediate moves the active-lane boundary; flipping
-  flipping `0x0a`↔`0x02` swaps predicate-vs-select producer (RT-1b: a *naive* byte0 swap MALFORMS output — the two have different operand layouts; true condition inversion is via the **byte+4 compare-mode/negate** field).
-- **Loops use a real backward jump:** `0f 00 54 <off6> 00` (10B), `off6` = **signed little-endian
-  byte-relative offset**, target = `jump_addr + 4 + off6`. Zeroing the back-edge → contained infinite-loop
-  hang (proves it's the taken edge). Fixed-count loops are fully **unrolled**.
+- **Divergence uses predicate compares plus a structured execution-mask stack.** The six-byte
+  `icmp_pred_ordered6` form maps float/unsigned/signed `>` and `<` in byte+4; the ten-byte
+  `icmp_pred_extended10` form covers integer/bitwise equality, IEEE floating equality, and ordered
+  floating complement sequences. Predicate-result inversion is byte0 bit4. The following conditional
+  push has its own independent inversion at byte3 bit5; setting both inversions cancels. Source release
+  is separate again at compare byte2 bits3/4. Arbitrary Boolean values may be materialized as ordinary
+  0/1 GPR values and compared with zero, while short-circuit trees preserve structured mask control.
+- **Loops use a real backward `JMP_EXEC_ANY`:** `0f 00 54 <off6> 00` (10B), where `off6` is a signed
+  little-endian byte displacement relative to the **start of the branch instruction**. The paired
+  `0f 01` instruction is `JMP_EXEC_NONE`, used after mask narrowing to skip an empty region. A safe
+  retarget to a decoded loop pop produced the exact one-trip oracle; the old PC+4 base lands inside
+  that instruction and is refuted by EXP-M4-46.
 - **✅ The `0x0f` execution-mask family is now fully decoded (RT-ISA-FIX, HW-validated).** `0x0f` is the
   control-flow / execution-mask group; **byte+1 selects the sub-op** — each now has a length rule + descriptor
   in `agx-isa`, so if/else/while/for/break/continue/nested-divergence shaders **tokenize cleanly** (0 of 42
   `0x0f` ops undecoded across a for/while/nested/break/continue corpus):
   | byte+1 | mnemonic | len | role |
   |---|---|---|---|
-  | `0x00` | `jump` | 10 | unconditional PC-relative jump (loop back-edge / block skip) |
-  | `0x01` | `jump_cond` | 10 | **conditional** PC-relative jump — the `else`-skip / `while`/`for` loop-exit guard |
-  | `0x05` | `if_push` | 4 | execution-mask **push** (enter divergent region); byte+2 0x54 outer / 0x04 inner |
+  | `0x00` | `jump` | 10 | `JMP_EXEC_ANY`: branch while any lane remains active in the current mask |
+  | `0x01` | `jump_cond` | 10 | `JMP_EXEC_NONE`: skip when mask narrowing leaves no active lanes |
+  | `0x05` | `if_push` / `if_push_cond` | 4 | execution-mask push; conditional byte3 bit5 independently inverts consumption |
   | `0x06` | `pop_reconverge` | 6 | mask **pop** / **reconverge** (block/loop end); byte+3 = level |
   | `0x80` | `call_indirect` | 6 | computed-target branch (indirect call / break-to-exit) |
   | `0x04` | `mask_op` | 4 | inner mask op in deep nesting (continue-edge re-mask; ⏳ inferred, 1 occurrence) |
 
-  Same shape, the `0x8f` sibling (byte0 = `0x80|0x0f`) is a 4-byte **CF merge/reconverge** marker
-  (`8f 04/05 54 ..`) at if/else and loop joins — the same op as a function `ret` (`8f 02/12 54`) with a
-  different byte+1. HW splice evidence: corrupting the `0f 00` back-edge offset → `CMDBUF_ERROR`; corrupting a
+  The `0x8f` family contains distinct operations rather than one return/merge opcode. `8f 04 54 <selector>`
+  is a four-byte loop-mask update; selector depth witnesses are `0x22`, `0x26`, and `0x2a`, while the
+  orthogonal `0x20` bit is semantic but its exact identity-versus-polarity role remains open.
+  `8f 05 54 <scope> 00 <loop-depth>` is a six-byte nonlocal break unwind. Genuine function returns
+  retain byte+1 `0x02`/`0x12`. HW splice evidence: corrupting the `0f 00` back-edge offset → `CMDBUF_ERROR`; corrupting a
   `0f 06` reconverge (byte+1 `0x06→0x00`) → `CMDBUF_ERROR`; turning the `0f 01` guard unconditional
   (byte+1 `0x01→0x00`) makes **every lane skip the loop body → all-zero output** (proving 0f 00 = uncond,
   0f 01 = cond). See `experiments/RT-ISA-FIX/`.
@@ -739,12 +745,12 @@ independent 12-register aliasing scans.
 identical immediate model; `mode` (byte+2) inert exactly when `(v & 0xC0) == 0x00` (64 values,
 127 values **fault**); `flag` (byte+1) inert exactly when `(v & 0x12) == 0x02`.
 
-**Control-flow bytes an emitter may fill freely, measured inert across all 256 values** in a
-program whose oracle proves the branch and the mask stack executed: `if_push.scope`,
-`if_push_pred.scope`, `jump.link`, `jump.branch_ctrl`, `pop_reconverge.scope`. Load-bearing in
-the same family: `if_push.scope_kind` (64 values inert, 178 wrong value, 1 hang);
-`pop_reconverge.scope_kind = 0` is the single fatal value; `ret.linkmode` runs **only when
-`(v & 7) == 4`** — the other 224 values fault.
+**Control-flow field results must be read per descriptor and target.** The older broad sweeps of
+`if_push.scope`, `if_push_pred.scope`, `jump.link`, `jump.branch_ctrl`, and
+`pop_reconverge.scope` remain recorded in `validation.json`, but EXP-M4-45 splits conditional-push
+inversion from the generic scope byte and EXP-M4-46 splits loop-mask updates/break unwinds from
+function returns. Genuine return link modes are `0x02` leaf and `0x12` non-leaf; byte+1 `0x04/0x05`
+belongs to the loop family and must not be emitted as a return.
 
 **What EXP-0140 does NOT establish (`UNKNOWN`, deliberately):**
 

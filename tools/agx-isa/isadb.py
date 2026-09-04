@@ -2239,24 +2239,20 @@ def instr_length(buf, off=0):
         # compare-and-select producer (14B, byte+2 low-nibble == 0x0d, e.g. 0x1d).
         return 14 if (buf[off + 2] & 0x0f) == 0x0d else 6
     # ---- CONTROL FLOW / PROGRAM STRUCTURE (EXP-0010, HW-validated lengths) ----
-    # 0x0a: integer compare -> per-lane execution predicate (feeds an early
-    #       return / break / continue). 6-byte form; the compare immediate is at
-    #       byte+3 and the condition SENSE is in byte0/byte+1 (HW: splicing byte0
-    #       0x0a<->0x02 inverts >= vs <, swapping which lanes execute -- EXP-0010).
-    # 0x0a and its dst-register siblings (0x1a,0x2a,0x3a,0x9a,0xca,...): the 6-byte
-    # integer compare -> per-lane execution PREDICATE. Exactly like the low-nibble-2
-    # icmp/select family, byte0's HIGH nibble is the destination (predicate) register,
-    # so the DB must key on the LOW nibble == 0xa, not the whole byte. The old
-    # `b0 == 0x0a` rule left every dst>0 form (2a/3a/1a/9a/ca) UNDECODED, desyncing
-    # the compare-heavy divergent kernels (k_tex_atomic, k_uint_arith, k_int64). byte+2
-    # is the compare op-select (<= 0x3f: 0x22/0x23/0x25/0x2b/0x35/0x39/0x3a observed);
-    # length is uniformly 6. EXP-M4-01 census (anchored: every 0x?a is followed by a
-    # cleanly-tokenized if_push/psel/imad, byte-identical in shape to the 0x0a form).
+    # 0x?a predicate compares have a six-byte ordered form and a ten-byte
+    # equality / ordered-complement form (EXP-M4-45). byte+2 bit0 selects the
+    # extended layout in every focused native instance; bytes+4/+5 == 06 00 are
+    # also required here so unrelated low-nibble-a corpus forms are not greedily
+    # reframed. byte0 bit4 is predicate-result inversion, not a destination
+    # predicate register. Higher byte0 bits remain unassigned.
     if (b0 & 0x0f) == 0x0a:
         # gated on byte+2 being a real compare op-select (<= 0x3f); a byte+2 > 0x3f means
         # this `Xa` is not an icmp (compact op / resync landing) -- do not greedily length 6.
         b2a = buf[off + 2] if off + 2 < len(buf) else -1
         if 0 <= b2a <= 0x3f:
+            if ((b2a & 0x01) and off + 5 < len(buf)
+                    and buf[off + 4] == 0x06 and buf[off + 5] == 0x00):
+                return 10
             return 6
     # 0x05 / 0x16: conditional SELECT (branchless if / ternary) d = pred?A:B, 4B.
     #       Cleanly tokenizes gsel4 (0x05) and dsel5 (0x16). The compare feeding
@@ -2318,10 +2314,15 @@ def instr_length(buf, off=0):
                                        # following 0f 01 jump_cond in cf_big's nested while+continue.
                                        # RT-ISA-FIX (inferred, single occurrence -- byte+2==0x04 not 0x54).
         return LEN_UNKNOWN
-    # ---- FUNCTION RETURN (byte0 0x8f, EXP-0035) ----
-    # Control-flow family (low nibble 0xf) with the link/return high bit; 4 bytes,
-    # byte+2 == 0x54 CF marker; no encoded target (HW link register / CF stack).
+    # ---- LOOP MASK UPDATE / NONLOCAL BREAK / FUNCTION RETURN (0x8f) ----
+    # EXP-M4-46 separates three forms sharing the leader.  The ordinary
+    # function return has byte+1 in {0x02,0x12} and is four bytes.  Native loops
+    # use a four-byte 8f 04 54 <depth> latch/update, while a break through one
+    # or more nested execution-mask scopes uses six-byte 8f 05 54 ... .
     if b0 == 0x8f:
+        if (off + 2 < len(buf) and buf[off + 1] == 0x05 and
+                buf[off + 2] == 0x54):
+            return 6
         return 4
     # ---- CALL-SITE / FRAME-SETUP marker (byte0 0x43, EXP-0035; re-scoped EXP-0030) ----
     # `43 00 00 01` precedes every out-of-line CALL (plain compute kernels too), and

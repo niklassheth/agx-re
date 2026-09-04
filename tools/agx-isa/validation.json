@@ -1,8 +1,8 @@
 {
  "_license": "GPL-3.0-or-later",
  "spec": "docs/evidence-classification.md",
- "generated": "2026-09-03",
- "db_sha256": "00afaf3dd709ddb88c4932b1c0a4c3c97eb101ceb65999088bc81eea61f7745c",
+ "generated": "2026-09-04",
+ "db_sha256": "325d9009d3744728b3361f563b60eea9e7b3def71932a82878250305e139661a",
  "_conventions": {
   "default": "untested. A field with no committed experiment that exercised it is untested with evidence []. Positional knowledge alone is not a label.",
   "evidence_ids": "directory-name prefixes under experiments/ - this includes the RT-* red-team splice-and-observe experiments (A18 Pro), which are committed experiments with retained raw evidence, alongside EXP-NNNN and EXP-M4-NN / EXP-O2X.",
@@ -13,27 +13,27 @@
   "emittable": "an instruction qualifies only if EVERY field in its db.json descriptor is hardware-run or isolated-byte-diff (docs/evidence-classification.md section 2, the emittable rule). Field-less descriptors qualify only if the instruction itself is hardware-run / isolated-byte-diff."
  },
  "coverage": {
-  "total_instructions": 176,
-  "total_fields": 1109,
+  "total_instructions": 182,
+  "total_fields": 1142,
   "by_label": {
-   "hardware-run": 531,
+   "hardware-run": 539,
    "isolated-byte-diff": 67,
-   "corpus-correlation": 75,
-   "tokenization-only": 148,
+   "corpus-correlation": 82,
+   "tokenization-only": 150,
    "single-template-inference": 32,
    "api-accept-reject": 0,
    "host-private": 0,
-   "untested": 256
+   "untested": 272
   },
   "by_label_pct": {
-   "hardware-run": 47.9,
-   "isolated-byte-diff": 6.0,
-   "corpus-correlation": 6.8,
-   "tokenization-only": 13.3,
-   "single-template-inference": 2.9,
+   "hardware-run": 47.2,
+   "isolated-byte-diff": 5.9,
+   "corpus-correlation": 7.2,
+   "tokenization-only": 13.1,
+   "single-template-inference": 2.8,
    "api-accept-reject": 0.0,
    "host-private": 0.0,
-   "untested": 23.1
+   "untested": 23.8
   },
   "emittable_instructions": 35,
   "emittable_mnemonics": [
@@ -73,7 +73,7 @@
    "sr_read_wide",
    "uniform_mov"
   ],
-  "decodable_not_yet_emittable": 141,
+  "decodable_not_yet_emittable": 147,
   "data_word_descriptors": 6,
   "data_word_mnemonics": [
    "operand_word",
@@ -83,7 +83,7 @@
    "operand_word_x2_h7",
    "pad_operand"
   ],
-  "emitter_relevant_instructions": 170,
+  "emitter_relevant_instructions": 176,
   "emittable_of_emitter_relevant": 35
  },
  "instructions": {
@@ -5928,6 +5928,237 @@
     "note": "PASSED THROUGH from EXP-0161 unchanged. Accepted set fits (v & 0xE0) == 0xC0 in both carriers (24 of 203 / 32 of 256). **Citations ADDED 2026-08-30 by EXP-0215 (additions only, zero removals \u2014 the original `evidence` list is still a prefix).** Each addition is backed by a located OBSERVATION record, not a name match: EXP-0138-m4-emit-falu @ experiments/EXP-0138-m4-emit-falu/raw/m4_20260828_run01/sweep.jsonl:15947; EXP-0154-g17p-emit-alu @ experiments/EXP-0154-g17p-emit-alu/raw/g17p_20260829_run02/sweep.jsonl:19832"
    }
   },
+  "icmp_pred_ordered6": {
+   "_instruction": {
+    "label": "hardware-run",
+    "range": "six-byte ordered float/uint/sint predicate compares, register and compact-immediate witnesses",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"]
+   },
+   "invert": {
+    "label": "hardware-run",
+    "range": "0..1; both values dispatched on ordered and equality carriers",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Toggling byte0 bit4 complemented every lane; a simultaneous push inversion restored the original result.",
+    "start": 4,
+    "width": 1
+   },
+   "b0_hi": {
+    "label": "untested",
+    "range": "0..7; no semantics assigned",
+    "target": "G16G",
+    "evidence": [],
+    "start": 5,
+    "width": 3
+   },
+   "srcA_desc": {
+    "label": "untested",
+   "range": "packed seven-bit source descriptor; native values observed but not generalized",
+   "target": "G16G",
+   "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Native source descriptors were located by program analysis, but this experiment did not sweep or derive their register mapping.",
+    "start": 8,
+    "width": 7
+   },
+   "srcA_aux": {
+    "label": "untested",
+    "range": "0..1; tested but semantically unexplained",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Both values were result- and lifetime-inert in the tested envelope; this does not establish a global role.",
+    "start": 15,
+    "width": 1
+   },
+   "control_aux_lo": {
+    "label": "untested",
+    "range": "0..1; role unknown",
+    "target": "G16G",
+    "evidence": [],
+    "start": 18,
+    "width": 1
+   },
+   "release_srcA": {
+    "label": "hardware-run",
+    "range": "0..1, independently and jointly with release_srcB",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Setting the bit caused a distinguishable later source-A use to read zero while preserving compare output.",
+    "start": 19,
+    "width": 1
+   },
+   "release_srcB": {
+    "label": "hardware-run",
+    "range": "0..1, independently and jointly with release_srcA",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Setting the bit caused a distinguishable later source-B use to read zero while preserving compare output.",
+    "start": 20,
+    "width": 1
+   },
+   "control_aux_hi": {
+    "label": "untested",
+    "range": "0..3; role unknown",
+    "target": "G16G",
+    "evidence": [],
+    "start": 22,
+    "width": 2
+   },
+   "srcB_desc": {
+    "label": "untested",
+   "range": "packed seven-bit source descriptor or compact-immediate payload; not generalized",
+   "target": "G16G",
+   "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Native source and compact-immediate payloads were observed, but this experiment did not derive the complete encoding map.",
+    "start": 24,
+    "width": 7
+   },
+   "srcB_aux": {
+    "label": "untested",
+    "range": "0..1; tested but semantically unexplained",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Both values were result- and lifetime-inert in the tested envelope; this does not establish a global role.",
+    "start": 31,
+    "width": 1
+   },
+   "condition": {
+    "label": "hardware-run",
+    "range": "tested discrete codes 0x02..0x07 and native compact-immediate counterparts 0x13,0x15,0x17",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Direct substitutions exercised float, unsigned, and signed ordered comparisons, including NaNs, signed zero, and integer extremes.",
+    "start": 32,
+    "width": 8
+   },
+   "operand_tail": {
+    "label": "corpus-correlation",
+    "range": "observed 0xc0 register pair and 0xc2 compact immediate",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "start": 40,
+    "width": 8
+   }
+  },
+  "icmp_pred_extended10": {
+   "_instruction": {
+    "label": "hardware-run",
+    "range": "ten-byte integer/bitwise equality, IEEE equality, ordered-float complement, and compact-immediate witnesses",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"]
+   },
+   "invert": {
+    "label": "hardware-run",
+    "range": "0..1 on extended predicate carriers",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "start": 4,
+    "width": 1
+   },
+   "b0_hi": {
+    "label": "untested",
+    "range": "0..7; no semantics assigned",
+    "target": "G16G",
+    "evidence": [],
+    "start": 5,
+    "width": 3
+   },
+   "srcA_desc": {
+    "label": "untested",
+   "range": "packed seven-bit source descriptor; native values observed but not generalized",
+   "target": "G16G",
+   "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Native source descriptors were located by program analysis, but this experiment did not sweep or derive their register mapping.",
+    "start": 8,
+    "width": 7
+   },
+   "srcA_aux": {
+    "label": "untested",
+   "range": "0..1; exact role unknown",
+   "target": "G16G",
+   "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "The bit varies in native programs, but no independent semantic or liveness result was established for this extended carrier.",
+    "start": 15,
+    "width": 1
+   },
+   "control_aux_lo": {
+    "label": "untested",
+    "range": "0..1; role unknown",
+    "target": "G16G",
+    "evidence": [],
+    "start": 18,
+    "width": 1
+   },
+   "release_srcA": {
+    "label": "hardware-run",
+    "range": "0..1 on the extended integer-equality carrier",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Setting byte2 bit3 cleared the distinguishable later source-A use while preserving the comparison.",
+    "start": 19,
+    "width": 1
+   },
+   "release_srcB": {
+    "label": "corpus-correlation",
+    "range": "0..1 layout correspondence with the hardware-validated short form",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "The field position is shared with the short form, but source-B release was not independently isolated on an extended carrier.",
+    "start": 20,
+    "width": 1
+   },
+   "control_aux_hi": {
+    "label": "untested",
+    "range": "0..3; role unknown",
+    "target": "G16G",
+    "evidence": [],
+    "start": 22,
+    "width": 2
+   },
+   "srcB_desc": {
+    "label": "untested",
+   "range": "packed seven-bit source descriptor or compact-immediate payload; not generalized",
+   "target": "G16G",
+   "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Native source and compact-immediate payloads were observed, but this experiment did not derive the complete encoding map.",
+    "start": 24,
+    "width": 7
+   },
+   "srcB_aux": {
+    "label": "untested",
+   "range": "0..1; exact role unknown",
+   "target": "G16G",
+   "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "The bit varies in native programs, but no independent semantic or liveness result was established for this extended carrier.",
+    "start": 31,
+    "width": 1
+   },
+   "relation": {
+    "label": "hardware-run",
+    "range": "tested discrete codes 0x00,0x02,0x03,0x07; native compact-immediate 0x17",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "0x00/0x07 distinguish IEEE from bitwise equality; 0x02/0x03 distinguish ordered floating greater/less relations.",
+    "start": 48,
+    "width": 8
+   },
+   "operand_tail": {
+    "label": "corpus-correlation",
+    "range": "observed 0xc0 register pair and 0xc2 compact immediate",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "start": 56,
+    "width": 8
+   },
+   "extension": {
+    "label": "tokenization-only",
+    "range": "16-bit trailing extension; 0x0000 in focused witnesses",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "start": 64,
+    "width": 16
+   }
+  },
   "icmp_pred": {
    "_instruction": {
     "label": "hardware-run",
@@ -6770,6 +7001,39 @@
     "note": "256/256 values executed (0 skipped by the hang budget); 242 comparable across the two gated runs (pairs where either side failed its integrity check or was skipped are excluded), 242 of those identical **Citations ADDED 2026-08-30 by EXP-0215 (additions only, zero removals \u2014 the original `evidence` list is still a prefix).** Each addition is backed by a located OBSERVATION record, not a name match: EXP-0187-g17p-rtword-census @ experiments/EXP-0187-g17p-rtword-census/raw/prefreeze/pilot01/sweep.jsonl:350; EXP-0200-cfrt-word-instruction-hw @ experiments/EXP-0200-cfrt-word-instruction-hw/raw/t1_frozen0187/g17p_20260830_t1run02rev/sweep.jsonl:367"
    }
   },
+  "if_push_cond": {
+   "_instruction": {
+    "label": "hardware-run",
+    "range": "normal and inverted conditional mask pushes after short and extended predicate compares",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"]
+   },
+   "predicate_level": {
+    "label": "corpus-correlation",
+    "range": "observed conditional level values encoded above the fixed low bit",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "start": 25,
+    "width": 4
+   },
+   "invert": {
+    "label": "hardware-run",
+    "range": "0..1; 0f055401 normal and 0f055421 inverted",
+    "target": "G16G",
+    "evidence": ["EXP-M4-45-predicate-conditions"],
+    "note": "Toggling only byte3 bit5 complemented every lane; toggling predicate inversion too restored the original oracle.",
+    "start": 29,
+    "width": 1
+   },
+   "scope_hi": {
+    "label": "untested",
+    "range": "0..3; role unknown",
+    "target": "G16G",
+    "evidence": [],
+    "start": 30,
+    "width": 2
+   }
+  },
   "pop_reconverge": {
    "_instruction": {
     "label": "isolated-byte-diff",
@@ -6973,6 +7237,72 @@
      "source": "EXP-0208 desk reclassification (\u00a710.2) \u2014 derived from ALREADY-COMMITTED raw, no new device time. NOT a promotion: the legacy `label` is unchanged."
     },
     "note": "**CORPUS-WIDE CAVEAT (EXP-0210): EVERY fault/hang label in the 2026-08-30 wave was taken on a BUSY machine, and a quiet GPU FAILS HARDER.** Same encodings, same ok/not-ok partition, escalated severity: EXP-0201 silent-no-write -> fault (18 -> 355, identical in both orders); EXP-0206 `if_push.scope` fault -> HANG at the same values; EXP-0204 deriv 7/11 -> 48/48 hangs. EXP-0202 is the counterexample (hard outcomes byte-identical busy and quiet), so this is not an instrument artefact. **The ok/not-ok PARTITION is trustworthy; the SEVERITY LABEL is not.** **Citations ADDED 2026-08-30 by EXP-0215 (additions only, zero removals \u2014 the original `evidence` list is still a prefix).** Each addition is backed by a located OBSERVATION record, not a name match: EXP-0156-g17p-emit-cf-mem @ experiments/EXP-0156-g17p-emit-cf-mem/raw/g17p-20260830-cf02f/sweep.jsonl:771"
+   }
+  },
+  "loop_mask_update": {
+   "_instruction": {
+    "label": "hardware-run",
+    "range": "native top/bottom-tested loops, compound latches, direct breaks, and nesting through three levels",
+    "target": "G16G",
+    "evidence": ["EXP-M4-46-loop-semantics"]
+   },
+   "mask_selector": {
+    "label": "untested",
+    "range": "tested native values 0x02,0x22,0x26,0x2a plus 0x20-bit and depth substitutions",
+    "target": "G16G",
+    "evidence": ["EXP-M4-46-loop-semantics"],
+    "note": "Depth changes and the orthogonal 0x20 bit are load-bearing. The exact identity-versus-polarity meaning of 0x20 remains unresolved.",
+    "start": 24,
+    "width": 8
+   }
+  },
+  "break_mask_unwind": {
+   "_instruction": {
+    "label": "hardware-run",
+    "range": "six-byte nonlocal breaks under one/two conditionals and at loop depth one/two",
+    "target": "G16G",
+    "evidence": ["EXP-M4-46-loop-semantics"]
+   },
+   "scope_depth_tag": {
+    "label": "corpus-correlation",
+    "range": "observed 0x03 with one active conditional and 0x04 with two",
+    "target": "G16G",
+    "evidence": ["EXP-M4-46-loop-semantics"],
+    "start": 24,
+    "width": 8
+   },
+   "reserved": {
+    "label": "tokenization-only",
+    "range": "0x00 in all focused witnesses",
+    "target": "G16G",
+    "evidence": ["EXP-M4-46-loop-semantics"],
+    "start": 32,
+    "width": 8
+   },
+   "target_loop_depth": {
+    "label": "corpus-correlation",
+    "range": "observed 0x01 for the outer loop and 0x02 for the inner loop of a two-loop nest",
+    "target": "G16G",
+    "evidence": ["EXP-M4-46-loop-semantics"],
+    "start": 40,
+    "width": 8
+   }
+  },
+  "loop_mask_update_form56": {
+   "_instruction": {
+    "label": "hardware-run",
+    "range": "0x54 to 0x56 same-program latch splice preserved all 64 output words",
+    "target": "G16G",
+    "evidence": ["EXP-M4-46-loop-semantics"]
+   },
+   "mask_selector": {
+    "label": "corpus-correlation",
+    "range": "native selectors observed; same layout as the 0x54 form",
+    "target": "G16G",
+    "evidence": ["EXP-M4-46-loop-semantics"],
+    "note": "Compatible loop behavior was validated for the simple splice, but selector values were not independently exercised in this form.",
+    "start": 24,
+    "width": 8
    }
   },
   "device_load": {

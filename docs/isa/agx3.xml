@@ -164,6 +164,37 @@
     <value value="32" label="reciprocal-precision flag (rcp/1-op SFU)">reciprocal_precision_flag</value>
   </enum>
 
+  <enum kind="icmp_pred_ordered6_condition" name="icmp_pred_ordered6 condition">
+    <value value="2">float_gt</value>
+    <value value="3">float_lt</value>
+    <value value="4">uint_gt</value>
+    <value value="5">uint_lt</value>
+    <value value="6">sint_gt</value>
+    <value value="7">sint_lt</value>
+    <value value="18" label="float_gt|compact_imm">float_gt_compact_imm</value>
+    <value value="19" label="float_lt|compact_imm">float_lt_compact_imm</value>
+    <value value="20" label="uint_gt|compact_imm">uint_gt_compact_imm</value>
+    <value value="21" label="uint_lt|compact_imm">uint_lt_compact_imm</value>
+    <value value="22" label="sint_gt|compact_imm">sint_gt_compact_imm</value>
+    <value value="23" label="sint_lt|compact_imm">sint_lt_compact_imm</value>
+  </enum>
+
+  <enum kind="icmp_pred_ordered6_operand_tail" name="icmp_pred_ordered6 operand_tail">
+    <value value="192">register_pair</value>
+    <value value="194">compact_immediate</value>
+  </enum>
+
+  <enum kind="icmp_pred_extended10_relation" name="icmp_pred_extended10 relation">
+    <value value="0">ieee_float_eq</value>
+    <value value="2">ieee_float_gt</value>
+    <value value="3">ieee_float_lt</value>
+    <value value="7">integer_or_bitwise_eq</value>
+    <value value="16" label="ieee_float_eq|compact_imm">ieee_float_eq_compact_imm</value>
+    <value value="18" label="ieee_float_gt|compact_imm">ieee_float_gt_compact_imm</value>
+    <value value="19" label="ieee_float_lt|compact_imm">ieee_float_lt_compact_imm</value>
+    <value value="23" label="integer_or_bitwise_eq|compact_imm">integer_or_bitwise_eq_compact_imm</value>
+  </enum>
+
   <enum kind="icmp_pred_cmpmode" name="icmp_pred cmpmode">
     <value value="2" label="relational(lt/gt)">relational</value>
     <value value="3" label="equality(eq/ne)">equality</value>
@@ -189,8 +220,8 @@
   </enum>
 
   <enum kind="if_push_scope" name="if_push scope">
-    <value value="84" label="mask_bankA(outer/even)">mask_bankA</value>
-    <value value="86" label="mask_bankB(nested/odd)">mask_bankB</value>
+    <value value="84">form54</value>
+    <value value="86" label="form56(exact scheduling role unresolved)">form56</value>
   </enum>
 
   <enum kind="if_push_scope_kind" name="if_push scope_kind">
@@ -540,8 +571,6 @@
 
   <enum kind="ret_linkmode" name="ret linkmode">
     <value value="2" label="leaf (v &amp; 3 == 2)">leaf</value>
-    <value value="4" label="FAULTS on G17P -- the old `cf_merge` reading is REFUTED (EXP-0206)">FAULTS_on_G17P_the_old_cf_merge_reading_is_REFUTED</value>
-    <value value="5" label="FAULTS on G17P -- the old `cf_merge_push` reading is REFUTED (EXP-0206)">FAULTS_on_G17P_the_old_cf_merge_push_reading_is_REFUTED</value>
     <value value="18" label="nonleaf_restore_link (0x10 = restore-link flag; v &amp; 3 == 2)">nonleaf_restore_link</value>
   </enum>
 
@@ -1251,9 +1280,64 @@
     <ins name="rsqrt_estimate_DEF_0171_5" subop="00001111" label="rsqrt_estimate (G17P precise lowering) -- DEF-0171-5"/>
   </group>
 
-  <!-- icmp_pred: predicate[dst_pred] = (srcA <cond> srcB) -->
-  <!-- provenance: byte-diff EXP-M4-13 R6 (OWN-MSL): compiled the full comparator cross-product {lt,gt,le,ge,eq,ne} x {int,uint,float} feeding a data-dependent loop ... -->
-  <ins name="icmp_pred" length="6" label="predicate[dst_pred] = (srcA &lt;cond&gt; srcB)">
+  <!-- icmp_pred_ordered6: Six-byte ordered predicate compare -->
+  <!-- provenance: OWN-SHADER + HW-VALIDATED (EXP-M4-45): 39 native programs and 35 field/liveness ablations matched complete T8132 oracles. Direct byte4 substitutions ... -->
+  <ins name="icmp_pred_ordered6" length="6" label="Six-byte ordered predicate compare">
+    <exact bit="0:3">1010</exact>
+    <exact bit="16">0</exact>
+    <exact bit="17">1</exact>
+    <exact bit="21">1</exact>
+    <modifier name="invert" bit="4"/>
+    <!-- b0_hi [5:7]: inferred / not yet bit-decoded -->
+    <zero bit="5:7"/>
+    <!-- srcA_desc [8:14]: inferred / not yet bit-decoded -->
+    <zero bit="8:14"/>
+    <modifier name="srcA_aux" bit="15"/>
+    <!-- control_aux_lo [18]: inferred / not yet bit-decoded -->
+    <zero bit="18"/>
+    <modifier name="release_srcA" bit="19"/>
+    <modifier name="release_srcB" bit="20"/>
+    <!-- control_aux_hi [22:23]: inferred / not yet bit-decoded -->
+    <zero bit="22:23"/>
+    <!-- srcB_desc [24:30]: inferred / not yet bit-decoded -->
+    <zero bit="24:30"/>
+    <modifier name="srcB_aux" bit="31"/>
+    <modifier name="condition" bit="32:39" kind="icmp_pred_ordered6_condition"/>
+    <modifier name="operand_tail" bit="40:47" kind="icmp_pred_ordered6_operand_tail"/>
+  </ins>
+
+  <!-- icmp_pred_extended10: Ten-byte predicate compare used for integer/bitwise equality, IEEE floating equality, and ordered ... -->
+  <!-- provenance: OWN-SHADER + HW-VALIDATED (EXP-M4-45): native integer equality, floating equality, float <=/>= sequences, and integer equality-immediate all executed ... -->
+  <ins name="icmp_pred_extended10" length="10" label="Ten-byte predicate compare used for integer/bitwise equality, IEEE floating equality, and ordered ...">
+    <exact bit="0:3">1010</exact>
+    <exact bit="16">1</exact>
+    <exact bit="17">1</exact>
+    <exact bit="21">1</exact>
+    <exact bit="32:47">0000000000000110</exact>
+    <modifier name="invert" bit="4"/>
+    <!-- b0_hi [5:7]: inferred / not yet bit-decoded -->
+    <zero bit="5:7"/>
+    <!-- srcA_desc [8:14]: inferred / not yet bit-decoded -->
+    <zero bit="8:14"/>
+    <modifier name="srcA_aux" bit="15"/>
+    <!-- control_aux_lo [18]: inferred / not yet bit-decoded -->
+    <zero bit="18"/>
+    <modifier name="release_srcA" bit="19"/>
+    <modifier name="release_srcB" bit="20"/>
+    <!-- control_aux_hi [22:23]: inferred / not yet bit-decoded -->
+    <zero bit="22:23"/>
+    <!-- srcB_desc [24:30]: inferred / not yet bit-decoded -->
+    <zero bit="24:30"/>
+    <modifier name="srcB_aux" bit="31"/>
+    <modifier name="relation" bit="48:55" kind="icmp_pred_extended10_relation"/>
+    <modifier name="operand_tail" bit="56:63" kind="icmp_pred_ordered6_operand_tail"/>
+    <!-- extension [64:79]: inferred / not yet bit-decoded -->
+    <zero bit="64:79"/>
+  </ins>
+
+  <!-- icmp_pred: Legacy six-byte low-nibble-a fallback for corpus forms not matched by icmp_pred_ordered6 -->
+  <!-- provenance: Legacy OWN-SHADER corpus descriptor retained so unrelated six-byte low-nibble-a forms continue to tokenize. Its former broad semantic assignments are ... -->
+  <ins name="icmp_pred" length="6" label="Legacy six-byte low-nibble-a fallback for corpus forms not matched by icmp_pred_ordered6">
     <exact bit="0:3">1010</exact>
     <dest name="dst_pred" bit="4:7"/>
     <src name="srcA" bit="8:14"/>
@@ -1291,9 +1375,9 @@
     <modifier name="sel" bit="24:31"/>
   </ins>
 
-  <!-- jump: PC-relative jump -->
-  <!-- provenance: HW-VALIDATED (EXP-0010 E6): -44 back-edge in prodloop; zeroing the offset -> infinite-loop hang, off-boundary offsets -> fault. EXP-M4-13 R9 own-MSL ... -->
-  <ins name="jump" length="10" label="PC-relative jump">
+  <!-- jump: JMP_EXEC_ANY PC-relative branch: take the branch when the current execution mask contains any ... -->
+  <!-- provenance: HW-VALIDATED (EXP-0010 E6 + EXP-M4-46): changing a backedge changes execution and invalid targets fault/hang. EXP-M4-46: all 33 broadly decoded ... -->
+  <ins name="jump" length="10" label="JMP_EXEC_ANY PC-relative branch: take the branch when the current execution mask contains any ...">
     <exact bit="0:7">00001111</exact>
     <exact bit="8:15">00000000</exact>
     <modifier name="branch_ctrl" bit="16:23"/>
@@ -1301,9 +1385,9 @@
     <modifier name="link" bit="72:79"/>
   </ins>
 
-  <!-- jump_cond: CONDITIONAL PC-relative jump (masked branch) -->
-  <!-- provenance: byte-diff EXP-M4-13 R6 (OWN-MSL): compiled if-bodies of increasing size -> the offset field grows monotonically (0x6e/0x80/0xba) confirming it is the ... -->
-  <ins name="jump_cond" length="10" label="CONDITIONAL PC-relative jump (masked branch)">
+  <!-- jump_cond: JMP_EXEC_NONE PC-relative branch: skip to the target when the current execution mask contains no ... -->
+  <!-- provenance: OWN-SHADER + HW-VALIDATED structure (EXP-M4-45/46): every fresh guarded loop places 0f 01 after mask narrowing and targets its matching pop/exit ... -->
+  <ins name="jump_cond" length="10" label="JMP_EXEC_NONE PC-relative branch: skip to the target when the current execution mask contains no ...">
     <exact bit="0:7">00001111</exact>
     <exact bit="8:15">00000001</exact>
     <modifier name="cf_scope" bit="16:23" kind="jump_cond_cf_scope"/>
@@ -1311,13 +1395,27 @@
     <modifier name="reserved" bit="72:79"/>
   </ins>
 
-  <!-- if_push: execution-mask PUSH: enters a divergent region, saving the reconvergence point and narrowing the ... -->
-  <!-- provenance: byte-diff EXP-M4-13 R6 (OWN-MSL): compiled a loop-nesting ladder L1/L2/L3 -> the loop-body pushes carry scope alternating 0x54 (outer), 0x56 (next) ... -->
-  <ins name="if_push" length="4" label="execution-mask PUSH: enters a divergent region, saving the reconvergence point and narrowing the ...">
+  <!-- if_push: Execution-mask push: save the current active-lane population and narrow execution using the current ... -->
+  <!-- provenance: OWN-SHADER + HW-VALIDATED (EXP-M4-45/46): exact nested if/loop outputs; the semantic effect of push bit 0x20 was isolated on hardware. EXP-M4-46 ... -->
+  <ins name="if_push" length="4" label="Execution-mask push: save the current active-lane population and narrow execution using the current ...">
     <exact bit="0:7">00001111</exact>
     <exact bit="8:15">00000101</exact>
     <modifier name="scope" bit="16:23" kind="if_push_scope"/>
     <modifier name="scope_kind" bit="24:31" kind="if_push_scope_kind"/>
+  </ins>
+
+  <!-- if_push_cond: Conditional execution-mask push in the observed 0x54 form -->
+  <!-- provenance: OWN-SHADER + HW-VALIDATED (EXP-M4-45): toggling only byte3 bit5 complemented every lane after both short ordered and extended equality predicate ... -->
+  <ins name="if_push_cond" length="4" label="Conditional execution-mask push in the observed 0x54 form">
+    <exact bit="0:7">00001111</exact>
+    <exact bit="8:15">00000101</exact>
+    <exact bit="16:23">01010100</exact>
+    <exact bit="24">1</exact>
+    <!-- predicate_level [25:28]: inferred / not yet bit-decoded -->
+    <zero bit="25:28"/>
+    <modifier name="invert" bit="29"/>
+    <!-- scope_hi [30:31]: inferred / not yet bit-decoded -->
+    <zero bit="30:31"/>
   </ins>
 
   <!-- pop_reconverge: execution-mask POP / reconverge: re-enables the lanes masked off by the matching if_push (0f 05) or ... -->
@@ -1338,6 +1436,35 @@
     <exact bit="8:15">00000100</exact>
     <modifier name="mask_bank" bit="16:23" kind="pop_reconverge_scope"/>
     <modifier name="scope_kind" bit="24:31"/>
+  </ins>
+
+  <!-- loop_mask_update: Update the active execution mask at a loop latch or structured break point -->
+  <!-- provenance: OWN-SHADER + HW-VALIDATED (EXP-M4-46): 19 exact-output programs cover top/bottom-tested and compound-condition loops, direct break, nesting through ... -->
+  <ins name="loop_mask_update" length="4" label="Update the active execution mask at a loop latch or structured break point">
+    <exact bit="0:7">10001111</exact>
+    <exact bit="8:15">00000100</exact>
+    <exact bit="16:23">01010100</exact>
+    <modifier name="mask_selector" bit="24:31"/>
+  </ins>
+
+  <!-- break_mask_unwind: Nonlocal loop-break mask update through one or more enclosing execution-mask scopes -->
+  <!-- provenance: OWN-SHADER + HW-VALIDATED (EXP-M4-46): break_nested_if = 8f0554030001, break_nested_two_if = 8f0554040001, nested_break_continue inner-loop break = ... -->
+  <ins name="break_mask_unwind" length="6" label="Nonlocal loop-break mask update through one or more enclosing execution-mask scopes">
+    <exact bit="0:7">10001111</exact>
+    <exact bit="8:15">00000101</exact>
+    <exact bit="16:23">01010100</exact>
+    <modifier name="scope_depth_tag" bit="24:31"/>
+    <modifier name="reserved" bit="32:39"/>
+    <immediate name="target_loop_depth" bit="40:47"/>
+  </ins>
+
+  <!-- loop_mask_update_form56: Alternate byte+2 0x56 form of loop_mask_update -->
+  <!-- provenance: OWN-SHADER corpus + HW-VALIDATED form compatibility (EXP-M4-13/46). The old ret_luse classification conflated byte+1 0x04 mask updates with genuine ... -->
+  <ins name="loop_mask_update_form56" length="4" label="Alternate byte+2 0x56 form of loop_mask_update">
+    <exact bit="0:7">10001111</exact>
+    <exact bit="8:15">00000100</exact>
+    <exact bit="16:23">01010110</exact>
+    <modifier name="mask_selector" bit="24:31"/>
   </ins>
 
   <!-- device_load: load a vector into destination register dst = dst_lo | (dst_ext9 << 2) from the address space ... -->
@@ -2058,9 +2185,9 @@
     <zero bit="104:111"/>
   </ins>
 
-  <!-- ret: function RETURN / CF merge: `8f <lm> 54 <sb>` (4B) -->
-  <!-- provenance: HW-VALIDATED linkmode (EXP-0035 + RT-ISA-FIX) + EXP-M4-13 R10 corpus census (byte+3 = {0x22:411,0x26:238,0x02:49,...}); byte+3 retyped raw->mod as ... -->
-  <ins name="ret" length="4" label="function RETURN / CF merge: `8f &lt;lm&gt; 54 &lt;sb&gt;` (4B)">
+  <!-- ret: Function return: `8f <linkmode> 54 <scoreboard>` (4B) -->
+  <!-- provenance: HW-VALIDATED return modes (EXP-0035 + EXP-0206). EXP-M4-46 separates the previously conflated 0x04/0x05 native loop-mask forms using fresh ... -->
+  <ins name="ret" length="4" label="Function return: `8f &lt;linkmode&gt; 54 &lt;scoreboard&gt;` (4B)">
     <exact bit="0:7">10001111</exact>
     <exact bit="16:23">01010100</exact>
     <modifier name="linkmode" bit="8:15" kind="ret_linkmode"/>
@@ -3072,9 +3199,9 @@
     <zero bit="72:95"/>
   </ins>
 
-  <!-- ret_luse: function RETURN / CF merge, LAST-USE variant: `8f <lm> 56 <t>` (4 B) -->
-  <!-- provenance: byte-diff (EXP-M4-13 R7): `8f 04 56 02` is byte-invariant across every intersection_query kernel (rq_pred/g_*/s_*/rtq_*), always at the ... -->
-  <ins name="ret_luse" length="4" label="function RETURN / CF merge, LAST-USE variant: `8f &lt;lm&gt; 56 &lt;t&gt;` (4 B)">
+  <!-- ret_luse: Function-return 0x56 variant for genuine leaf/nonleaf link modes 0x02/0x12 -->
+  <!-- provenance: HW-VALIDATED genuine return modes (EXP-0206); loop-form separation from native branch context in EXP-M4-13/46. The exact 0x54 versus 0x56 ... -->
+  <ins name="ret_luse" length="4" label="Function-return 0x56 variant for genuine leaf/nonleaf link modes 0x02/0x12">
     <exact bit="0:7">10001111</exact>
     <exact bit="16:23">01010110</exact>
     <modifier name="linkmode" bit="8:15" kind="ret_linkmode"/>

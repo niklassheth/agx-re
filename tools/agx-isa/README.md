@@ -52,6 +52,9 @@ shaders):
 | `0x09` | float ALU | **6**, or **8** if `(byte[+2] & 0x02)` (fma) |
 | `0x0b` | float unary (fmov/neg/abs) | 10 |
 | `0x12` | float min/max | 6 |
+| low nibble `0xA` | predicate compare | 6 for ordered form; 10 when byte+2 bit0 is set and bytes+4/+5 are `06 00` (EXP-M4-45) |
+| `0x0f` | execution-mask control | 10 for `JMP_EXEC_ANY/NONE`; 4 for mask push; 6 for pop (EXP-M4-45/46) |
+| `0x8f` | loop-mask update / break unwind / return | 4 for byte+1 `04` loop update or `02/12` return; 6 for byte+1 `05` break unwind (EXP-M4-46) |
 | `0x9f` | integer ALU | 10/12 — **not solved (follow-up)** |
 | low-nibble `0x5` + `byte+1==0x80` + `byte+2==0x0c` | **texture sample / read** (companion + sampler op) | 14 (EXP-0016 HW) |
 | `0xd7` | **texture write** (memory-family store) | 16 (EXP-0016 HW) |
