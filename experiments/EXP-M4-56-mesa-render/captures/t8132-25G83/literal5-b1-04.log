@@ -1,0 +1,6 @@
+DEVICE Apple M4
+VERTEX v_main
+FRAGMENT f_main
+PIPELINE_SOURCE archive
+STATUS CMDBUF_ERROR
+ERROR command buffer failed: Caused GPU Hang Error (00000003:kIOGPUCommandBufferCallbackErrorHang)

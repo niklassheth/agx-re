@@ -1,0 +1,38 @@
+[
+  {
+    "vertex": "vertex",
+    "fragment": "fragment",
+    "pixels": 4096,
+    "covered": 1152,
+    "max_channel_error": 0,
+    "errors": [],
+    "error_count": 0
+  },
+  {
+    "vertex": "vertex-w",
+    "fragment": "fragment",
+    "pixels": 4096,
+    "covered": 1152,
+    "max_channel_error": 1,
+    "errors": [],
+    "error_count": 0
+  },
+  {
+    "vertex": "vertex-small",
+    "fragment": "fragment",
+    "pixels": 4096,
+    "covered": 288,
+    "max_channel_error": 0,
+    "errors": [],
+    "error_count": 0
+  },
+  {
+    "vertex": "vertex",
+    "fragment": "fragment-alt",
+    "pixels": 4096,
+    "covered": 1152,
+    "max_channel_error": 0,
+    "errors": [],
+    "error_count": 0
+  }
+]

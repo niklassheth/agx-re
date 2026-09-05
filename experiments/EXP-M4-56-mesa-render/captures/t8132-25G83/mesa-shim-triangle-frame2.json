@@ -1,0 +1,10 @@
+{
+  "width": 512,
+  "height": 512,
+  "covered": 82620,
+  "coverage_errors": 0,
+  "color_errors": 0,
+  "background_errors": 0,
+  "max_channel_error": 1,
+  "attachment_sha256": "d487b7a84a08eb3287b1db13935e1ae5d2cf902a6e7a45055687d9fda7b9bc0f"
+}

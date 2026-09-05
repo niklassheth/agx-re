@@ -1,0 +1,50 @@
+--- a/proxyclient/m1n1/agx/shim.py
++++ b/proxyclient/m1n1/agx/shim.py
+@@ -1391,6 +1391,37 @@
+             ),
+         )
+         parameters = replace(parameters, encoder=vdm_base)
++        if os.getenv("G16G_RENDER_GRAPH_DUMP"):
++            import pathlib, json
++            from dataclasses import asdict
++            directory = pathlib.Path(os.environ["G16G_RENDER_GRAPH_DUMP"])
++            directory.mkdir(parents=True, exist_ok=True)
++            records = []
++            for index, binding in enumerate(queue.vm.bindings):
++                name = "%03d-%x.bin" % (index, int(binding.addr))
++                directory.joinpath(name).write_bytes(self._read_vm(
++                    queue.vm, int(binding.addr), int(binding.size)))
++                records.append(dict(file=name, address=int(binding.addr),
++                                    size=int(binding.size), flags=int(binding.flags)))
++            directory.joinpath("graph.json").write_text(json.dumps(
++                dict(bindings=records, parameters=asdict(parameters)), indent=2))
++        if os.getenv("G16G_RENDER_FIXED_VIEW_CONTROL"):
++            from . import g16g_render_client
++            from m1n1.hw.uat import MemoryAttr
++            space = front.g16g_runtime["space"]
++            package = self._read_vm(queue.vm, 0x10001000000, 0x400000)
++            pa = int(space.u.memalign(0x4000, len(package)))
++            space.write(pa, package)
++            for address, size, writable in g16g_render_client.MAPPING_RANGES:
++                if 0x10000000000 <= address and address + size <= 0x10000400000:
++                    space.uat.iomap_at_root(
++                        int(client["client_root"]), address,
++                        pa + address - 0x10000000000, size,
++                        ctx=int(client["context"]), AttrIndex=MemoryAttr.Shared,
++                        AP=2, nG=1, UXN=writable, PXN=0, OS=1, AF=1, SH=0)
++            space.uat.flush_dirty()
++            space.uat.invalidate_cache()
++            space.flush()
+         self._push_timestamp_objects(file)
+         timestamp_addresses = self._timestamp_addresses(command)
+ 
+@@ -1447,6 +1478,9 @@
+             self._read_vm(queue.vm, int(pointer), int(size))
+             for pointer, size in attachments
+         )
++        if os.getenv("G16G_RENDER_GRAPH_DUMP"):
++            for index, output in enumerate(after_outputs):
++                directory.joinpath("output-%d-%d.bin" % (publication, index)).write_bytes(output)
+         attachment_results = tuple(
+             {
+                 "pointer": int(pointer),

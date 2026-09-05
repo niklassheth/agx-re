@@ -1,0 +1,11 @@
+[
+  {
+    "vertex": "vertex",
+    "fragment": "fragment",
+    "pixels": 4096,
+    "covered": 1290,
+    "max_channel_error": 1,
+    "errors": [],
+    "error_count": 0
+  }
+]
